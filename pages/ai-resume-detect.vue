@@ -66,6 +66,13 @@ const factCheckFeedbacks = ref({
   },
 });
 
+// 新的事實查核系統狀態
+const resumeInput = ref("");
+const isFactChecking = ref(false);
+const factCheckProgress = ref(0); // 0: 未開始, 1: 解析中, 2: 搜尋中, 3: 分析中, 4: 完成
+const factCheckResult = ref(null);
+const factCheckError = ref("");
+
 // // 追蹤已點擊過的項目
 // const clickedItems = ref({
 //   item1: false,
@@ -144,6 +151,62 @@ const copyToClipboard = (text) => {
 // 事實查核項目標記為已驗證
 const markAsVerified = (itemId) => {
   factCheckFeedbacks.value[itemId].verified = !factCheckFeedbacks.value[itemId].verified;
+};
+
+// 開始事實查核流程
+const startFactCheck = async () => {
+  if (!resumeInput.value.trim()) {
+    factCheckError.value = "請輸入履歷內容";
+    return;
+  }
+
+  isFactChecking.value = true;
+  factCheckProgress.value = 1;
+  factCheckError.value = "";
+  factCheckResult.value = null;
+
+  try {
+    const response = await $fetch("/api/resume/fact-check", {
+      method: "POST",
+      body: {
+        resumeText: resumeInput.value,
+      },
+    });
+
+    factCheckResult.value = response;
+    factCheckProgress.value = 4;
+  } catch (err) {
+    factCheckError.value = err?.data?.message || err?.message || "事實查核時發生錯誤";
+    console.error("Fact check error:", err);
+    factCheckProgress.value = 0;
+  } finally {
+    isFactChecking.value = false;
+  }
+};
+
+// 重置事實查核
+const resetFactCheck = () => {
+  resumeInput.value = "";
+  factCheckProgress.value = 0;
+  factCheckResult.value = null;
+  factCheckError.value = "";
+  isFactChecking.value = false;
+};
+
+// 獲取置信度顏色
+const getConfidenceColor = (confidence) => {
+  if (confidence >= 0.9) return "#2e7d32"; // 綠色 - 非常確信
+  if (confidence >= 0.7) return "#388e3c"; // 淺綠 - 較為確信
+  if (confidence >= 0.5) return "#f57f17"; // 黃色 - 不確定
+  return "#d32f2f"; // 紅色 - 可能不匹配
+};
+
+// 獲取置信度文字
+const getConfidenceText = (confidence) => {
+  if (confidence >= 0.9) return "非常確信";
+  if (confidence >= 0.7) return "較為確信";
+  if (confidence >= 0.5) return "不確定";
+  return "可能不匹配";
 };
 
 // 增強型定位功能：滾動到指定段落並高亮顯示
@@ -1892,350 +1955,223 @@ const downloadQuestions = () => {
             
             <!-- 事實查核內容區域 -->
             <div v-show="activeTab === 'fact-check'">
-              <!-- 事實查核說明 -->
-              <div class="mb-6 p-4 bg-#e8f5e8 rounded-6px">
-                <h3 class="text-20px font-bold text-#2e7d32 mb-2">事實查核說明</h3>
-                <p class="text-16px text-#555 m-0">
-                  以下項目建議進一步確認，可透過面試或背景調查驗證履歷內容的真實性。
-                </p>
-              </div>
-              
-              <!-- 學歷驗證 -->
-              <div class="bg-#f8f9fa p-6 rounded-6px mb-6 border-l-4 border-l-#2e7d32">
-                <div class="flex justify-between items-center mb-4">
-                  <h3 class="text-24px font-bold m-0 text-#2e7d32">學歷驗證</h3>
-                  <div class="flex gap-3">
-                    <button
-                      class="p-3 rounded-full hover:bg-#eee transition-colors w-12 h-12"
-                      :class="{ 'bg-#e8f5e8': factCheckFeedbacks.education.verified }"
-                      @click="handleFactCheckFeedback('education', 'verify')"
-                      title="標記為已驗證"
-                    >
-                      <svg
-                        xmlns="http://www.w3.org/2000/svg"
-                        width="22"
-                        height="22"
-                        viewBox="0 0 24 24"
-                        fill="none"
-                        stroke="currentColor"
-                        stroke-width="2"
-                        stroke-linecap="round"
-                        stroke-linejoin="round"
-                        class="text-#2e7d32"
-                      >
-                        <polyline points="20 6 9 17 4 12"></polyline>
-                      </svg>
-                    </button>
-                    <button
-                      class="p-3 rounded-full hover:bg-#eee transition-colors w-12 h-12"
-                      :class="{ 'bg-#e6f7f6': factCheckFeedbacks.education.liked }"
-                      @click="handleFactCheckFeedback('education', 'like')"
-                    >
-                      <svg
-                        xmlns="http://www.w3.org/2000/svg"
-                        width="22"
-                        height="22"
-                        viewBox="0 0 24 24"
-                        fill="none"
-                        stroke="currentColor"
-                        stroke-width="2"
-                        stroke-linecap="round"
-                        stroke-linejoin="round"
-                        class="text-#00AFB8"
-                      >
-                        <path d="M14 9V5a3 3 0 0 0-3-3l-4 9v11h11.28a2 2 0 0 0 2-1.7l1.38-9a2 2 0 0 0-2-2.3zM7 22H4a2 2 0 0 1-2-2v-7a2 2 0 0 1 2-2h3"></path>
-                      </svg>
-                    </button>
-                    <button
-                      class="p-3 rounded-full hover:bg-#eee transition-colors w-12 h-12"
-                      :class="{ 'bg-#ffeaea': factCheckFeedbacks.education.disliked }"
-                      @click="handleFactCheckFeedback('education', 'dislike')"
-                    >
-                      <svg
-                        xmlns="http://www.w3.org/2000/svg"
-                        width="22"
-                        height="22"
-                        viewBox="0 0 24 24"
-                        fill="none"
-                        stroke="currentColor"
-                        stroke-width="2"
-                        stroke-linecap="round"
-                        stroke-linejoin="round"
-                        class="text-#ff5252"
-                      >
-                        <path d="M10 15v4a3 3 0 0 0 3 3l4-9V2H5.72a2 2 0 0 0-2 1.7l-1.38 9a2 2 0 0 0 2 2.3zm7-13h2.67A2.31 2.31 0 0 1 22 4v7a2.31 2.31 0 0 1-2.33 2H17"></path>
-                      </svg>
-                    </button>
-                  </div>
-                </div>
-                <div class="mb-4">
-                  <p class="text-18px text-#555 mb-3">
-                    • 國立中興大學資訊管理學系<br>
-                    • 國立清華大學資訊工程碩士學位
+              <!-- 履歷上傳區域 -->
+              <div v-if="factCheckProgress === 0" class="mb-8">
+                <div class="mb-6 p-4 bg-#e8f5e8 rounded-6px">
+                  <h3 class="text-20px font-bold text-#2e7d32 mb-2">智能履歷事實查核</h3>
+                  <p class="text-16px text-#555 m-0">
+                    上傳履歷內容，我們將透過 AI 技術自動解析並查證履歷中的教育背景、工作經歷、技能和成就，提供詳細的事實查核報告。
                   </p>
-                  <div class="text-16px text-#666">
-                    <strong>建議查核方式：</strong>
-                    <ul class="ml-4 mt-2">
-                      <li>要求提供畢業證書影本</li>
-                      <li>聯繫學校註冊組確認學歷</li>
-                      <li>詢問具體的修課內容或指導教授</li>
-                    </ul>
+                </div>
+
+                <div class="bg-white p-6 rounded-8px border border-#ddd">
+                  <label class="block text-16px font-medium text-#333 mb-3">
+                    履歷內容
+                  </label>
+                  <textarea
+                    v-model="resumeInput"
+                    rows="12"
+                    class="w-full px-4 py-3 border border-#ddd rounded-6px focus:outline-none focus:ring-2 focus:ring-#2e7d32 text-14px leading-relaxed"
+                    placeholder="請貼上候選人的履歷內容，包含姓名、教育背景、工作經歷、技能和成就等資訊..."
+                  ></textarea>
+                  
+                  <!-- 錯誤訊息 -->
+                  <div v-if="factCheckError" class="mt-4 p-3 bg-red-50 border border-red-200 rounded-6px">
+                    <p class="text-red-600 text-14px m-0">{{ factCheckError }}</p>
+                  </div>
+
+                  <div class="mt-6 flex gap-4">
+                    <button
+                      :disabled="isFactChecking || !resumeInput.trim()"
+                      class="px-6 py-3 bg-#2e7d32 text-white rounded-6px hover:bg-#1b5e20 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                      @click="startFactCheck"
+                    >
+                      {{ isFactChecking ? "處理中..." : "開始事實查核" }}
+                    </button>
+                    <button
+                      v-if="factCheckResult"
+                      class="px-6 py-3 bg-#666 text-white rounded-6px hover:bg-#555 transition-colors"
+                      @click="resetFactCheck"
+                    >
+                      重新查核
+                    </button>
                   </div>
                 </div>
               </div>
               
-              <!-- 工作經歷驗證 -->
-              <div class="bg-#f8f9fa p-6 rounded-6px mb-6 border-l-4 border-l-#ff9800">
-                <div class="flex justify-between items-center mb-4">
-                  <h3 class="text-24px font-bold m-0 text-#ff9800">工作經歷驗證</h3>
-                  <div class="flex gap-3">
-                    <button
-                      class="p-3 rounded-full hover:bg-#eee transition-colors w-12 h-12"
-                      :class="{ 'bg-#fff3e0': factCheckFeedbacks.experience.verified }"
-                      @click="handleFactCheckFeedback('experience', 'verify')"
-                      title="標記為已驗證"
-                    >
-                      <svg
-                        xmlns="http://www.w3.org/2000/svg"
-                        width="22"
-                        height="22"
-                        viewBox="0 0 24 24"
-                        fill="none"
-                        stroke="currentColor"
-                        stroke-width="2"
-                        stroke-linecap="round"
-                        stroke-linejoin="round"
-                        class="text-#ff9800"
-                      >
-                        <polyline points="20 6 9 17 4 12"></polyline>
-                      </svg>
-                    </button>
-                    <button
-                      class="p-3 rounded-full hover:bg-#eee transition-colors w-12 h-12"
-                      :class="{ 'bg-#e6f7f6': factCheckFeedbacks.experience.liked }"
-                      @click="handleFactCheckFeedback('experience', 'like')"
-                    >
-                      <svg
-                        xmlns="http://www.w3.org/2000/svg"
-                        width="22"
-                        height="22"
-                        viewBox="0 0 24 24"
-                        fill="none"
-                        stroke="currentColor"
-                        stroke-width="2"
-                        stroke-linecap="round"
-                        stroke-linejoin="round"
-                        class="text-#00AFB8"
-                      >
-                        <path d="M14 9V5a3 3 0 0 0-3-3l-4 9v11h11.28a2 2 0 0 0 2-1.7l1.38-9a2 2 0 0 0-2-2.3zM7 22H4a2 2 0 0 1-2-2v-7a2 2 0 0 1 2-2h3"></path>
-                      </svg>
-                    </button>
-                    <button
-                      class="p-3 rounded-full hover:bg-#eee transition-colors w-12 h-12"
-                      :class="{ 'bg-#ffeaea': factCheckFeedbacks.experience.disliked }"
-                      @click="handleFactCheckFeedback('experience', 'dislike')"
-                    >
-                      <svg
-                        xmlns="http://www.w3.org/2000/svg"
-                        width="22"
-                        height="22"
-                        viewBox="0 0 24 24"
-                        fill="none"
-                        stroke="currentColor"
-                        stroke-width="2"
-                        stroke-linecap="round"
-                        stroke-linejoin="round"
-                        class="text-#ff5252"
-                      >
-                        <path d="M10 15v4a3 3 0 0 0 3 3l4-9V2H5.72a2 2 0 0 0-2 1.7l-1.38 9a2 2 0 0 0 2 2.3zm7-13h2.67A2.31 2.31 0 0 1 22 4v7a2.31 2.31 0 0 1-2.33 2H17"></path>
-                      </svg>
-                    </button>
+              <!-- 處理進度指示器 -->
+              <div v-if="isFactChecking || factCheckProgress > 0 && factCheckProgress < 4" class="mb-8">
+                <div class="bg-white p-6 rounded-8px border border-#ddd">
+                  <h3 class="text-18px font-bold text-#333 mb-4">事實查核進度</h3>
+                  <div class="flex items-center justify-between mb-4">
+                    <div class="flex items-center space-x-4">
+                      <div class="flex items-center">
+                        <div class="w-8 h-8 rounded-full flex items-center justify-center text-white text-12px font-bold"
+                             :class="factCheckProgress >= 1 ? 'bg-#2e7d32' : 'bg-#ddd'">
+                          1
+                        </div>
+                        <span class="ml-2 text-14px" :class="factCheckProgress >= 1 ? 'text-#2e7d32 font-medium' : 'text-#666'">
+                          履歷解析
+                        </span>
+                      </div>
+                      <div class="flex-1 h-1 bg-#ddd rounded" :class="factCheckProgress >= 2 ? 'bg-#2e7d32' : ''"></div>
+                      <div class="flex items-center">
+                        <div class="w-8 h-8 rounded-full flex items-center justify-center text-white text-12px font-bold"
+                             :class="factCheckProgress >= 2 ? 'bg-#2e7d32' : 'bg-#ddd'">
+                          2
+                        </div>
+                        <span class="ml-2 text-14px" :class="factCheckProgress >= 2 ? 'text-#2e7d32 font-medium' : 'text-#666'">
+                          資料搜尋
+                        </span>
+                      </div>
+                      <div class="flex-1 h-1 bg-#ddd rounded" :class="factCheckProgress >= 3 ? 'bg-#2e7d32' : ''"></div>
+                      <div class="flex items-center">
+                        <div class="w-8 h-8 rounded-full flex items-center justify-center text-white text-12px font-bold"
+                             :class="factCheckProgress >= 3 ? 'bg-#2e7d32' : 'bg-#ddd'">
+                          3
+                        </div>
+                        <span class="ml-2 text-14px" :class="factCheckProgress >= 3 ? 'text-#2e7d32 font-medium' : 'text-#666'">
+                          結果分析
+                        </span>
+                      </div>
+                      <div class="flex-1 h-1 bg-#ddd rounded" :class="factCheckProgress >= 4 ? 'bg-#2e7d32' : ''"></div>
+                      <div class="flex items-center">
+                        <div class="w-8 h-8 rounded-full flex items-center justify-center text-white text-12px font-bold"
+                             :class="factCheckProgress >= 4 ? 'bg-#2e7d32' : 'bg-#ddd'">
+                          4
+                        </div>
+                        <span class="ml-2 text-14px" :class="factCheckProgress >= 4 ? 'text-#2e7d32 font-medium' : 'text-#666'">
+                          完成
+                        </span>
+                      </div>
+                    </div>
                   </div>
-                </div>
-                <div class="mb-4">
-                  <p class="text-18px text-#555 mb-3">
-                    • DEF 科技公司實習經歷<br>
-                    • XYZ 資訊有限公司軟體工程師<br>
-                    • ABC 科技股份有限公司資深工程師
-                  </p>
-                  <div class="text-16px text-#666">
-                    <strong>建議查核方式：</strong>
-                    <ul class="ml-4 mt-2">
-                      <li>要求提供離職證明或在職證明</li>
-                      <li>聯繫前主管或HR確認工作內容</li>
-                      <li>詢問具體的專案細節和技術架構</li>
-                    </ul>
+                  <div v-if="isFactChecking" class="flex items-center justify-center py-4">
+                    <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-#2e7d32"></div>
+                    <span class="ml-3 text-#666">正在處理中，請稍候...</span>
                   </div>
                 </div>
               </div>
               
-              <!-- 技能聲稱驗證 -->
-              <div class="bg-#f8f9fa p-6 rounded-6px mb-6 border-l-4 border-l-#9c27b0">
-                <div class="flex justify-between items-center mb-4">
-                  <h3 class="text-24px font-bold m-0 text-#9c27b0">技能聲稱驗證</h3>
-                  <div class="flex gap-3">
-                    <button
-                      class="p-3 rounded-full hover:bg-#eee transition-colors w-12 h-12"
-                      :class="{ 'bg-#f3e5f5': factCheckFeedbacks.skills.verified }"
-                      @click="handleFactCheckFeedback('skills', 'verify')"
-                      title="標記為已驗證"
-                    >
-                      <svg
-                        xmlns="http://www.w3.org/2000/svg"
-                        width="22"
-                        height="22"
-                        viewBox="0 0 24 24"
-                        fill="none"
-                        stroke="currentColor"
-                        stroke-width="2"
-                        stroke-linecap="round"
-                        stroke-linejoin="round"
-                        class="text-#9c27b0"
-                      >
-                        <polyline points="20 6 9 17 4 12"></polyline>
-                      </svg>
-                    </button>
-                    <button
-                      class="p-3 rounded-full hover:bg-#eee transition-colors w-12 h-12"
-                      :class="{ 'bg-#e6f7f6': factCheckFeedbacks.skills.liked }"
-                      @click="handleFactCheckFeedback('skills', 'like')"
-                    >
-                      <svg
-                        xmlns="http://www.w3.org/2000/svg"
-                        width="22"
-                        height="22"
-                        viewBox="0 0 24 24"
-                        fill="none"
-                        stroke="currentColor"
-                        stroke-width="2"
-                        stroke-linecap="round"
-                        stroke-linejoin="round"
-                        class="text-#00AFB8"
-                      >
-                        <path d="M14 9V5a3 3 0 0 0-3-3l-4 9v11h11.28a2 2 0 0 0 2-1.7l1.38-9a2 2 0 0 0-2-2.3zM7 22H4a2 2 0 0 1-2-2v-7a2 2 0 0 1 2-2h3"></path>
-                      </svg>
-                    </button>
-                    <button
-                      class="p-3 rounded-full hover:bg-#eee transition-colors w-12 h-12"
-                      :class="{ 'bg-#ffeaea': factCheckFeedbacks.skills.disliked }"
-                      @click="handleFactCheckFeedback('skills', 'dislike')"
-                    >
-                      <svg
-                        xmlns="http://www.w3.org/2000/svg"
-                        width="22"
-                        height="22"
-                        viewBox="0 0 24 24"
-                        fill="none"
-                        stroke="currentColor"
-                        stroke-width="2"
-                        stroke-linecap="round"
-                        stroke-linejoin="round"
-                        class="text-#ff5252"
-                      >
-                        <path d="M10 15v4a3 3 0 0 0 3 3l4-9V2H5.72a2 2 0 0 0-2 1.7l-1.38 9a2 2 0 0 0 2 2.3zm7-13h2.67A2.31 2.31 0 0 1 22 4v7a2.31 2.31 0 0 1-2.33 2H17"></path>
-                      </svg>
-                    </button>
+              <!-- 事實查核結果展示 -->
+              <div v-if="factCheckResult && factCheckProgress === 4" class="mb-8">
+                <!-- 總體摘要 -->
+                <div class="bg-white p-6 rounded-8px border border-#ddd mb-6">
+                  <div class="flex items-center justify-between mb-4">
+                    <h3 class="text-20px font-bold text-#333">事實查核報告</h3>
+                    <div class="flex items-center">
+                      <span class="text-14px text-#666 mr-2">總體匹配度:</span>
+                      <div class="w-16 h-16 rounded-full flex items-center justify-center text-white text-14px font-bold"
+                           :style="{ backgroundColor: getConfidenceColor(factCheckResult.fact_check_results.overall_score) }">
+                        {{ Math.round(factCheckResult.fact_check_results.overall_score * 100) }}%
+                      </div>
+                    </div>
+                  </div>
+                  <div class="text-16px text-#666 mb-4">
+                    <strong>候選人:</strong> {{ factCheckResult.candidate.name }}
+                  </div>
+                  <div class="text-16px text-#666 mb-4">
+                    {{ factCheckResult.fact_check_results.summary }}
+                  </div>
+                  
+                  <!-- 關鍵指標 -->
+                  <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mt-6">
+                    <div class="text-center p-3 bg-#f8f9fa rounded-6px">
+                      <div class="text-18px font-bold text-#2e7d32">{{ factCheckResult.extraction.queries_generated }}</div>
+                      <div class="text-12px text-#666">查詢項目</div>
+                    </div>
+                    <div class="text-center p-3 bg-#f8f9fa rounded-6px">
+                      <div class="text-18px font-bold text-#2e7d32">{{ factCheckResult.process_metadata.step2_searches.successful_queries }}</div>
+                      <div class="text-12px text-#666">成功搜尋</div>
+                    </div>
+                    <div class="text-center p-3 bg-#f8f9fa rounded-6px">
+                      <div class="text-18px font-bold text-#2e7d32">{{ factCheckResult.fact_check_results.verified_items.length }}</div>
+                      <div class="text-12px text-#666">已驗證項目</div>
+                    </div>
+                    <div class="text-center p-3 bg-#f8f9fa rounded-6px">
+                      <div class="text-18px font-bold text-#d32f2f">{{ factCheckResult.fact_check_results.red_flags.length }}</div>
+                      <div class="text-12px text-#666">可疑項目</div>
+                    </div>
                   </div>
                 </div>
-                <div class="mb-4">
-                  <p class="text-18px text-#555 mb-3">
-                    • 精通 Python、JavaScript、Java<br>
-                    • 雲端架構設計經驗<br>
-                    • 專案管理能力
-                  </p>
-                  <div class="text-16px text-#666">
-                    <strong>建議查核方式：</strong>
-                    <ul class="ml-4 mt-2">
-                      <li>現場技術測試或 coding 面試</li>
-                      <li>詢問具體的技術問題和解決方案</li>
-                      <li>要求展示或說明相關專案成果</li>
-                    </ul>
+
+                <!-- 分類結果詳情 -->
+                <div class="space-y-6">
+                  <div v-for="match in factCheckResult.fact_check_results.matches" :key="match.category" 
+                       class="bg-white p-6 rounded-8px border border-#ddd">
+                    <div class="flex items-center justify-between mb-4">
+                      <h4 class="text-18px font-bold text-#333 capitalize">
+                        {{ match.category === 'education' ? '教育背景' : 
+                            match.category === 'experience' ? '工作經歷' : 
+                            match.category === 'skills' ? '技能' : '成就' }}
+                      </h4>
+                      <div class="flex items-center space-x-3">
+                        <div class="flex items-center">
+                          <span class="text-12px text-#666 mr-2">匹配:</span>
+                          <div class="w-6 h-6 rounded-full flex items-center justify-center"
+                               :class="match.match ? 'bg-#2e7d32' : 'bg-#d32f2f'">
+                            <svg v-if="match.match" class="w-4 h-4 text-white" fill="currentColor" viewBox="0 0 20 20">
+                              <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/>
+                            </svg>
+                            <svg v-else class="w-4 h-4 text-white" fill="currentColor" viewBox="0 0 20 20">
+                              <path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd"/>
+                            </svg>
+                          </div>
+                        </div>
+                        <div class="flex items-center">
+                          <span class="text-12px text-#666 mr-2">置信度:</span>
+                          <span class="text-14px font-bold" :style="{ color: getConfidenceColor(match.confidence) }">
+                            {{ Math.round(match.confidence * 100) }}% 
+                            ({{ getConfidenceText(match.confidence) }})
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                    
+                    <div class="text-14px text-#666 mb-3">
+                      {{ match.notes }}
+                    </div>
+                    
+                    <div v-if="match.url" class="text-12px">
+                      <span class="text-#666">來源: </span>
+                      <a :href="match.url" target="_blank" class="text-#1976d2 hover:underline">
+                        {{ match.source }}
+                      </a>
+                    </div>
                   </div>
                 </div>
-              </div>
-              
-              <!-- 成就數據驗證 -->
-              <div class="bg-#f8f9fa p-6 rounded-6px mb-6 border-l-4 border-l-#e91e63">
-                <div class="flex justify-between items-center mb-4">
-                  <h3 class="text-24px font-bold m-0 text-#e91e63">成就數據驗證</h3>
-                  <div class="flex gap-3">
-                    <button
-                      class="p-3 rounded-full hover:bg-#eee transition-colors w-12 h-12"
-                      :class="{ 'bg-#fce4ec': factCheckFeedbacks.achievements.verified }"
-                      @click="handleFactCheckFeedback('achievements', 'verify')"
-                      title="標記為已驗證"
-                    >
-                      <svg
-                        xmlns="http://www.w3.org/2000/svg"
-                        width="22"
-                        height="22"
-                        viewBox="0 0 24 24"
-                        fill="none"
-                        stroke="currentColor"
-                        stroke-width="2"
-                        stroke-linecap="round"
-                        stroke-linejoin="round"
-                        class="text-#e91e63"
-                      >
-                        <polyline points="20 6 9 17 4 12"></polyline>
-                      </svg>
-                    </button>
-                    <button
-                      class="p-3 rounded-full hover:bg-#eee transition-colors w-12 h-12"
-                      :class="{ 'bg-#e6f7f6': factCheckFeedbacks.achievements.liked }"
-                      @click="handleFactCheckFeedback('achievements', 'like')"
-                    >
-                      <svg
-                        xmlns="http://www.w3.org/2000/svg"
-                        width="22"
-                        height="22"
-                        viewBox="0 0 24 24"
-                        fill="none"
-                        stroke="currentColor"
-                        stroke-width="2"
-                        stroke-linecap="round"
-                        stroke-linejoin="round"
-                        class="text-#00AFB8"
-                      >
-                        <path d="M14 9V5a3 3 0 0 0-3-3l-4 9v11h11.28a2 2 0 0 0 2-1.7l1.38-9a2 2 0 0 0-2-2.3zM7 22H4a2 2 0 0 1-2-2v-7a2 2 0 0 1 2-2h3"></path>
-                      </svg>
-                    </button>
-                    <button
-                      class="p-3 rounded-full hover:bg-#eee transition-colors w-12 h-12"
-                      :class="{ 'bg-#ffeaea': factCheckFeedbacks.achievements.disliked }"
-                      @click="handleFactCheckFeedback('achievements', 'dislike')"
-                    >
-                      <svg
-                        xmlns="http://www.w3.org/2000/svg"
-                        width="22"
-                        height="22"
-                        viewBox="0 0 24 24"
-                        fill="none"
-                        stroke="currentColor"
-                        stroke-width="2"
-                        stroke-linecap="round"
-                        stroke-linejoin="round"
-                        class="text-#ff5252"
-                      >
-                        <path d="M10 15v4a3 3 0 0 0 3 3l4-9V2H5.72a2 2 0 0 0-2 1.7l-1.38 9a2 2 0 0 0 2 2.3zm7-13h2.67A2.31 2.31 0 0 1 22 4v7a2.31 2.31 0 0 1-2.33 2H17"></path>
-                      </svg>
-                    </button>
-                  </div>
+
+                <!-- 可疑項目警告 -->
+                <div v-if="factCheckResult.fact_check_results.red_flags.length > 0" 
+                     class="bg-#fff3e0 border-l-4 border-l-#f57c00 p-4 rounded-6px mt-6">
+                  <h4 class="text-16px font-bold text-#f57c00 mb-2">需要注意的項目</h4>
+                  <ul class="text-14px text-#666 ml-4">
+                    <li v-for="flag in factCheckResult.fact_check_results.red_flags" :key="flag">
+                      {{ flag }}
+                    </li>
+                  </ul>
                 </div>
-                <div class="mb-4">
-                  <p class="text-18px text-#555 mb-3">
-                    • 提升系統可擴展性 30%<br>
-                    • 降低運營成本 40%<br>
-                    • 數位轉型平台專案成功
-                  </p>
-                  <div class="text-16px text-#666">
-                    <strong>建議查核方式：</strong>
-                    <ul class="ml-4 mt-2">
-                      <li>要求提供具體的數據報告或證明文件</li>
-                      <li>詢問計算方式和測量基準</li>
-                      <li>聯繫前同事或主管確認成果</li>
-                    </ul>
+
+                <!-- 處理資訊 -->
+                <details class="bg-#f8f9fa p-4 rounded-6px mt-6">
+                  <summary class="cursor-pointer text-14px text-#666 hover:text-#333">
+                    處理詳情
+                  </summary>
+                  <div class="mt-3 text-12px text-#666 space-y-2">
+                    <div>OpenAI Tokens 用量: {{ factCheckResult.process_metadata.total_cost_estimate.openai_tokens }}</div>
+                    <div>Perplexity Tokens 用量: {{ factCheckResult.process_metadata.total_cost_estimate.perplexity_tokens }}</div>
+                    <div>處理時間: {{ new Date(factCheckResult.process_metadata.processing_time).toLocaleString() }}</div>
                   </div>
+                </details>
+
+                <!-- 重新查核按鈕 -->
+                <div class="flex justify-center mt-6">
+                  <button
+                    class="px-6 py-3 bg-#666 text-white rounded-6px hover:bg-#555 transition-colors"
+                    @click="resetFactCheck"
+                  >
+                    重新查核
+                  </button>
                 </div>
               </div>
             </div>
