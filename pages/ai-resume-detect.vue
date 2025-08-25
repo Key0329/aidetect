@@ -1,7 +1,29 @@
 <script setup>
-import { ref } from "vue";
+import { ref, computed, onMounted, onUnmounted } from "vue";
 
 const showAIDetectDrawer = ref(false);
+const sidebarWidth = ref(400); // 側邊欄寬度，將在 onMounted 中設定為螢幕三分之一
+const isResizing = ref(false);
+
+// 初始化和響應式視窗大小處理
+const initSidebarWidth = () => {
+  if (typeof window !== 'undefined') {
+    const windowWidth = window.innerWidth;
+    sidebarWidth.value = Math.round(windowWidth / 3);
+  }
+};
+
+const handleWindowResize = () => {
+  if (!isResizing.value && typeof window !== 'undefined') {
+    const windowWidth = window.innerWidth;
+    const newWidth = Math.round(windowWidth / 3);
+    
+    // 限制範圍：最小 300px，最大 800px
+    if (newWidth >= 300 && newWidth <= 800) {
+      sidebarWidth.value = newWidth;
+    }
+  }
+};
 const isLoading = ref(false);
 const isInterviewQuestionsExpanded = ref(false);
 const highlightedElement = ref(null);
@@ -193,6 +215,59 @@ const resetFactCheck = () => {
   isFactChecking.value = false;
 };
 
+// 拖曳調整側邊欄寬度功能
+const startResize = (event) => {
+  isResizing.value = true;
+  document.addEventListener('mousemove', handleResize);
+  document.addEventListener('mouseup', stopResize);
+  event.preventDefault();
+};
+
+const handleResize = (event) => {
+  if (!isResizing.value) return;
+  
+  const windowWidth = window.innerWidth;
+  const mouseX = event.clientX;
+  const newWidth = windowWidth - mouseX;
+  
+  // 限制寬度範圍：最小 300px，最大螢幕寬度的一半
+  const minWidth = 300;
+  const maxWidth = Math.min(800, Math.round(windowWidth / 2));
+  
+  if (newWidth >= minWidth && newWidth <= maxWidth) {
+    sidebarWidth.value = newWidth;
+  }
+};
+
+const stopResize = () => {
+  isResizing.value = false;
+  document.removeEventListener('mousemove', handleResize);
+  document.removeEventListener('mouseup', stopResize);
+};
+
+// 計算側邊欄樣式
+const sidebarStyle = computed(() => {
+  const isOpen = showAIDetectDrawer.value;
+  const currentWidth = isOpen ? Math.max(sidebarWidth.value, 300) : 0; // 直接在這裡處理最小寬度
+  
+  return {
+    width: `${currentWidth}px`,
+    minWidth: isOpen ? '300px' : '0px',
+    transition: isResizing.value ? 'none' : 'width 0.3s ease-out, min-width 0.3s ease-out'
+  };
+});
+
+// 計算主內容區域樣式
+const mainContentStyle = computed(() => {
+  const isOpen = showAIDetectDrawer.value;
+  const currentWidth = isOpen ? Math.max(sidebarWidth.value, 300) : 0;
+  
+  return {
+    marginRight: `${currentWidth}px`,
+    transition: isResizing.value ? 'none' : 'margin-right 0.3s ease-out'
+  };
+});
+
 // 獲取置信度顏色
 const getConfidenceColor = (confidence) => {
   if (confidence >= 0.9) return "#2e7d32"; // 綠色 - 非常確信
@@ -335,10 +410,20 @@ const downloadQuestions = () => {
   document.body.removeChild(link);
   URL.revokeObjectURL(url);
 };
+
+// 生命週期 hooks
+onMounted(() => {
+  initSidebarWidth();
+  window.addEventListener('resize', handleWindowResize);
+});
+
+onUnmounted(() => {
+  window.removeEventListener('resize', handleWindowResize);
+});
 </script>
 
 <template>
-  <div class="resume bg-#f3f3f3 flex flex-col min-h-screen">
+  <div class="resume bg-#f3f3f3 flex flex-col min-h-screen relative">
     <header>
       <div
         class="headerBlack bg-#292929 h-30px flex justify-start items-center"
@@ -446,7 +531,7 @@ const downloadQuestions = () => {
         </li>
       </ul>
     </nav>
-    <main class="bg-#f3f3f3 py-10 px-6 max-w-1320px mx-auto">
+    <main class="bg-#f3f3f3 py-10 px-6 max-w-1320px mx-auto" :style="mainContentStyle">
       <div class="pt-5 px-3 pb-20">
         <h2 class="m-0 text-start font-400 h-12 border-b-dashed border-b-#ddd">
           <span>軟體工程師</span>
@@ -1038,23 +1123,29 @@ const downloadQuestions = () => {
       </div>
     </main>
 
-    <!-- AI檢測 Side Drawer (無遮罩層) -->
+    <!-- AI檢測 Push Sidebar -->
     <div
-      class="side-drawer fixed top-0 right-0 h-full bg-#40C7CD z-50 w-800px transform transition-transform duration-300 ease-in-out shadow-lg text-start"
-      :class="showAIDetectDrawer ? 'translate-x-0' : 'translate-x-full'"
+      class="push-sidebar fixed top-0 right-0 h-full bg-#40C7CD z-50 shadow-lg text-start overflow-hidden"
+      :style="sidebarStyle"
     >
+      <!-- 拖曳調整手柄 -->
       <div
-        class="drawer-header border-b-solid border-b-1px border-b-#292929 px-5 py-3 flex justify-between items-center"
+        class="resize-handle absolute left-0 top-0 h-full w-1 bg-#292929 cursor-col-resize hover:bg-#555 transition-colors"
+        @mousedown="startResize"
+        :style="{ opacity: showAIDetectDrawer ? 1 : 0 }"
+      ></div>
+      <div
+        class="drawer-header border-b-solid border-b-1px border-b-#292929 px-5 py-3 flex justify-between items-center ml-1"
       >
-        <h2 class="text-24px font-bold m-0 text-#292929">AI 檢測結果</h2>
+        <h2 class="text-24px font-bold m-0 text-#292929 truncate">AI 檢測結果</h2>
         <button
-          class="text-32px hover:bg-#f3f3f3 rounded-full w-10 h-10 flex items-center justify-center"
+          class="text-32px hover:bg-#f3f3f3 rounded-full w-10 h-10 flex items-center justify-center flex-shrink-0"
           @click="closeAIDetectDrawer"
         >
           &times;
         </button>
       </div>
-      <div class="drawer-body p-6 overflow-y-auto h-[calc(100%-78px)]">
+      <div class="drawer-body p-6 overflow-y-auto h-[calc(100%-78px)] ml-1">
         <!-- Skeleton loading -->
         <div v-if="isLoading" class="skeleton-container">
           <div class="flex items-center mb-8">
@@ -2435,9 +2526,27 @@ const downloadQuestions = () => {
   backdrop-filter: blur(1px);
 }
 
-.side-drawer {
+/* 推動式側邊欄樣式 */
+.push-sidebar {
   overscroll-behavior: contain;
   border-left: 1px solid #eee;
+}
+
+.resize-handle {
+  user-select: none;
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+}
+
+.resize-handle:hover {
+  background-color: #555 !important;
+}
+
+/* 確保主內容在側邊欄動畫期間不會跳動 */
+main {
+  box-sizing: border-box;
+  min-width: 0;
 }
 
 /* 點擊提示樣式 */
