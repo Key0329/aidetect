@@ -5,23 +5,24 @@ const showAIDetectDrawer = ref(false);
 const sidebarWidth = ref(400); // 側邊欄寬度，將在 onMounted 中設定為螢幕三分之一
 const isResizing = ref(false);
 
+// 響應式側邊欄寬度計算
+const getResponsiveSidebarWidth = () => {
+  if (typeof window === 'undefined') return 400;
+  
+  const width = window.innerWidth;
+  if (width < 640) return Math.min(width * 0.95, 380); // 手機：95% 或最大 380px
+  if (width < 1024) return Math.min(width * 0.6, 500); // 平板：60% 或最大 500px
+  return Math.min(width * 0.33, 600); // 桌面：33% 或最大 600px
+};
+
 // 初始化和響應式視窗大小處理
 const initSidebarWidth = () => {
-  if (typeof window !== 'undefined') {
-    const windowWidth = window.innerWidth;
-    sidebarWidth.value = Math.round(windowWidth / 3);
-  }
+  sidebarWidth.value = getResponsiveSidebarWidth();
 };
 
 const handleWindowResize = () => {
-  if (!isResizing.value && typeof window !== 'undefined') {
-    const windowWidth = window.innerWidth;
-    const newWidth = Math.round(windowWidth / 3);
-    
-    // 限制範圍：最小 300px，最大 800px
-    if (newWidth >= 300 && newWidth <= 800) {
-      sidebarWidth.value = newWidth;
-    }
+  if (!isResizing.value) {
+    sidebarWidth.value = getResponsiveSidebarWidth();
   }
 };
 const isLoading = ref(false);
@@ -30,15 +31,13 @@ const highlightedElement = ref(null);
 const isCopied = ref(false);
 
 // 新增 tab 切換控制變數
-const activeTab = ref("description"); // 可選值: 'description', 'ai', 'fact-check', 'chat'
+const activeTab = ref("description"); // 可選值: 'description', 'ai', 'fact-check', 'questions', 'chat'
 
 // 新增狀態管理變數
-const showQuestionGuide = ref(false);
 const showQuestionPrompt = ref(true); // 新增控制問題提示區域顯示的變數
 const needQuestions = ref(false);
 const isQuestionsLoading = ref(false);
 const showDenyTip = ref(false);
-const questionsRef = ref(null); // 添加對問題區域的引用
 
 // 新增反饋狀態追蹤
 const feedbacks = ref({
@@ -326,7 +325,6 @@ const scrollToSection = (sectionId, targetText) => {
 // 新增重置問題區塊的函數
 const resetQuestionSection = () => {
   needQuestions.value = false;
-  showQuestionGuide.value = false;
   showQuestionPrompt.value = true;
   isInterviewQuestionsExpanded.value = false;
   showDenyTip.value = false;
@@ -343,19 +341,11 @@ const handleQuestionsRequest = (need) => {
       // 模擬載入時間
       setTimeout(() => {
         isQuestionsLoading.value = false;
-        showQuestionGuide.value = true;
         isInterviewQuestionsExpanded.value = true;
         showQuestionPrompt.value = false; // 隱藏問題提示區域
-
-        // 等待DOM更新後滾動到問題區塊
-        setTimeout(() => {
-          if (questionsRef.value) {
-            questionsRef.value.scrollIntoView({
-              behavior: "smooth",
-              block: "start",
-            });
-          }
-        }, 100);
+        
+        // 直接切換到建議提問 tab
+        activeTab.value = 'questions';
       }, 2000);
     }, 0);
   } else {
@@ -1364,47 +1354,58 @@ onUnmounted(() => {
             </div>
           </div>
           <!-- 內文 -->
-          <div class="bg-white p-6 rounded-6px mb-10">
-            <div class="flex mb-6 border-b-solid border-b-1px border-b-#eee">
+          <div class="bg-white p-4 md:p-6 rounded-8px mb-10 shadow-sm">
+            <div class="modern-tabs flex mb-6 border-b-solid border-b-1px border-b-grayscale-200 overflow-x-auto scrollbar-hide">
               <div
-                class="py-3 px-6 cursor-pointer text-22px"
+                class="tab-item py-3 px-4 md:px-6 cursor-pointer text-16 md:text-18 lg:text-20 whitespace-nowrap transition-all duration-200 relative"
                 :class="
                   activeTab === 'description'
-                    ? 'text-#00afb8 border-b-solid border-b-3 border-b-#00afb8'
-                    : 'text-#555'
+                    ? 'text-secondary-200 border-b-solid border-b-2 border-b-secondary-200 font-600'
+                    : 'text-grayscale-500 hover:text-secondary-200 hover:bg-grayscale-100'
                 "
                 @click="activeTab = 'description'"
               >
                 學經歷地圖
               </div>
               <div
-                class="py-3 px-6 cursor-pointer text-22px"
+                class="tab-item py-3 px-4 md:px-6 cursor-pointer text-16 md:text-18 lg:text-20 whitespace-nowrap transition-all duration-200 relative"
                 :class="
                   activeTab === 'ai'
-                    ? 'text-#00afb8 border-b-solid border-b-3 border-b-#00afb8'
-                    : 'text-#555'
+                    ? 'text-secondary-200 border-b-solid border-b-2 border-b-secondary-200 font-600'
+                    : 'text-grayscale-500 hover:text-secondary-200 hover:bg-grayscale-100'
                 "
                 @click="activeTab = 'ai'"
               >
                 AI 痕跡檢測
               </div>
               <div
-                class="py-3 px-6 cursor-pointer text-22px"
+                class="tab-item py-3 px-4 md:px-6 cursor-pointer text-16 md:text-18 lg:text-20 whitespace-nowrap transition-all duration-200 relative"
                 :class="
                   activeTab === 'fact-check'
-                    ? 'text-#00afb8 border-b-solid border-b-3 border-b-#00afb8'
-                    : 'text-#555'
+                    ? 'text-secondary-200 border-b-solid border-b-2 border-b-secondary-200 font-600'
+                    : 'text-grayscale-500 hover:text-secondary-200 hover:bg-grayscale-100'
                 "
                 @click="activeTab = 'fact-check'"
               >
                 事實查核
               </div>
               <div
-                class="py-3 px-6 cursor-pointer text-22px"
+                class="tab-item py-3 px-4 md:px-6 cursor-pointer text-16 md:text-18 lg:text-20 whitespace-nowrap transition-all duration-200 relative"
+                :class="
+                  activeTab === 'questions'
+                    ? 'text-secondary-200 border-b-solid border-b-2 border-b-secondary-200 font-600'
+                    : 'text-grayscale-500 hover:text-secondary-200 hover:bg-grayscale-100'
+                "
+                @click="activeTab = 'questions'"
+              >
+                建議提問
+              </div>
+              <div
+                class="tab-item py-3 px-4 md:px-6 cursor-pointer text-16 md:text-18 lg:text-20 whitespace-nowrap transition-all duration-200 relative"
                 :class="
                   activeTab === 'chat'
-                    ? 'text-#00afb8 border-b-solid border-b-3 border-b-#00afb8'
-                    : 'text-#555'
+                    ? 'text-secondary-200 border-b-solid border-b-2 border-b-secondary-200 font-600'
+                    : 'text-grayscale-500 hover:text-secondary-200 hover:bg-grayscale-100'
                 "
                 @click="activeTab = 'chat'"
               >
@@ -1413,20 +1414,20 @@ onUnmounted(() => {
             </div>
 
 
-            <div v-show="activeTab === 'description'" class="mb-8">
-              <div class="w-full mx-auto">
+            <div v-show="activeTab === 'description'" class="tab-content">
+              <div class="w-full mx-auto max-w-4xl">
                 <img
                   src="@/assets/images/ai/roadmap.jpg"
                   alt="職涯地圖"
-                  class="w-full object-cover"
+                  class="w-full object-cover rounded-6px shadow-sm"
                 />
               </div>
             </div>
 
             <!-- 分類卡片區域 -->
-            <div v-show="activeTab === 'ai'">
+            <div v-show="activeTab === 'ai'" class="tab-content space-y-6">
               <!-- 卡片1：經歷跳躍或邏輯不通 -->
-              <div class="bg-#fff8e1 p-6 rounded-6px mb-6">
+              <div class="bg-primary-500 p-4 md:p-6 rounded-8px shadow-sm border border-primary-400">
                 <div class="flex justify-between items-center mb-4">
                   <h3 class="text-24px font-bold m-0">經歷跳躍或邏輯不通</h3>
                   <div class="flex justify-end">
@@ -1569,7 +1570,7 @@ onUnmounted(() => {
               <div class="border-solid border-b-2 border-#eee my-5"></div>
 
               <!-- 卡片2：堆砌熱門關鍵字但缺乏上下文 -->
-              <div class="bg-#fff8e1 p-6 rounded-6px mb-6">
+              <div class="bg-primary-500 p-4 md:p-6 rounded-8px shadow-sm border border-primary-400">
                 <div class="flex justify-between items-center mb-4">
                   <h3 class="text-24px font-bold m-0">
                     堆砌熱門關鍵字但缺乏上下文
@@ -1869,50 +1870,6 @@ onUnmounted(() => {
                         </div>
                       </div>
 
-                      <div class="text-20px leading-24px text-#555 mt-0">
-                        建議提問：
-                        <div
-                          class="p-4 bg-#f4eff9 rounded-8px mt-2 border-l-4 border-l-#00afb8 relative group cursor-pointer hover:bg-#e6daf2 transition-colors shadow-sm"
-                          @click="
-                            copyToClipboard(
-                              '面試提問建議：\n\n您可以請求求職者分享關於技術實踐的具體細節，例如詢問一個使用AWS、Docker和Kubernetes的實際項目經驗，以及求職者在其中負責的具體部分。\n\n關於效能優化，可以請求分享如何縮短API響應時間的具體重構方法，以及如何識別性能瓶頸和量化成效。這樣的對話能幫助您更深入了解求職者的實際技術能力和解決問題的方法。'
-                            )
-                          "
-                        >
-                          <div
-                            class="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity duration-200"
-                          >
-                            <svg
-                              xmlns="http://www.w3.org/2000/svg"
-                              width="16"
-                              height="16"
-                              viewBox="0 0 24 24"
-                              fill="none"
-                              stroke="#00AFB8"
-                              stroke-width="2"
-                              stroke-linecap="round"
-                              stroke-linejoin="round"
-                            >
-                              <rect
-                                x="9"
-                                y="9"
-                                width="13"
-                                height="13"
-                                rx="2"
-                                ry="2"
-                              ></rect>
-                              <path
-                                d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"
-                              ></path>
-                            </svg>
-                          </div>
-                          <div class="font-normal">
-                            <p class="m-0">
-                              您可以引導求職者分享雲端與DevOps的實際項目細節，包括如何架構自動化部署流程；並請其說明API效能優化的具體重構方法和如何識別性能瓶頸。這類具體技術問題能幫助評估求職者解決實際問題的能力。
-                            </p>
-                          </div>
-                        </div>
-                      </div>
                     </div>
                   </div>
                 </div>
@@ -2204,7 +2161,7 @@ onUnmounted(() => {
             </div>
             
             <!-- 事實查核內容區域 -->
-            <div v-show="activeTab === 'fact-check'">
+            <div v-show="activeTab === 'fact-check'" class="tab-content">
               <!-- 履歷上傳區域 -->
               <div v-if="factCheckProgress === 0" class="mb-8">
                 <div class="mb-6 p-4 bg-#e8f5e8 rounded-6px">
@@ -2486,194 +2443,182 @@ onUnmounted(() => {
             </div>
           </div>
 
-          <!-- 面試建議問題 -->
-          <div
-            v-if="showQuestionGuide"
-            class="my-10 border-t-2 border-t-dashed border-#ddd"
-          ></div>
 
-          <div
-            v-if="showQuestionGuide"
-            ref="questionsRef"
-            class="bg-#f9f4ff p-6 rounded-8px mb-10 border-1 border-solid border-#e0e0e0 shadow-md"
-          >
-            <div
-              class="flex justify-between items-center cursor-pointer"
-              @click="toggleInterviewQuestions"
-            >
-              <div class="flex items-center">
-                <h3 class="text-24px font-bold my-0 text-#6a3ea1">
-                  建議問題範本
-                </h3>
-                <!-- 新增重置按鈕 -->
-                <button
-                  class="py-2 px-4 mr-5 text-#555 border-none rounded-6px cursor-pointer transition-colors text-18px flex items-center"
-                  @click.stop="resetQuestionSection"
-                >
-                  <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    width="18"
-                    height="18"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    stroke-width="2"
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                    class="mr-2"
+          
+          <!-- 建議提問內容區域 -->
+          <div v-show="activeTab === 'questions'" class="tab-content">
+            <div class="mb-6 p-4 bg-#f9f4ff rounded-6px">
+              <h3 class="text-20px font-bold text-#6a3ea1 mb-2">建議面試問題</h3>
+              <p class="text-16px text-#555 m-0">
+                根據履歷內容生成專業的面試問題，幫助您深入了解候選人的能力和經驗。
+              </p>
+            </div>
+
+            <!-- 建議問題範本區域 -->
+            <div class="bg-white p-6 rounded-8px mb-10 border-1 border-solid border-#e0e0e0 shadow-md">
+              <div
+                class="flex justify-between items-center cursor-pointer"
+                @click="toggleInterviewQuestions"
+              >
+                <div class="flex items-center">
+                  <h3 class="text-24px font-bold my-0 text-#6a3ea1">
+                    建議問題範本
+                  </h3>
+                  <!-- 重置按鈕 -->
+                  <button
+                    class="py-2 px-4 mr-5 text-#555 border-none rounded-6px cursor-pointer transition-colors text-18px flex items-center"
+                    @click.stop="resetQuestionSection"
                   >
-                    <path
-                      d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"
-                    ></path>
-                    <path d="M3 3v5h5"></path>
-                  </svg>
-                </button>
-              </div>
-              <div class="flex items-center">
-                <div
-                  class="transform transition-transform duration-300"
-                  :class="isInterviewQuestionsExpanded ? 'rotate-180' : ''"
-                >
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      width="18"
+                      height="18"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      stroke-width="2"
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      class="mr-2"
+                    >
+                      <polyline points="1 4 1 10 7 10"></polyline>
+                      <path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"></path>
+                    </svg>
+                    重置
+                  </button>
+                </div>
+                <div>
                   <svg
                     xmlns="http://www.w3.org/2000/svg"
-                    width="20"
-                    height="20"
+                    width="24"
+                    height="24"
                     viewBox="0 0 24 24"
                     fill="none"
                     stroke="currentColor"
                     stroke-width="2"
                     stroke-linecap="round"
                     stroke-linejoin="round"
+                    class="transform transition-transform"
+                    :class="{ 'rotate-180': isInterviewQuestionsExpanded }"
                   >
                     <polyline points="6 9 12 15 18 9"></polyline>
                   </svg>
                 </div>
               </div>
-            </div>
 
-            <div
-              class="interview-questions-container"
-              :class="{ expanded: isInterviewQuestionsExpanded }"
-              style="background-color: #f9f4ff"
-            >
-              <div class="interview-questions-content">
-                <template v-if="isInterviewQuestionsExpanded">
-                  <p class="text-20px leading-28px mb-5 text-#333 pb-3">
-                    這是我的建議問題，需要我幫忙用訊息詢問求職者，或是幫您下載問題在面試中詢問嗎？
-                  </p>
-
-                  <div
-                    class="p-6 bg-#f4eff9 rounded-8px mb-5 border-l-4 border-l-#6a3ea1 relative group cursor-pointer hover:bg-#e6daf2 transition-colors shadow-sm"
-                    @click="
-                      copyToClipboard(
-                        '李先生您好，感謝您應徵我們的職位！\n\n我們對您的履歷很有興趣，希望您能先協助回覆以下幾個問題，幫助我們更了解您的專業背景：\n\n1. 您在履歷中提到在ABC科技時提升系統可擴展性30%，能非簡要說明當時的系統架構以及您採取了哪些具體措施來實現這個改善？\n\n2. 您列出精通多種技術如Python、JavaScript和Java等，能否分享一個您最熟悉的技術棧，以及一個您使用這些技術解決的最具挑戰性問題？\n\n3. 關於數位轉型平台專案，您提到降低了40%的運營成本，這個數據是如何計算的？過程中遇到了哪些主要困難，您是如何解決的？\n\n感謝您的配合！您的回覆將幫助我們更好地準備面試內容。期待您的回音，也期待不久後與您見面交流。'
-                      )
-                    "
-                  >
-                    <div
-                      class="absolute top-3 right-3 opacity-0 group-hover:opacity-100 transition-opacity duration-200"
-                    >
-                      <svg
-                        xmlns="http://www.w3.org/2000/svg"
-                        width="18"
-                        height="18"
-                        viewBox="0 0 24 24"
-                        fill="none"
-                        stroke="#00AFB8"
-                        stroke-width="2"
-                        stroke-linecap="round"
-                        stroke-linejoin="round"
-                      >
-                        <rect
-                          x="9"
-                          y="9"
-                          width="13"
-                          height="13"
-                          rx="2"
-                          ry="2"
-                        ></rect>
-                        <path
-                          d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"
-                        ></path>
-                      </svg>
-                    </div>
-                    <p
-                      class="text-19px leading-28px pl-5 pr-5 border-l-2 border-transparent font-normal"
-                    >
-                      李先生您好，感謝您應徵我們的職位！
-                      <br /><br />
-                      我們對您的履歷很有興趣，希望您能先協助回覆以下幾個問題，幫助我們更了解您的專業背景：
-                      <br /><br />
-                      1.
-                      您在履歷中提到在ABC科技時提升系統可擴展性30%，能否簡要說明當時的系統架構以及您採取了哪些具體措施來實現這個改善？
-                      <br /><br />
-                      2.
-                      您列出精通多種技術如Python、JavaScript和Java等，能否分享一個您最熟悉的技術棧，以及一個您使用這些技術解決的最具挑戰性問題？
-                      <br /><br />
-                      3.
-                      關於數位轉型平台專案，您提到降低了40%的運營成本，這個數據是如何計算的？過程中遇到了哪些主要困難，您是如何解決的？
-                      <br /><br />
-                      感謝您的配合！您的回覆將幫助我們更好地準備面試內容。期待您的回音，也期待不久後與您見面交流。
+              <!-- 可展開的問題內容 -->
+              <template v-if="isInterviewQuestionsExpanded">
+                <div class="mt-6 p-6 bg-#f5f5f5 rounded-6px">
+                  <h4 class="text-20px font-bold mb-4 text-#333">
+                    技術深度問題
+                  </h4>
+                  <div class="space-y-4 text-16px text-#666 leading-28px">
+                    <p class="mb-4">
+                      <strong>1. 具體實作經驗：</strong><br />
+                      請詳細說明您在ABC科技時如何實現40%運營成本降低？能否分享具體的技術方案和實施過程？
+                    </p>
+                    <p class="mb-4">
+                      <strong>2. 技術選型能力：</strong><br />
+                      在全端開發中，您如何處理前後端的技術選型？請舉例說明您的決策過程和考量因素。
+                    </p>
+                    <p class="mb-4">
+                      <strong>3. 系統架構設計：</strong><br />
+                      請描述您設計過最複雜的系統架構，包括技術棧選擇、擴展性考慮和性能優化策略。
                     </p>
                   </div>
-                  <!-- 添加按鈕區域 -->
-                  <div
-                    class="flex gap-6 justify-center mt-8 pt-5 border-t-1 border-#eee"
-                  >
-                    <router-link
-                      to="/bc"
-                      class="py-4 px-10 text-20px bg-#6a3ea1 text-white border-none rounded-8px cursor-pointer hover:bg-#522e80 transition-colors flex items-center font-bold shadow-md"
-                    >
-                      <svg
-                        xmlns="http://www.w3.org/2000/svg"
-                        width="20"
-                        height="20"
-                        viewBox="0 0 24 24"
-                        fill="none"
-                        stroke="currentColor"
-                        stroke-width="2"
-                        stroke-linecap="round"
-                        stroke-linejoin="round"
-                        class="mr-3"
-                      >
-                        <path
-                          d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"
-                        ></path>
-                      </svg>
-                      問問求職者
-                    </router-link>
-                    <button
-                      class="py-4 px-10 text-20px bg-transparent border-solid border-2 border-#6a3ea1 text-#6a3ea1 rounded-8px cursor-pointer hover:bg-#6a3ea1 hover:text-white transition-colors flex items-center font-bold"
-                      @click="downloadQuestions"
-                    >
-                      <svg
-                        xmlns="http://www.w3.org/2000/svg"
-                        width="20"
-                        height="20"
-                        viewBox="0 0 24 24"
-                        fill="none"
-                        stroke="currentColor"
-                        stroke-width="2"
-                        stroke-linecap="round"
-                        stroke-linejoin="round"
-                        class="mr-3"
-                      >
-                        <path
-                          d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"
-                        ></path>
-                        <polyline points="7 10 12 15 17 10"></polyline>
-                        <line x1="12" y1="15" x2="12" y2="3"></line>
-                      </svg>
-                      下載問題範本
-                    </button>
+
+                  <h4 class="text-20px font-bold mb-4 mt-8 text-#333">
+                    團隊協作問題
+                  </h4>
+                  <div class="space-y-4 text-16px text-#666 leading-28px">
+                    <p class="mb-4">
+                      <strong>4. 領導經驗：</strong><br />
+                      請分享一個您領導團隊解決技術難題的經驗，包括遇到的挑戰和解決方案。
+                    </p>
+                    <p class="mb-4">
+                      <strong>5. 溝通協調：</strong><br />
+                      如何與非技術團隊成員（如產品經理、設計師）溝通複雜的技術問題？
+                    </p>
+                    <p class="mb-4">
+                      <strong>6. 知識分享：</strong><br />
+                      您如何幫助團隊成員提升技術能力？有沒有建立過技術分享或培訓機制？
+                    </p>
                   </div>
-                </template>
-              </div>
+
+                  <h4 class="text-20px font-bold mb-4 mt-8 text-#333">
+                    職涯發展問題
+                  </h4>
+                  <div class="space-y-4 text-16px text-#666 leading-28px">
+                    <p class="mb-4">
+                      <strong>7. 職業規劃：</strong><br />
+                      您期待在我們公司獲得什麼樣的成長機會？未來3-5年的職業目標是什麼？
+                    </p>
+                    <p class="mb-4">
+                      <strong>8. 挑戰認知：</strong><br />
+                      對於這個職位，您認為最大的挑戰是什麼？您會如何應對？
+                    </p>
+                    <p class="mb-4">
+                      <strong>9. 學習能力：</strong><br />
+                      面對新技術或不熟悉的領域，您的學習方法是什麼？能否舉例說明？
+                    </p>
+                  </div>
+                </div>
+
+                <!-- 按鈕區域 -->
+                <div class="flex gap-6 justify-center mt-8 pt-5 border-t-1 border-#eee">
+                  <router-link
+                    to="/bc"
+                    class="py-4 px-10 text-20px bg-#6a3ea1 text-white border-none rounded-8px cursor-pointer hover:bg-#522e80 transition-colors flex items-center font-bold shadow-md"
+                  >
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      width="20"
+                      height="20"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      stroke-width="2"
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      class="mr-3"
+                    >
+                      <path
+                        d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"
+                      ></path>
+                    </svg>
+                    問問求職者
+                  </router-link>
+                  <button
+                    class="py-4 px-10 text-20px bg-transparent border-solid border-2 border-#6a3ea1 text-#6a3ea1 rounded-8px cursor-pointer hover:bg-#6a3ea1 hover:text-white transition-colors flex items-center font-bold"
+                    @click="downloadQuestions"
+                  >
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      width="20"
+                      height="20"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      stroke-width="2"
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      class="mr-3"
+                    >
+                      <path
+                        d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"
+                      ></path>
+                      <polyline points="7 10 12 15 17 10"></polyline>
+                      <line x1="12" y1="15" x2="12" y2="3"></line>
+                    </svg>
+                    下載問題範本
+                  </button>
+                </div>
+              </template>
             </div>
           </div>
           
           <!-- AI 聊天室內容區域 -->
-          <div v-show="activeTab === 'chat'">
+          <div v-show="activeTab === 'chat'" class="tab-content">
             <div class="mb-6 p-4 bg-#e8f5ff rounded-6px">
               <h3 class="text-20px font-bold text-#1976d2 mb-2">AI 人資助手</h3>
               <p class="text-16px text-#555 m-0">
@@ -3032,5 +2977,55 @@ main {
 
 .animate-spin {
   animation: animate-spin 1s linear infinite;
+}
+
+/* 現代化 Tab 樣式 */
+.modern-tabs {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+  
+  &::-webkit-scrollbar {
+    display: none;
+  }
+}
+
+.tab-item {
+  border-radius: 6px 6px 0 0;
+  position: relative;
+  
+  &:hover {
+    transform: translateY(-1px);
+  }
+  
+  &:active {
+    transform: translateY(0);
+  }
+}
+
+/* Tab 內容區域樣式 */
+.tab-content {
+  animation: fadeIn 0.3s ease-in-out;
+  min-height: 200px;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* 隱藏滾動條 */
+.scrollbar-hide {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+  
+  &::-webkit-scrollbar {
+    display: none;
+  }
 }
 </style>
