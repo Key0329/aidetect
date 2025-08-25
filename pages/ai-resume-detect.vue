@@ -30,7 +30,7 @@ const highlightedElement = ref(null);
 const isCopied = ref(false);
 
 // 新增 tab 切換控制變數
-const activeTab = ref("condition"); // 可選值: 'condition', 'description', 'ai', 'fact-check'
+const activeTab = ref("description"); // 可選值: 'description', 'ai', 'fact-check', 'chat'
 
 // 新增狀態管理變數
 const showQuestionGuide = ref(false);
@@ -94,6 +94,11 @@ const isFactChecking = ref(false);
 const factCheckProgress = ref(0); // 0: 未開始, 1: 解析中, 2: 搜尋中, 3: 分析中, 4: 完成
 const factCheckResult = ref(null);
 const factCheckError = ref("");
+
+// AI 聊天室狀態管理
+const chatMessages = ref([]);
+const chatInput = ref("");
+const isChatLoading = ref(false);
 
 // // 追蹤已點擊過的項目
 // const clickedItems = ref({
@@ -409,6 +414,170 @@ const downloadQuestions = () => {
   // 清理
   document.body.removeChild(link);
   URL.revokeObjectURL(url);
+};
+
+// 預設回應內容
+const getPresetResponse = (message) => {
+  const lowerMessage = message.toLowerCase();
+  
+  // 快捷選項的預設回應
+  if (message.includes('分析這份履歷的優缺點')) {
+    return `根據這份履歷，我看到以下分析：
+
+✅ 優點：
+• 擁有豐富的技術經驗，從實習到資深工程師的完整職涯發展
+• 學歷背景扎實，從學士到碩士都是相關科系
+• 具備全端開發能力和雲端架構經驗
+• 有具體的成果數據（如降低40%運營成本）
+
+⚠️ 需要注意：
+• 可以進一步了解團隊領導經驗的具體細節
+• 建議詢問對新技術的學習能力和適應性
+• 可以確認離職原因和職涯規劃
+
+整體來說，這是一份相當優質的履歷，建議安排面試深入了解。`;
+  }
+  
+  if (message.includes('建議適合的面試問題')) {
+    return `根據履歷內容，我建議以下面試問題：
+
+🔸 技術深度：
+• 請詳細說明您在ABC科技如何實現40%運營成本降低？
+• 在全端開發中，您如何處理前後端的技術選型？
+
+🔸 團隊協作：
+• 請分享一個您領導團隊解決技術難題的經驗
+• 如何與非技術團隊成員溝通複雜的技術問題？
+
+🔸 職涯發展：
+• 您期待在我們公司獲得什麼樣的成長機會？
+• 對於這個職位，您認為最大的挑戰是什麼？
+
+這些問題可以幫您更全面地評估候選人。`;
+  }
+  
+  if (message.includes('評估候選人的適合度')) {
+    return `綜合評估這位候選人的適合度：
+
+🎯 技術匹配度：90%
+• 技術棧與職位需求高度吻合
+• 有實際的專案經驗和成果
+
+🎯 經驗匹配度：85%
+• 10年+經驗符合資深職位要求
+• 有從基層到管理的完整歷練
+
+🎯 文化契合度：75%
+• 需要面試確認價值觀和工作風格
+• 學習態度和團隊協作需進一步了解
+
+🎯 整體評分：83%
+建議優先安排面試，這位候選人值得深入交流。`;
+  }
+  
+  if (message.includes('薪資談判建議')) {
+    return `薪資談判建議：
+
+💡 市場行情參考：
+• 10年+ 資深工程師：年薪 120-180萬
+• 有管理經驗加成：+15-25%
+• 特殊技術領域：+10-20%
+
+💡 談判策略：
+• 先了解對方期待薪資範圍
+• 強調公司發展前景和學習機會
+• 可提供績效獎金或股票選擇權
+• 考慮其他福利（彈性工時、教育訓練等）
+
+💡 注意事項：
+• 避免一開始就談薪資上限
+• 預留談判空間，通常可協商10-15%
+• 關注候選人真正在意的價值點
+
+建議先確認雙方期望，再進行具體談判。`;
+  }
+  
+  // 關鍵字回應
+  if (lowerMessage.includes('履歷') || lowerMessage.includes('resume')) {
+    return '我可以協助您分析履歷內容、評估候選人適合度，或是建議改進方向。請告訴我您想了解哪個方面？';
+  }
+  
+  if (lowerMessage.includes('面試') || lowerMessage.includes('interview')) {
+    return '關於面試，我可以幫您：\n• 設計針對性的面試問題\n• 提供面試技巧建議\n• 分析候選人回答\n• 評估面試表現\n\n您需要哪方面的協助呢？';
+  }
+  
+  if (lowerMessage.includes('薪資') || lowerMessage.includes('salary')) {
+    return '薪資相關問題我很樂意協助！我可以提供市場行情分析、談判策略建議、薪資結構設計等。請告訴我您的具體需求。';
+  }
+  
+  if (lowerMessage.includes('招募') || lowerMessage.includes('recruit')) {
+    return '在招募方面，我可以協助您：\n• 撰寫職缺描述\n• 制定招募策略\n• 篩選候選人\n• 優化招募流程\n\n請告訴我您目前的招募挑戰？';
+  }
+  
+  // 預設友善回應
+  const defaultResponses = [
+    '感謝您的提問！作為人資助手，我可以協助您分析履歷、設計面試問題、提供薪資建議等。請告訴我您需要什麼協助？',
+    '我是專門為人資設計的 AI 助手，擅長履歷分析、面試規劃和招募建議。有什麼我可以幫您的嗎？',
+    '很高興為您服務！我在人資領域有豐富的知識，可以協助您處理各種招募和人才管理問題。請詳細描述您的需求。'
+  ];
+  
+  return defaultResponses[Math.floor(Math.random() * defaultResponses.length)];
+};
+
+// AI 聊天室功能
+const sendMessage = async () => {
+  if (!chatInput.value.trim() || isChatLoading.value) return;
+
+  const userMessage = chatInput.value.trim();
+  chatInput.value = "";
+
+  // 添加用戶訊息
+  chatMessages.value.push({
+    type: "user",
+    content: userMessage,
+    timestamp: new Date()
+  });
+
+  // 設置載入狀態
+  isChatLoading.value = true;
+
+  // 模擬 AI 回應延遲
+  setTimeout(() => {
+    const response = getPresetResponse(userMessage);
+    
+    // 添加 AI 回覆
+    chatMessages.value.push({
+      type: "assistant",
+      content: response,
+      timestamp: new Date()
+    });
+
+    // 滾動到底部
+    setTimeout(() => {
+      const chatContainer = document.getElementById('chat-messages');
+      if (chatContainer) {
+        chatContainer.scrollTop = chatContainer.scrollHeight;
+      }
+    }, 100);
+
+    isChatLoading.value = false;
+  }, 1500); // 1.5 秒延遲模擬 AI 思考時間
+};
+
+const sendQuickMessage = (message) => {
+  chatInput.value = message;
+  sendMessage();
+};
+
+const clearChat = () => {
+  chatMessages.value = [];
+};
+
+const handleKeydown = (event) => {
+  if (event.key === 'Enter' && !event.shiftKey) {
+    event.preventDefault();
+    sendMessage();
+  }
 };
 
 // 生命週期 hooks
@@ -1200,17 +1369,6 @@ onUnmounted(() => {
               <div
                 class="py-3 px-6 cursor-pointer text-22px"
                 :class="
-                  activeTab === 'condition'
-                    ? 'text-#00afb8 border-b-solid border-b-3 border-b-#00afb8'
-                    : 'text-#555'
-                "
-                @click="activeTab = 'condition'"
-              >
-                求職條件比對
-              </div>
-              <div
-                class="py-3 px-6 cursor-pointer text-22px"
-                :class="
                   activeTab === 'description'
                     ? 'text-#00afb8 border-b-solid border-b-3 border-b-#00afb8'
                     : 'text-#555'
@@ -1241,18 +1399,19 @@ onUnmounted(() => {
               >
                 事實查核
               </div>
-            </div>
-
-            <!-- 職缺條件標籤內容 -->
-            <div v-show="activeTab === 'condition'" class="mb-8">
-              <div class="w-full mx-auto">
-                <img
-                  src="@/assets/images/ai/condition.jpg"
-                  alt="職涯地圖"
-                  class="w-full object-cover"
-                />
+              <div
+                class="py-3 px-6 cursor-pointer text-22px"
+                :class="
+                  activeTab === 'chat'
+                    ? 'text-#00afb8 border-b-solid border-b-3 border-b-#00afb8'
+                    : 'text-#555'
+                "
+                @click="activeTab = 'chat'"
+              >
+                AI 助手
               </div>
             </div>
+
 
             <div v-show="activeTab === 'description'" class="mb-8">
               <div class="w-full mx-auto">
@@ -2512,6 +2671,120 @@ onUnmounted(() => {
               </div>
             </div>
           </div>
+          
+          <!-- AI 聊天室內容區域 -->
+          <div v-show="activeTab === 'chat'">
+            <div class="mb-6 p-4 bg-#e8f5ff rounded-6px">
+              <h3 class="text-20px font-bold text-#1976d2 mb-2">AI 人資助手</h3>
+              <p class="text-16px text-#555 m-0">
+                專為人資設計的 AI 助手，可以幫您分析履歷、生成面試問題、提供招募建議等。
+              </p>
+            </div>
+
+            <!-- 聊天訊息區域 -->
+            <div class="bg-white rounded-8px border border-#ddd mb-4">
+              <div class="h-400px overflow-y-auto p-4" id="chat-messages">
+                <!-- 歡迎訊息 -->
+                <div v-if="chatMessages.length === 0" class="text-center py-8">
+                  <div class="text-48px mb-4">🤖</div>
+                  <p class="text-18px text-#666 mb-6">您好！我是您的 AI 人資助手</p>
+                  <p class="text-16px text-#888 mb-4">我可以協助您：</p>
+                  <div class="grid grid-cols-2 gap-2 max-w-400px mx-auto">
+                    <button 
+                      @click="sendQuickMessage('分析這份履歷的優缺點')"
+                      class="p-3 bg-#f0f8ff border border-#e0e8f0 rounded-6px text-14px hover:bg-#e8f4fd transition-colors"
+                    >
+                      📋 分析履歷優缺點
+                    </button>
+                    <button 
+                      @click="sendQuickMessage('建議適合的面試問題')"
+                      class="p-3 bg-#f0f8ff border border-#e0e8f0 rounded-6px text-14px hover:bg-#e8f4fd transition-colors"
+                    >
+                      ❓ 建議面試問題
+                    </button>
+                    <button 
+                      @click="sendQuickMessage('評估候選人的適合度')"
+                      class="p-3 bg-#f0f8ff border border-#e0e8f0 rounded-6px text-14px hover:bg-#e8f4fd transition-colors"
+                    >
+                      ⭐ 評估適合度
+                    </button>
+                    <button 
+                      @click="sendQuickMessage('薪資談判建議')"
+                      class="p-3 bg-#f0f8ff border border-#e0e8f0 rounded-6px text-14px hover:bg-#e8f4fd transition-colors"
+                    >
+                      💰 薪資談判建議
+                    </button>
+                  </div>
+                </div>
+
+                <!-- 聊天訊息列表 -->
+                <div v-for="(message, index) in chatMessages" :key="index" class="mb-4">
+                  <!-- 用戶訊息 -->
+                  <div v-if="message.type === 'user'" class="flex justify-end">
+                    <div class="max-w-[80%] bg-#1976d2 text-white p-3 rounded-lg rounded-br-none">
+                      {{ message.content }}
+                    </div>
+                  </div>
+                  <!-- AI 回覆 -->
+                  <div v-else class="flex justify-start">
+                    <div class="max-w-[80%] bg-#f5f5f5 p-3 rounded-lg rounded-bl-none">
+                      <div class="flex items-start">
+                        <span class="text-24px mr-2">🤖</span>
+                        <div class="flex-1">
+                          <p class="m-0 whitespace-pre-line">{{ message.content }}</p>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- AI 回覆中的載入動畫 -->
+                <div v-if="isChatLoading" class="flex justify-start mb-4">
+                  <div class="max-w-[80%] bg-#f5f5f5 p-3 rounded-lg rounded-bl-none">
+                    <div class="flex items-center">
+                      <span class="text-24px mr-2">🤖</span>
+                      <div class="flex space-x-1">
+                        <div class="w-2 h-2 bg-#666 rounded-full animate-bounce"></div>
+                        <div class="w-2 h-2 bg-#666 rounded-full animate-bounce" style="animation-delay: 0.1s"></div>
+                        <div class="w-2 h-2 bg-#666 rounded-full animate-bounce" style="animation-delay: 0.2s"></div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- 輸入區域 -->
+              <div class="border-t border-#eee p-4">
+                <div class="flex gap-2">
+                  <textarea
+                    v-model="chatInput"
+                    @keydown="handleKeydown"
+                    placeholder="輸入您的問題..."
+                    rows="2"
+                    class="flex-1 p-3 border border-#ddd rounded-6px resize-none focus:outline-none focus:border-#1976d2 text-16px"
+                  ></textarea>
+                  <button
+                    @click="sendMessage"
+                    :disabled="!chatInput.trim() || isChatLoading"
+                    class="px-6 py-3 bg-#1976d2 text-white rounded-6px hover:bg-#1565c0 disabled:bg-#ccc disabled:cursor-not-allowed transition-colors"
+                  >
+                    發送
+                  </button>
+                </div>
+                <div class="flex justify-between items-center mt-2">
+                  <span class="text-12px text-#888">按 Enter 發送，Shift+Enter 換行</span>
+                  <button
+                    @click="clearChat"
+                    v-if="chatMessages.length > 0"
+                    class="text-12px text-#666 hover:text-#333 transition-colors"
+                  >
+                    清除對話
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+
         </div>
       </div>
     </div>
