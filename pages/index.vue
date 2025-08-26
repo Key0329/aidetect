@@ -43,7 +43,7 @@ useHead({
     </header>
 
     <!-- 主要內容 -->
-    <main class="container mx-auto px-4 py-12 max-w-6xl">
+    <main class="container mx-auto px-4 py-12">
       <!-- 歡迎區塊 -->
       <div class="text-center mb-16">
         <h1 class="text-48px font-bold text-grayscale-600 mb-6">
