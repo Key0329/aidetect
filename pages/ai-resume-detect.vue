@@ -4239,62 +4239,6 @@ onUnmounted(() => {
           <!-- Tab 導航 -->
         </div>
 
-        <!-- 問題引導區域 -->
-        <div
-          v-if="showQuestionPrompt"
-          class="bg-#f9f4ff p-8 rounded-8px mb-10 border-1 border-solid border-#eee shadow-md"
-        >
-          <div v-if="!isQuestionsLoading">
-            <p class="text-22px leading-28px mb-5 text-center">
-              我可以幫您總結提問求職者的方向，是否為您提供相關問題？
-            </p>
-            <div class="flex gap-5 justify-center">
-              <button
-                class="py-3 px-8 bg-#6a3ea1 text-white border-none rounded-6px cursor-pointer hover:bg- transition-colors text-20px"
-                @click="handleQuestionsRequest(true)"
-              >
-                需要
-              </button>
-              <button
-                class="py-3 px-8 bg-transparent border-1 border-solid border-#6a3ea1 text-#6a3ea1 rounded-6px cursor-pointer hover:bg-#6a3ea1 hover:text-white transition-colors text-20px"
-                @click="handleQuestionsRequest(false)"
-              >
-                不需要
-              </button>
-            </div>
-          </div>
-          <!-- 不需要時的溫馨提示 -->
-          <div
-            v-if="showDenyTip"
-            id="question-section"
-            class="mt-5 p-4 bg-#FFF8E1 text-#856404 rounded-6px text-18px"
-          >
-            <p class="m-0 text-center">
-              以上為我們提供的分析報告，建議與候選人更深入交流，更完整認識對方的專業歷程
-            </p>
-          </div>
-          <!-- 需要時的載入動畫 -->
-          <div v-if="isQuestionsLoading" class="mt-5 text-center">
-            <div
-              class="inline-block w-8 h-8 border-3 border-t-#6a3ea1 border-r-#6a3ea1 border-b-transparent border-l-transparent rounded-full animate-spin"
-            ></div>
-            <p
-              class="text-18px text-#555 flex items-center justify-center mt-3"
-            >
-              <span class="mr-3">正在生成問題建議</span>
-              <span class="inline-flex">
-                <span class="animate-pulse">.</span>
-                <span class="animate-pulse" style="animation-delay: 0.2s"
-                  >.</span
-                >
-                <span class="animate-pulse" style="animation-delay: 0.4s"
-                  >.</span
-                >
-              </span>
-            </p>
-          </div>
-        </div>
-
         <!-- 建議提問內容區域 -->
         <div v-show="activeTab === 'questions'" class="tab-content">
           <!-- 現代化標題卡片 -->
