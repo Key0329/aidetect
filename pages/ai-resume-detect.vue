@@ -33,6 +33,22 @@ const isCopied = ref(false);
 // 新增 tab 切換控制變數
 const activeTab = ref("description"); // 可選值: 'description', 'ai', 'fact-check', 'questions', 'chat'
 
+// 新增卡片總結區狀態變數
+const currentCard = ref(0); // 0: 總結卡片, 1: 建議問題卡片
+const cardSummary = ref({
+  recommendation: "高度推薦", // 高度推薦 | 需關注問題
+  analysis:
+    "此候選人的履歷與職缺要求高度符合，具備相關工作經驗與技能背景，建議優先安排面試。",
+  concerns: [],
+});
+
+// 新增功能選單狀態變數
+const activeFunction = ref("timeline"); // 可選值: 'job-match', 'timeline', 'fact-check', 'ai-chat'
+
+// 複製功能狀態管理
+const copiedQuestions = ref(new Set());
+const showCopyToast = ref(false);
+
 // 新增狀態管理變數
 const showQuestionPrompt = ref(true); // 新增控制問題提示區域顯示的變數
 const needQuestions = ref(false);
@@ -120,6 +136,102 @@ const handleFeedback = (itemId, type) => {
     feedbacks.value[itemId].liked = type === "like";
     feedbacks.value[itemId].disliked = type === "dislike";
   }
+};
+
+// 卡片滑動功能
+const cardContainer = ref(null);
+
+const scrollToCard = (index) => {
+  if (cardContainer.value) {
+    const cardWidth = cardContainer.value.children[0].offsetWidth + 16; // 卡片寬度 + gap
+    cardContainer.value.scrollTo({
+      left: index * cardWidth,
+      behavior: "smooth",
+    });
+  }
+};
+
+const showQuestionCard = () => {
+  scrollToCard(1);
+};
+
+const backToSummary = () => {
+  scrollToCard(0);
+};
+
+const scheduleInterview = () => {
+  // 邀約面試功能 - 可以導向 HR 信箱或其他邀約流程
+  alert("正在導向面試邀約流程...");
+};
+
+// 複製功能
+const copyQuestion = async (questionText, questionIndex) => {
+  try {
+    await navigator.clipboard.writeText(questionText);
+    copiedQuestions.value.add(questionIndex);
+    showCopySuccess();
+
+    // 3秒後移除複製狀態
+    setTimeout(() => {
+      copiedQuestions.value.delete(questionIndex);
+    }, 3000);
+  } catch (err) {
+    console.error("複製失敗:", err);
+    // 降級到手動選取複製
+    fallbackCopy(questionText);
+  }
+};
+
+const copyAllQuestions = async () => {
+  const questions = [
+    "請分享您在前一份工作中遇到的最大挑戰，以及如何解決的？",
+    "您對於這個職位有什麼特別的想法或期待？",
+    "請描述一次您需要快速學習新技能的經驗。",
+  ];
+
+  const allQuestionsText = questions.map((q, i) => `${i + 1}. ${q}`).join("\n");
+
+  try {
+    await navigator.clipboard.writeText(allQuestionsText);
+    showCopySuccess("已複製全部問題");
+  } catch (err) {
+    console.error("複製失敗:", err);
+    fallbackCopy(allQuestionsText);
+  }
+};
+
+const fallbackCopy = (text) => {
+  const textArea = document.createElement("textarea");
+  textArea.value = text;
+  document.body.appendChild(textArea);
+  textArea.select();
+  try {
+    document.execCommand("copy");
+    showCopySuccess();
+  } catch (err) {
+    console.error("降級複製也失敗:", err);
+  }
+  document.body.removeChild(textArea);
+};
+
+const showCopySuccess = (message = "已複製到剪貼板") => {
+  showCopyToast.value = true;
+  setTimeout(() => {
+    showCopyToast.value = false;
+  }, 2000);
+};
+
+// 功能選單切換
+const switchFunction = (funcName) => {
+  activeFunction.value = funcName;
+  // 根據功能同步切換對應的 tab
+  const functionTabMap = {
+    "job-match": "ai",
+    timeline: "description",
+    "fact-check": "fact-check",
+    "ai-chat": "chat",
+  };
+  activeTab.value = functionTabMap[funcName];
 };
 
 // 處理事實查核反饋
@@ -1304,7 +1416,7 @@ onUnmounted(() => {
           class="text-2xl font-bold m-0 text-slate-800 truncate flex items-center"
         >
           <svg
-            class="w-6 h-6 mr-2 text-cyan-600"
+            class="w-6 h-6 mr-2 text-primary-400"
             fill="none"
             stroke="currentColor"
             viewBox="0 0 24 24"
@@ -1313,10 +1425,10 @@ onUnmounted(() => {
               stroke-linecap="round"
               stroke-linejoin="round"
               stroke-width="2"
-              d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014.846 21H9.154a3.374 3.374 0 00-2.894-1.789L5.712 18.3z"
+              d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
             ></path>
           </svg>
-          AI 分析結果
+          AI 履歷助手
         </h2>
         <button
           class="text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-lg w-10 h-10 flex items-center justify-center flex-shrink-0 transition-all duration-200"
@@ -1363,500 +1475,24 @@ onUnmounted(() => {
 
         <!-- 實際內容 -->
         <div v-else>
-          <!-- AI 工具標題與介紹 -->
-          <div class="mb-8">
-            <p class="text-20px leading-28px text-#292929 font-bold mb-4">
-              此工具透過分析履歷文本特徵，協助產生履歷導覽。
-            </p>
+          <!-- 卡片總結區 -->
+          <div class="mb-6">
+            <!-- 卡片容器 - 改用橫向滑動 -->
             <div
-              class="bg-gradient-to-r from-amber-50 to-yellow-50 border border-amber-200 p-6 rounded-xl shadow-sm"
+              ref="cardContainer"
+              class="flex space-x-4 overflow-x-auto scrollbar-hide snap-x snap-mandatory rounded-xl"
             >
-              <p
-                class="m-0 leading-7 text-amber-700 font-medium flex items-center"
-              >
-                <svg
-                  class="w-5 h-5 mr-2 text-amber-600"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                    stroke-width="2"
-                    d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z"
-                  ></path>
-                </svg>
-                分析僅供參考，建議結合面試表現進行綜合評估。
-              </p>
-            </div>
-          </div>
-          <!-- 內文 -->
-          <div
-            class="bg-white/90 backdrop-blur-sm p-4 md:p-6 rounded-xl mb-10 shadow-lg border border-slate-200/50"
-          >
-            <div
-              class="modern-tabs flex mb-6 border-b border-slate-200 overflow-x-auto scrollbar-hide bg-slate-50/50 rounded-t-lg p-1"
-            >
-              <div
-                class="tab-item py-2 px-4 md:px-6 cursor-pointer text-sm md:text-base font-medium whitespace-nowrap transition-all duration-200 rounded-md"
-                :class="
-                  activeTab === 'description'
-                    ? 'text-white bg-gradient-to-r from-cyan-500 to-blue-600 shadow-sm'
-                    : 'text-slate-600 hover:text-slate-800 hover:bg-white/80'
-                "
-                @click="activeTab = 'description'"
-              >
-                學經歷地圖
-              </div>
-              <div
-                class="tab-item py-2 px-4 md:px-6 cursor-pointer text-sm md:text-base font-medium whitespace-nowrap transition-all duration-200 rounded-md"
-                :class="
-                  activeTab === 'ai'
-                    ? 'text-white bg-gradient-to-r from-cyan-500 to-blue-600 shadow-sm'
-                    : 'text-slate-600 hover:text-slate-800 hover:bg-white/80'
-                "
-                @click="activeTab = 'ai'"
-              >
-                履歷前後文分析
-              </div>
-              <div
-                class="tab-item py-2 px-4 md:px-6 cursor-pointer text-sm md:text-base font-medium whitespace-nowrap transition-all duration-200 rounded-md"
-                :class="
-                  activeTab === 'fact-check'
-                    ? 'text-white bg-gradient-to-r from-cyan-500 to-blue-600 shadow-sm'
-                    : 'text-slate-600 hover:text-slate-800 hover:bg-white/80'
-                "
-                @click="activeTab = 'fact-check'"
-              >
-                事實查核
-              </div>
-              <div
-                class="tab-item py-2 px-4 md:px-6 cursor-pointer text-sm md:text-base font-medium whitespace-nowrap transition-all duration-200 rounded-md"
-                :class="
-                  activeTab === 'questions'
-                    ? 'text-white bg-gradient-to-r from-cyan-500 to-blue-600 shadow-sm'
-                    : 'text-slate-600 hover:text-slate-800 hover:bg-white/80'
-                "
-                @click="activeTab = 'questions'"
-              >
-                建議提問
-              </div>
-              <div
-                class="tab-item py-2 px-4 md:px-6 cursor-pointer text-sm md:text-base font-medium whitespace-nowrap transition-all duration-200 rounded-md"
-                :class="
-                  activeTab === 'chat'
-                    ? 'text-white bg-gradient-to-r from-cyan-500 to-blue-600 shadow-sm'
-                    : 'text-slate-600 hover:text-slate-800 hover:bg-white/80'
-                "
-                @click="activeTab = 'chat'"
-              >
-                AI 助手
-              </div>
-            </div>
-
-            <div v-show="activeTab === 'description'" class="tab-content">
-              <!-- 學經歷時間軸視覺化 -->
-              <div class="space-y-8">
-                <!-- 教育背景區塊 -->
-                <div class="relative">
-                  <h3
-                    class="text-lg font-semibold text-slate-800 mb-4 flex items-center"
-                  >
-                    <svg
-                      class="w-5 h-5 mr-2 text-blue-600"
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
-                    >
-                      <path
-                        stroke-linecap="round"
-                        stroke-linejoin="round"
-                        stroke-width="2"
-                        d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.746 0 3.332.477 4.5 1.253v13C19.832 18.477 18.246 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"
-                      ></path>
-                    </svg>
-                    教育背景
-                  </h3>
-
-                  <!-- 教育時間軸 -->
-                  <div class="relative pl-6">
-                    <!-- 時間軸線 -->
-                    <div
-                      class="absolute left-2 top-0 bottom-0 w-0.5 bg-gradient-to-b from-blue-200 to-blue-400"
-                    ></div>
-
-                    <!-- 碩士學位 -->
-                    <div class="relative mb-6">
-                      <div
-                        class="absolute left-[-0.5rem] w-4 h-4 bg-blue-600 rounded-full border-2 border-white shadow-lg"
-                      ></div>
-                      <div
-                        class="bg-white rounded-lg p-4 border border-blue-200 shadow-sm hover:shadow-md transition-shadow"
-                      >
-                        <div class="flex justify-between items-start mb-2">
-                          <h4 class="font-semibold text-slate-800">
-                            國立清華大學
-                          </h4>
-                          <span class="text-sm text-slate-500">2012-2014</span>
-                        </div>
-                        <p class="text-sm text-slate-600 mb-1">
-                          資訊工程學系 碩士
-                        </p>
-                        <div class="flex items-center text-xs text-blue-600">
-                          <svg
-                            class="w-3 h-3 mr-1"
-                            fill="currentColor"
-                            viewBox="0 0 20 20"
-                          >
-                            <path
-                              fill-rule="evenodd"
-                              d="M10.394 2.08a1 1 0 00-.788 0l-7 3a1 1 0 000 1.84L5.25 8.051a.999.999 0 01.356-.257l4-1.714a1 1 0 11.788 1.838L7.667 9.088l1.94.831a1 1 0 00.787 0l7-3a1 1 0 000-1.838l-7-3zM3.31 9.397L5 10.12v4.102a8.969 8.969 0 00-1.05-.174 1 1 0 01-.89-.89 11.115 11.115 0 01.25-3.762zM9.3 16.573A9.026 9.026 0 007 14.935v-3.957l1.818.78a3 3 0 002.364 0l5.508-2.361a11.026 11.026 0 01.25 3.762 1 1 0 01-.89.89 8.968 8.968 0 00-5.35 2.524 1 1 0 01-1.4 0zM6 18a1 1 0 001-1v-2.065a8.935 8.935 0 00-2-.712V17a1 1 0 001 1z"
-                              clip-rule="evenodd"
-                            ></path>
-                          </svg>
-                          研究所畢業
-                        </div>
-                      </div>
-                    </div>
-
-                    <!-- 學士學位 -->
-                    <div class="relative">
-                      <div
-                        class="absolute left-[-0.5rem] w-4 h-4 bg-blue-400 rounded-full border-2 border-white shadow-lg"
-                      ></div>
-                      <div
-                        class="bg-white rounded-lg p-4 border border-blue-200 shadow-sm hover:shadow-md transition-shadow"
-                      >
-                        <div class="flex justify-between items-start mb-2">
-                          <h4 class="font-semibold text-slate-800">
-                            國立中興大學
-                          </h4>
-                          <span class="text-sm text-slate-500">2008-2012</span>
-                        </div>
-                        <p class="text-sm text-slate-600 mb-1">
-                          資訊管理學系 學士
-                        </p>
-                        <div class="flex items-center text-xs text-blue-600">
-                          <svg
-                            class="w-3 h-3 mr-1"
-                            fill="currentColor"
-                            viewBox="0 0 20 20"
-                          >
-                            <path
-                              fill-rule="evenodd"
-                              d="M10.394 2.08a1 1 0 00-.788 0l-7 3a1 1 0 000 1.84L5.25 8.051a.999.999 0 01.356-.257l4-1.714a1 1 0 11.788 1.838L7.667 9.088l1.94.831a1 1 0 00.787 0l7-3a1 1 0 000-1.838l-7-3zM3.31 9.397L5 10.12v4.102a8.969 8.969 0 00-1.05-.174 1 1 0 01-.89-.89 11.115 11.115 0 01.25-3.762zM9.3 16.573A9.026 9.026 0 007 14.935v-3.957l1.818.78a3 3 0 002.364 0l5.508-2.361a11.026 11.026 0 01.25 3.762 1 1 0 01-.89.89 8.968 8.968 0 00-5.35 2.524 1 1 0 01-1.4 0zM6 18a1 1 0 001-1v-2.065a8.935 8.935 0 00-2-.712V17a1 1 0 001 1z"
-                              clip-rule="evenodd"
-                            ></path>
-                          </svg>
-                          大學畢業
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-
-                <!-- 工作經歷區塊 -->
-                <div class="relative">
-                  <h3
-                    class="text-lg font-semibold text-slate-800 mb-4 flex items-center"
-                  >
-                    <svg
-                      class="w-5 h-5 mr-2 text-green-600"
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
-                    >
-                      <path
-                        stroke-linecap="round"
-                        stroke-linejoin="round"
-                        stroke-width="2"
-                        d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2-2v2m8 0V6a2 2 0 012 2v6a2 2 0 01-2 2H6a2 2 0 01-2-2V8a2 2 0 012-2V6"
-                      ></path>
-                    </svg>
-                    工作經歷
-                  </h3>
-
-                  <!-- 工作時間軸 -->
-                  <div class="relative pl-6">
-                    <!-- 時間軸線 -->
-                    <div
-                      class="absolute left-2 top-0 bottom-0 w-0.5 bg-gradient-to-b from-green-200 to-green-400"
-                    ></div>
-
-                    <!-- 資深軟體工程師 -->
-                    <div class="relative mb-6">
-                      <div
-                        class="absolute left-[-0.5rem] w-4 h-4 bg-green-600 rounded-full border-2 border-white shadow-lg"
-                      ></div>
-                      <div
-                        class="bg-white rounded-lg p-4 border border-green-200 shadow-sm hover:shadow-md transition-shadow"
-                      >
-                        <div class="flex justify-between items-start mb-2">
-                          <h4 class="font-semibold text-slate-800">
-                            ABC科技股份有限公司
-                          </h4>
-                          <span class="text-sm text-slate-500">2018-2024</span>
-                        </div>
-                        <p class="text-sm text-slate-600 mb-2">
-                          資深軟體工程師
-                        </p>
-                        <p class="text-xs text-slate-500 mb-2">
-                          成功將傳統系統遷移至雲端，降低 40% 運營成本
-                        </p>
-                        <div class="flex items-center text-xs text-green-600">
-                          <span class="bg-green-100 px-2 py-1 rounded-full"
-                            >6年經驗</span
-                          >
-                        </div>
-                      </div>
-                    </div>
-
-                    <!-- 軟體工程師 -->
-                    <div class="relative mb-6">
-                      <div
-                        class="absolute left-[-0.5rem] w-4 h-4 bg-green-500 rounded-full border-2 border-white shadow-lg"
-                      ></div>
-                      <div
-                        class="bg-white rounded-lg p-4 border border-green-200 shadow-sm hover:shadow-md transition-shadow"
-                      >
-                        <div class="flex justify-between items-start mb-2">
-                          <h4 class="font-semibold text-slate-800">
-                            XYZ科技有限公司
-                          </h4>
-                          <span class="text-sm text-slate-500">2015-2018</span>
-                        </div>
-                        <p class="text-sm text-slate-600 mb-2">軟體工程師</p>
-                        <p class="text-xs text-slate-500 mb-2">
-                          開發多個企業級應用系統
-                        </p>
-                        <div class="flex items-center text-xs text-green-600">
-                          <span class="bg-green-100 px-2 py-1 rounded-full"
-                            >3年經驗</span
-                          >
-                        </div>
-                      </div>
-                    </div>
-
-                    <!-- 初級工程師 -->
-                    <div class="relative">
-                      <div
-                        class="absolute left-[-0.5rem] w-4 h-4 bg-green-400 rounded-full border-2 border-white shadow-lg"
-                      ></div>
-                      <div
-                        class="bg-white rounded-lg p-4 border border-green-200 shadow-sm hover:shadow-md transition-shadow"
-                      >
-                        <div class="flex justify-between items-start mb-2">
-                          <h4 class="font-semibold text-slate-800">
-                            DEF軟體企業
-                          </h4>
-                          <span class="text-sm text-slate-500">2014-2015</span>
-                        </div>
-                        <p class="text-sm text-slate-600 mb-2">
-                          初級軟體工程師
-                        </p>
-                        <p class="text-xs text-slate-500 mb-2">
-                          學習企業軟體開發流程
-                        </p>
-                        <div class="flex items-center text-xs text-green-600">
-                          <span class="bg-green-100 px-2 py-1 rounded-full"
-                            >1年經驗</span
-                          >
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-
-                <!-- 技能標籤雲 -->
-                <div class="relative">
-                  <h3
-                    class="text-lg font-semibold text-slate-800 mb-4 flex items-center"
-                  >
-                    <svg
-                      class="w-5 h-5 mr-2 text-purple-600"
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
-                    >
-                      <path
-                        stroke-linecap="round"
-                        stroke-linejoin="round"
-                        stroke-width="2"
-                        d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014.846 21H9.154a3.374 3.374 0 00-2.894-1.789L5.712 18.3z"
-                      ></path>
-                    </svg>
-                    核心技能
-                  </h3>
-
-                  <div class="flex flex-wrap gap-2">
-                    <!-- 程式語言 -->
-                    <span
-                      class="bg-blue-100 text-blue-800 px-3 py-1 rounded-full text-sm font-medium"
-                      >Python</span
-                    >
-                    <span
-                      class="bg-yellow-100 text-yellow-800 px-3 py-1 rounded-full text-sm font-medium"
-                      >JavaScript</span
-                    >
-                    <span
-                      class="bg-red-100 text-red-800 px-3 py-1 rounded-full text-sm font-medium"
-                      >Java</span
-                    >
-
-                    <!-- 框架技術 -->
-                    <span
-                      class="bg-cyan-100 text-cyan-800 px-3 py-1 rounded-full text-sm font-medium"
-                      >React</span
-                    >
-                    <span
-                      class="bg-green-100 text-green-800 px-3 py-1 rounded-full text-sm font-medium"
-                      >Node.js</span
-                    >
-                    <span
-                      class="bg-indigo-100 text-indigo-800 px-3 py-1 rounded-full text-sm font-medium"
-                      >Django</span
-                    >
-
-                    <!-- 雲端技術 -->
-                    <span
-                      class="bg-orange-100 text-orange-800 px-3 py-1 rounded-full text-sm font-medium"
-                      >AWS</span
-                    >
-                    <span
-                      class="bg-gray-100 text-gray-800 px-3 py-1 rounded-full text-sm font-medium"
-                      >Docker</span
-                    >
-                    <span
-                      class="bg-purple-100 text-purple-800 px-3 py-1 rounded-full text-sm font-medium"
-                      >Kubernetes</span
-                    >
-
-                    <!-- 資料庫 -->
-                    <span
-                      class="bg-teal-100 text-teal-800 px-3 py-1 rounded-full text-sm font-medium"
-                      >MySQL</span
-                    >
-                    <span
-                      class="bg-emerald-100 text-emerald-800 px-3 py-1 rounded-full text-sm font-medium"
-                      >MongoDB</span
-                    >
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            <!-- 分類卡片區域 -->
-            <div v-show="activeTab === 'ai'" class="tab-content space-y-8">
-              <!-- 卡片1：經歷跳躍或邏輯不通 -->
-              <div
-                class="group bg-white rounded-xl shadow-lg border border-slate-200 hover:shadow-xl transition-all duration-300 overflow-hidden"
-              >
-                <!-- 卡片頭部 -->
+              <!-- 總結卡片 -->
+              <div class="w-[100%] flex-shrink-0 snap-start">
                 <div
-                  class="bg-gradient-to-r from-orange-50 to-red-50 border-b border-orange-200 p-6"
+                  class="bg-gradient-to-br from-white via-slate-50 to-blue-50 border border-slate-200 rounded-xl p-8 min-h-[200px] summary-card"
                 >
-                  <div class="flex justify-between items-center">
-                    <div class="flex items-center space-x-4">
-                      <div class="flex-shrink-0">
-                        <div
-                          class="w-10 h-10 bg-gradient-to-br from-orange-400 to-red-500 rounded-lg flex items-center justify-center shadow-sm"
-                        >
-                          <svg
-                            class="w-5 h-5 text-white"
-                            fill="none"
-                            stroke="currentColor"
-                            viewBox="0 0 24 24"
-                          >
-                            <path
-                              stroke-linecap="round"
-                              stroke-linejoin="round"
-                              stroke-width="2"
-                              d="M12 9v2m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-                            ></path>
-                          </svg>
-                        </div>
-                      </div>
-                      <div>
-                        <h3 class="text-xl font-bold text-slate-900 mb-1">
-                          經歷跳躍或邏輯不通
-                        </h3>
-                        <div class="flex items-center space-x-2">
-                          <span
-                            class="inline-flex items-center px-2 py-1 rounded-md text-xs font-medium bg-orange-100 text-orange-800"
-                            >高風險</span
-                          >
-                          <span class="text-sm text-slate-500"
-                            >邏輯一致性分析</span
-                          >
-                        </div>
-                      </div>
-                    </div>
-                    <div class="flex items-center space-x-2">
-                      <button
-                        class="p-2 rounded-lg hover:bg-emerald-100 transition-all duration-200 group/btn"
-                        :class="{
-                          'bg-emerald-100 text-emerald-700 shadow-sm':
-                            feedbacks.item1.liked,
-                        }"
-                        @click="handleFeedback('item1', 'like')"
-                      >
-                        <svg
-                          class="w-5 h-5 text-emerald-600 group-hover/btn:scale-110 transition-transform"
-                          fill="none"
-                          stroke="currentColor"
-                          viewBox="0 0 24 24"
-                        >
-                          <path
-                            stroke-linecap="round"
-                            stroke-linejoin="round"
-                            stroke-width="2"
-                            d="M14 10h4.764a2 2 0 011.789 2.894l-3.5 7A2 2 0 0115.263 21h-4.017c-.163 0-.326-.02-.485-.06L7 20m7-10V5a2 2 0 00-2-2h-.095c-.5 0-.905.405-.905.905 0 .714-.211 1.412-.608 2.006L7 11v9m7-10h-2M7 20H5a2 2 0 01-2-2v-6a2 2 0 012-2h2.5"
-                          ></path>
-                        </svg>
-                      </button>
-                      <button
-                        class="p-2 rounded-lg hover:bg-red-100 transition-all duration-200 group/btn"
-                        :class="{
-                          'bg-red-100 text-red-700 shadow-sm':
-                            feedbacks.item1.disliked,
-                        }"
-                        @click="handleFeedback('item1', 'dislike')"
-                      >
-                        <svg
-                          class="w-5 h-5 text-red-600 group-hover/btn:scale-110 transition-transform"
-                          fill="none"
-                          stroke="currentColor"
-                          viewBox="0 0 24 24"
-                        >
-                          <path
-                            stroke-linecap="round"
-                            stroke-linejoin="round"
-                            stroke-width="2"
-                            d="M10 14H5.236a2 2 0 01-1.789-2.894l3.5-7A2 2 0 018.736 3h4.018c.163 0 .326.02.485.06L17 4m-7 10v2a2 2 0 002 2h.095c.5 0 .905-.405.905-.905 0-.714.211-1.412.608-2.006L17 13V4m-7 10h2m5-10h2a2 2 0 012 2v6a2 2 0 01-2 2h-2.5"
-                          ></path>
-                        </svg>
-                      </button>
-                    </div>
-                  </div>
-                </div>
-
-                <!-- 卡片內容 -->
-                <div class="p-6">
-                  <!-- 分析描述 -->
-                  <div class="mb-6">
-                    <p class="text-slate-700 leading-relaxed mb-4">
-                      使用過於精確的數字（30%、40%、90%）但缺乏計算方法說明，顯示AI傾向於產生整齊的百分比數據。時間線存在重疊矛盾，工作經驗總和與學歷期間不符，無法自圓其說，這是AI合成履歷常見的邏輯問題。
-                    </p>
-                  </div>
-
-                  <!-- 履歷內文區塊 -->
-                  <div class="mb-6">
-                    <h4
-                      class="text-sm font-semibold text-slate-900 mb-3 flex items-center"
+                  <div class="flex items-start mb-6">
+                    <div
+                      class="w-10 h-10 bg-primary-100 rounded-full flex items-center justify-center flex-shrink-0 mr-3"
                     >
                       <svg
-                        class="w-4 h-4 mr-2 text-slate-500"
+                        class="w-5 h-5 text-primary-500"
                         fill="none"
                         stroke="currentColor"
                         viewBox="0 0 24 24"
@@ -1865,11 +1501,1105 @@ onUnmounted(() => {
                           stroke-linecap="round"
                           stroke-linejoin="round"
                           stroke-width="2"
-                          d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+                          d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
                         ></path>
                       </svg>
-                      履歷內文
-                    </h4>
+                    </div>
+                    <div class="flex-1">
+                      <h3 class="text-xl font-bold text-slate-800 mb-2">
+                        一鍵分析履歷
+                      </h3>
+                      <div class="flex items-center mb-4">
+                        <span
+                          :class="
+                            cardSummary.recommendation === '高度推薦'
+                              ? 'bg-green-100 text-green-700 border-green-200'
+                              : 'bg-yellow-100 text-yellow-700 border-yellow-200'
+                          "
+                          class="px-3 py-1 rounded-full text-sm font-medium border"
+                        >
+                          {{ cardSummary.recommendation }}
+                        </span>
+                      </div>
+                      <p class="text-slate-600 text-base leading-relaxed mb-6">
+                        {{ cardSummary.analysis }}
+                      </p>
+                      <div class="flex space-x-3">
+                        <button
+                          @click="showQuestionCard"
+                          class="flex-1 bg-gradient-to-r from-[#00afb8] to-[#008a94] text-white px-4 py-3 rounded-lg text-base font-medium action-button"
+                        >
+                          建議問題
+                        </button>
+                        <button
+                          @click="scheduleInterview"
+                          class="flex-1 bg-gradient-to-r from-[#00afb8] to-[#00c4d1] text-white px-4 py-3 rounded-lg text-base font-medium action-button"
+                        >
+                          邀約面試
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- 建議問題卡片 -->
+              <div class="w-[100%] flex-shrink-0 snap-start">
+                <div
+                  class="bg-gradient-to-br from-white via-purple-50 to-indigo-50 border border-purple-200 rounded-xl p-8 min-h-[200px] summary-card"
+                >
+                  <div class="flex items-start mb-6">
+                    <div
+                      class="w-10 h-10 bg-purple-100 rounded-full flex items-center justify-center flex-shrink-0 mr-3"
+                    >
+                      <svg
+                        class="w-5 h-5 text-purple-500"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          stroke-linecap="round"
+                          stroke-linejoin="round"
+                          stroke-width="2"
+                          d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                        ></path>
+                      </svg>
+                    </div>
+                    <div class="flex-1">
+                      <div class="flex items-center justify-between mb-4">
+                        <h3 class="text-xl font-bold text-slate-800">
+                          建議面試問題
+                        </h3>
+                        <button
+                          @click="copyAllQuestions"
+                          class="text-xs px-3 py-1 bg-[#00afb8] text-white rounded-full hover:bg-[#008a94] transition-colors duration-200 flex items-center space-x-1"
+                        >
+                          <svg
+                            class="w-3 h-3"
+                            fill="none"
+                            stroke="currentColor"
+                            viewBox="0 0 24 24"
+                          >
+                            <path
+                              stroke-linecap="round"
+                              stroke-linejoin="round"
+                              stroke-width="2"
+                              d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3"
+                            ></path>
+                          </svg>
+                          <span>全部複製</span>
+                        </button>
+                      </div>
+                      <div class="space-y-3 text-base text-slate-600">
+                        <div
+                          class="flex items-start justify-between group hover:bg-purple-25 rounded-lg p-2 -mx-2 transition-colors duration-200"
+                        >
+                          <div class="flex items-start flex-1">
+                            <span
+                              class="w-5 h-5 rounded-full bg-purple-100 text-purple-600 text-xs flex items-center justify-center flex-shrink-0 mt-0.5 mr-3 font-medium"
+                              >1</span
+                            >
+                            <span
+                              >請分享您在前一份工作中遇到的最大挑戰，以及如何解決的？</span
+                            >
+                          </div>
+                          <button
+                            @click="
+                              copyQuestion(
+                                '請分享您在前一份工作中遇到的最大挑戰，以及如何解決的？',
+                                1
+                              )
+                            "
+                            :class="
+                              copiedQuestions.has(1)
+                                ? 'text-green-500'
+                                : 'text-slate-400 hover:text-slate-600'
+                            "
+                            class="ml-2 opacity-0 group-hover:opacity-100 transition-all duration-200 flex-shrink-0"
+                          >
+                            <svg
+                              class="w-4 h-4"
+                              fill="none"
+                              stroke="currentColor"
+                              viewBox="0 0 24 24"
+                            >
+                              <path
+                                v-if="copiedQuestions.has(1)"
+                                stroke-linecap="round"
+                                stroke-linejoin="round"
+                                stroke-width="2"
+                                d="M5 13l4 4L19 7"
+                              ></path>
+                              <path
+                                v-else
+                                stroke-linecap="round"
+                                stroke-linejoin="round"
+                                stroke-width="2"
+                                d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3"
+                              ></path>
+                            </svg>
+                          </button>
+                        </div>
+                        <div
+                          class="flex items-start justify-between group hover:bg-purple-25 rounded-lg p-2 -mx-2 transition-colors duration-200"
+                        >
+                          <div class="flex items-start flex-1">
+                            <span
+                              class="w-5 h-5 rounded-full bg-purple-100 text-purple-600 text-xs flex items-center justify-center flex-shrink-0 mt-0.5 mr-3 font-medium"
+                              >2</span
+                            >
+                            <span>您對於這個職位有什麼特別的想法或期待？</span>
+                          </div>
+                          <button
+                            @click="
+                              copyQuestion(
+                                '您對於這個職位有什麼特別的想法或期待？',
+                                2
+                              )
+                            "
+                            :class="
+                              copiedQuestions.has(2)
+                                ? 'text-green-500'
+                                : 'text-slate-400 hover:text-slate-600'
+                            "
+                            class="ml-2 opacity-0 group-hover:opacity-100 transition-all duration-200 flex-shrink-0"
+                          >
+                            <svg
+                              class="w-4 h-4"
+                              fill="none"
+                              stroke="currentColor"
+                              viewBox="0 0 24 24"
+                            >
+                              <path
+                                v-if="copiedQuestions.has(2)"
+                                stroke-linecap="round"
+                                stroke-linejoin="round"
+                                stroke-width="2"
+                                d="M5 13l4 4L19 7"
+                              ></path>
+                              <path
+                                v-else
+                                stroke-linecap="round"
+                                stroke-linejoin="round"
+                                stroke-width="2"
+                                d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3"
+                              ></path>
+                            </svg>
+                          </button>
+                        </div>
+                        <div
+                          class="flex items-start justify-between group hover:bg-purple-25 rounded-lg p-2 -mx-2 transition-colors duration-200"
+                        >
+                          <div class="flex items-start flex-1">
+                            <span
+                              class="w-5 h-5 rounded-full bg-purple-100 text-purple-600 text-xs flex items-center justify-center flex-shrink-0 mt-0.5 mr-3 font-medium"
+                              >3</span
+                            >
+                            <span>請描述一次您需要快速學習新技能的經驗。</span>
+                          </div>
+                          <button
+                            @click="
+                              copyQuestion(
+                                '請描述一次您需要快速學習新技能的經驗。',
+                                3
+                              )
+                            "
+                            :class="
+                              copiedQuestions.has(3)
+                                ? 'text-green-500'
+                                : 'text-slate-400 hover:text-slate-600'
+                            "
+                            class="ml-2 opacity-0 group-hover:opacity-100 transition-all duration-200 flex-shrink-0"
+                          >
+                            <svg
+                              class="w-4 h-4"
+                              fill="none"
+                              stroke="currentColor"
+                              viewBox="0 0 24 24"
+                            >
+                              <path
+                                v-if="copiedQuestions.has(3)"
+                                stroke-linecap="round"
+                                stroke-linejoin="round"
+                                stroke-width="2"
+                                d="M5 13l4 4L19 7"
+                              ></path>
+                              <path
+                                v-else
+                                stroke-linecap="round"
+                                stroke-linejoin="round"
+                                stroke-width="2"
+                                d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3"
+                              ></path>
+                            </svg>
+                          </button>
+                        </div>
+                      </div>
+                      <button
+                        @click="backToSummary"
+                        class="mt-6 w-full bg-gradient-to-r from-slate-400 to-slate-500 text-white px-4 py-3 rounded-lg text-base font-medium action-button"
+                      >
+                        返回總結
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 複製成功提示 -->
+        <div
+          v-if="showCopyToast"
+          class="fixed top-20 right-6 bg-green-500 text-white px-4 py-2 rounded-lg shadow-lg z-50 flex items-center space-x-2 animate-bounce"
+        >
+          <svg
+            class="w-4 h-4"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+              d="M5 13l4 4L19 7"
+            ></path>
+          </svg>
+          <span>已複製到剪貼板</span>
+        </div>
+
+        <!-- 功能選單區 -->
+        <div class="mb-6">
+          <div class="grid grid-cols-2 gap-3">
+            <button
+              @click="switchFunction('job-match')"
+              :class="
+                activeFunction === 'job-match'
+                  ? 'bg-gradient-to-r from-blue-500 to-cyan-500 text-white shadow-md'
+                  : 'bg-white text-slate-600 border border-slate-200 hover:bg-slate-50'
+              "
+              class="p-4 rounded-lg text-left function-button"
+            >
+              <div class="flex items-center">
+                <svg
+                  class="w-5 h-5 mr-2"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-width="2"
+                    d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"
+                  ></path>
+                </svg>
+                <div>
+                  <div class="font-medium text-sm">職缺符合度分析</div>
+                </div>
+              </div>
+            </button>
+            <button
+              @click="switchFunction('timeline')"
+              :class="
+                activeFunction === 'timeline'
+                  ? 'bg-gradient-to-r from-green-500 to-teal-500 text-white shadow-md'
+                  : 'bg-white text-slate-600 border border-slate-200 hover:bg-slate-50'
+              "
+              class="p-4 rounded-lg text-left function-button"
+            >
+              <div class="flex items-center">
+                <svg
+                  class="w-5 h-5 mr-2"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-width="2"
+                    d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
+                  ></path>
+                </svg>
+                <div>
+                  <div class="font-medium text-sm">學經歷地圖</div>
+                </div>
+              </div>
+            </button>
+            <button
+              @click="switchFunction('fact-check')"
+              :class="
+                activeFunction === 'fact-check'
+                  ? 'bg-gradient-to-r from-orange-500 to-red-500 text-white shadow-md'
+                  : 'bg-white text-slate-600 border border-slate-200 hover:bg-slate-50'
+              "
+              class="p-4 rounded-lg text-left function-button"
+            >
+              <div class="flex items-center">
+                <svg
+                  class="w-5 h-5 mr-2"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-width="2"
+                    d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
+                  ></path>
+                </svg>
+                <div>
+                  <div class="font-medium text-sm">候選人事實查核</div>
+                </div>
+              </div>
+            </button>
+            <button
+              @click="switchFunction('ai-chat')"
+              :class="
+                activeFunction === 'ai-chat'
+                  ? 'bg-gradient-to-r from-purple-500 to-pink-500 text-white shadow-md'
+                  : 'bg-white text-slate-600 border border-slate-200 hover:bg-slate-50'
+              "
+              class="p-4 rounded-lg text-left function-button"
+            >
+              <div class="flex items-center">
+                <svg
+                  class="w-5 h-5 mr-2"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-width="2"
+                    d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"
+                  ></path>
+                </svg>
+                <div>
+                  <div class="font-medium text-sm">找人柴 AI 聊天室</div>
+                </div>
+              </div>
+            </button>
+          </div>
+        </div>
+
+        <!-- 內容展示區提示 -->
+        <div class="mb-6">
+          <div
+            class="bg-gradient-to-r from-amber-50 to-yellow-50 border border-amber-200 p-4 rounded-xl shadow-sm"
+          >
+            <p
+              class="m-0 leading-6 text-amber-700 font-medium flex items-center text-sm"
+            >
+              <svg
+                class="w-4 h-4 mr-2 text-amber-600"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z"
+                ></path>
+              </svg>
+              分析僅供參考，建議結合面試表現進行綜合評估。
+            </p>
+          </div>
+        </div>
+        <!-- 內容展示區 -->
+        <div
+          class="bg-white/90 backdrop-blur-sm p-4 md:p-6 rounded-xl mb-10 shadow-lg border border-slate-200/50"
+        >
+          <div v-show="activeTab === 'description'" class="tab-content">
+            <!-- 學經歷時間軸視覺化 -->
+            <div class="space-y-8">
+              <!-- 教育背景區塊 -->
+              <div class="relative">
+                <h3
+                  class="text-lg font-semibold text-slate-800 mb-4 flex items-center"
+                >
+                  <svg
+                    class="w-5 h-5 mr-2 text-blue-600"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      stroke-width="2"
+                      d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.746 0 3.332.477 4.5 1.253v13C19.832 18.477 18.246 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"
+                    ></path>
+                  </svg>
+                  教育背景
+                </h3>
+
+                <!-- 教育時間軸 -->
+                <div class="relative pl-6">
+                  <!-- 時間軸線 -->
+                  <div
+                    class="absolute left-2 top-0 bottom-0 w-0.5 bg-gradient-to-b from-blue-200 to-blue-400"
+                  ></div>
+
+                  <!-- 碩士學位 -->
+                  <div class="relative mb-6">
+                    <div
+                      class="absolute left-[-0.5rem] w-4 h-4 bg-blue-600 rounded-full border-2 border-white shadow-lg"
+                    ></div>
+                    <div
+                      class="bg-white rounded-lg p-4 border border-blue-200 shadow-sm hover:shadow-md transition-shadow"
+                    >
+                      <div class="flex justify-between items-start mb-2">
+                        <h4 class="font-semibold text-slate-800">
+                          國立清華大學
+                        </h4>
+                        <span class="text-sm text-slate-500">2012-2014</span>
+                      </div>
+                      <p class="text-sm text-slate-600 mb-1">
+                        資訊工程學系 碩士
+                      </p>
+                      <div class="flex items-center text-xs text-blue-600">
+                        <svg
+                          class="w-3 h-3 mr-1"
+                          fill="currentColor"
+                          viewBox="0 0 20 20"
+                        >
+                          <path
+                            fill-rule="evenodd"
+                            d="M10.394 2.08a1 1 0 00-.788 0l-7 3a1 1 0 000 1.84L5.25 8.051a.999.999 0 01.356-.257l4-1.714a1 1 0 11.788 1.838L7.667 9.088l1.94.831a1 1 0 00.787 0l7-3a1 1 0 000-1.838l-7-3zM3.31 9.397L5 10.12v4.102a8.969 8.969 0 00-1.05-.174 1 1 0 01-.89-.89 11.115 11.115 0 01.25-3.762zM9.3 16.573A9.026 9.026 0 007 14.935v-3.957l1.818.78a3 3 0 002.364 0l5.508-2.361a11.026 11.026 0 01.25 3.762 1 1 0 01-.89.89 8.968 8.968 0 00-5.35 2.524 1 1 0 01-1.4 0zM6 18a1 1 0 001-1v-2.065a8.935 8.935 0 00-2-.712V17a1 1 0 001 1z"
+                            clip-rule="evenodd"
+                          ></path>
+                        </svg>
+                        研究所畢業
+                      </div>
+                    </div>
+                  </div>
+
+                  <!-- 學士學位 -->
+                  <div class="relative">
+                    <div
+                      class="absolute left-[-0.5rem] w-4 h-4 bg-blue-400 rounded-full border-2 border-white shadow-lg"
+                    ></div>
+                    <div
+                      class="bg-white rounded-lg p-4 border border-blue-200 shadow-sm hover:shadow-md transition-shadow"
+                    >
+                      <div class="flex justify-between items-start mb-2">
+                        <h4 class="font-semibold text-slate-800">
+                          國立中興大學
+                        </h4>
+                        <span class="text-sm text-slate-500">2008-2012</span>
+                      </div>
+                      <p class="text-sm text-slate-600 mb-1">
+                        資訊管理學系 學士
+                      </p>
+                      <div class="flex items-center text-xs text-blue-600">
+                        <svg
+                          class="w-3 h-3 mr-1"
+                          fill="currentColor"
+                          viewBox="0 0 20 20"
+                        >
+                          <path
+                            fill-rule="evenodd"
+                            d="M10.394 2.08a1 1 0 00-.788 0l-7 3a1 1 0 000 1.84L5.25 8.051a.999.999 0 01.356-.257l4-1.714a1 1 0 11.788 1.838L7.667 9.088l1.94.831a1 1 0 00.787 0l7-3a1 1 0 000-1.838l-7-3zM3.31 9.397L5 10.12v4.102a8.969 8.969 0 00-1.05-.174 1 1 0 01-.89-.89 11.115 11.115 0 01.25-3.762zM9.3 16.573A9.026 9.026 0 007 14.935v-3.957l1.818.78a3 3 0 002.364 0l5.508-2.361a11.026 11.026 0 01.25 3.762 1 1 0 01-.89.89 8.968 8.968 0 00-5.35 2.524 1 1 0 01-1.4 0zM6 18a1 1 0 001-1v-2.065a8.935 8.935 0 00-2-.712V17a1 1 0 001 1z"
+                            clip-rule="evenodd"
+                          ></path>
+                        </svg>
+                        大學畢業
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- 工作經歷區塊 -->
+              <div class="relative">
+                <h3
+                  class="text-lg font-semibold text-slate-800 mb-4 flex items-center"
+                >
+                  <svg
+                    class="w-5 h-5 mr-2 text-green-600"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      stroke-width="2"
+                      d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2-2v2m8 0V6a2 2 0 012 2v6a2 2 0 01-2 2H6a2 2 0 01-2-2V8a2 2 0 012-2V6"
+                    ></path>
+                  </svg>
+                  工作經歷
+                </h3>
+
+                <!-- 工作時間軸 -->
+                <div class="relative pl-6">
+                  <!-- 時間軸線 -->
+                  <div
+                    class="absolute left-2 top-0 bottom-0 w-0.5 bg-gradient-to-b from-green-200 to-green-400"
+                  ></div>
+
+                  <!-- 資深軟體工程師 -->
+                  <div class="relative mb-6">
+                    <div
+                      class="absolute left-[-0.5rem] w-4 h-4 bg-green-600 rounded-full border-2 border-white shadow-lg"
+                    ></div>
+                    <div
+                      class="bg-white rounded-lg p-4 border border-green-200 shadow-sm hover:shadow-md transition-shadow"
+                    >
+                      <div class="flex justify-between items-start mb-2">
+                        <h4 class="font-semibold text-slate-800">
+                          ABC科技股份有限公司
+                        </h4>
+                        <span class="text-sm text-slate-500">2018-2024</span>
+                      </div>
+                      <p class="text-sm text-slate-600 mb-2">資深軟體工程師</p>
+                      <p class="text-xs text-slate-500 mb-2">
+                        成功將傳統系統遷移至雲端，降低 40% 運營成本
+                      </p>
+                      <div class="flex items-center text-xs text-green-600">
+                        <span class="bg-green-100 px-2 py-1 rounded-full"
+                          >6年經驗</span
+                        >
+                      </div>
+                    </div>
+                  </div>
+
+                  <!-- 軟體工程師 -->
+                  <div class="relative mb-6">
+                    <div
+                      class="absolute left-[-0.5rem] w-4 h-4 bg-green-500 rounded-full border-2 border-white shadow-lg"
+                    ></div>
+                    <div
+                      class="bg-white rounded-lg p-4 border border-green-200 shadow-sm hover:shadow-md transition-shadow"
+                    >
+                      <div class="flex justify-between items-start mb-2">
+                        <h4 class="font-semibold text-slate-800">
+                          XYZ科技有限公司
+                        </h4>
+                        <span class="text-sm text-slate-500">2015-2018</span>
+                      </div>
+                      <p class="text-sm text-slate-600 mb-2">軟體工程師</p>
+                      <p class="text-xs text-slate-500 mb-2">
+                        開發多個企業級應用系統
+                      </p>
+                      <div class="flex items-center text-xs text-green-600">
+                        <span class="bg-green-100 px-2 py-1 rounded-full"
+                          >3年經驗</span
+                        >
+                      </div>
+                    </div>
+                  </div>
+
+                  <!-- 初級工程師 -->
+                  <div class="relative">
+                    <div
+                      class="absolute left-[-0.5rem] w-4 h-4 bg-green-400 rounded-full border-2 border-white shadow-lg"
+                    ></div>
+                    <div
+                      class="bg-white rounded-lg p-4 border border-green-200 shadow-sm hover:shadow-md transition-shadow"
+                    >
+                      <div class="flex justify-between items-start mb-2">
+                        <h4 class="font-semibold text-slate-800">
+                          DEF軟體企業
+                        </h4>
+                        <span class="text-sm text-slate-500">2014-2015</span>
+                      </div>
+                      <p class="text-sm text-slate-600 mb-2">初級軟體工程師</p>
+                      <p class="text-xs text-slate-500 mb-2">
+                        學習企業軟體開發流程
+                      </p>
+                      <div class="flex items-center text-xs text-green-600">
+                        <span class="bg-green-100 px-2 py-1 rounded-full"
+                          >1年經驗</span
+                        >
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- 技能標籤雲 -->
+              <div class="relative">
+                <h3
+                  class="text-lg font-semibold text-slate-800 mb-4 flex items-center"
+                >
+                  <svg
+                    class="w-5 h-5 mr-2 text-purple-600"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      stroke-width="2"
+                      d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014.846 21H9.154a3.374 3.374 0 00-2.894-1.789L5.712 18.3z"
+                    ></path>
+                  </svg>
+                  核心技能
+                </h3>
+
+                <div class="flex flex-wrap gap-2">
+                  <!-- 程式語言 -->
+                  <span
+                    class="bg-blue-100 text-blue-800 px-3 py-1 rounded-full text-sm font-medium"
+                    >Python</span
+                  >
+                  <span
+                    class="bg-yellow-100 text-yellow-800 px-3 py-1 rounded-full text-sm font-medium"
+                    >JavaScript</span
+                  >
+                  <span
+                    class="bg-red-100 text-red-800 px-3 py-1 rounded-full text-sm font-medium"
+                    >Java</span
+                  >
+
+                  <!-- 框架技術 -->
+                  <span
+                    class="bg-cyan-100 text-cyan-800 px-3 py-1 rounded-full text-sm font-medium"
+                    >React</span
+                  >
+                  <span
+                    class="bg-green-100 text-green-800 px-3 py-1 rounded-full text-sm font-medium"
+                    >Node.js</span
+                  >
+                  <span
+                    class="bg-indigo-100 text-indigo-800 px-3 py-1 rounded-full text-sm font-medium"
+                    >Django</span
+                  >
+
+                  <!-- 雲端技術 -->
+                  <span
+                    class="bg-orange-100 text-orange-800 px-3 py-1 rounded-full text-sm font-medium"
+                    >AWS</span
+                  >
+                  <span
+                    class="bg-gray-100 text-gray-800 px-3 py-1 rounded-full text-sm font-medium"
+                    >Docker</span
+                  >
+                  <span
+                    class="bg-purple-100 text-purple-800 px-3 py-1 rounded-full text-sm font-medium"
+                    >Kubernetes</span
+                  >
+
+                  <!-- 資料庫 -->
+                  <span
+                    class="bg-teal-100 text-teal-800 px-3 py-1 rounded-full text-sm font-medium"
+                    >MySQL</span
+                  >
+                  <span
+                    class="bg-emerald-100 text-emerald-800 px-3 py-1 rounded-full text-sm font-medium"
+                    >MongoDB</span
+                  >
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- 分類卡片區域 -->
+          <div v-show="activeTab === 'ai'" class="tab-content space-y-8">
+            <!-- 卡片1：經歷跳躍或邏輯不通 -->
+            <div
+              class="group bg-white rounded-xl shadow-lg border border-slate-200 hover:shadow-xl transition-all duration-300 overflow-hidden"
+            >
+              <!-- 卡片頭部 -->
+              <div
+                class="bg-gradient-to-r from-orange-50 to-red-50 border-b border-orange-200 p-6"
+              >
+                <div class="flex justify-between items-center">
+                  <div class="flex items-center space-x-4">
+                    <div class="flex-shrink-0">
+                      <div
+                        class="w-10 h-10 bg-gradient-to-br from-orange-400 to-red-500 rounded-lg flex items-center justify-center shadow-sm"
+                      >
+                        <svg
+                          class="w-5 h-5 text-white"
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                        >
+                          <path
+                            stroke-linecap="round"
+                            stroke-linejoin="round"
+                            stroke-width="2"
+                            d="M12 9v2m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                          ></path>
+                        </svg>
+                      </div>
+                    </div>
+                    <div>
+                      <h3 class="text-xl font-bold text-slate-900 mb-1">
+                        經歷跳躍或邏輯不通
+                      </h3>
+                      <div class="flex items-center space-x-2">
+                        <span
+                          class="inline-flex items-center px-2 py-1 rounded-md text-xs font-medium bg-orange-100 text-orange-800"
+                          >高風險</span
+                        >
+                        <span class="text-sm text-slate-500"
+                          >邏輯一致性分析</span
+                        >
+                      </div>
+                    </div>
+                  </div>
+                  <div class="flex items-center space-x-2">
+                    <button
+                      class="p-2 rounded-lg hover:bg-emerald-100 transition-all duration-200 group/btn"
+                      :class="{
+                        'bg-emerald-100 text-emerald-700 shadow-sm':
+                          feedbacks.item1.liked,
+                      }"
+                      @click="handleFeedback('item1', 'like')"
+                    >
+                      <svg
+                        class="w-5 h-5 text-emerald-600 group-hover/btn:scale-110 transition-transform"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          stroke-linecap="round"
+                          stroke-linejoin="round"
+                          stroke-width="2"
+                          d="M14 10h4.764a2 2 0 011.789 2.894l-3.5 7A2 2 0 0115.263 21h-4.017c-.163 0-.326-.02-.485-.06L7 20m7-10V5a2 2 0 00-2-2h-.095c-.5 0-.905.405-.905.905 0 .714-.211 1.412-.608 2.006L7 11v9m7-10h-2M7 20H5a2 2 0 01-2-2v-6a2 2 0 012-2h2.5"
+                        ></path>
+                      </svg>
+                    </button>
+                    <button
+                      class="p-2 rounded-lg hover:bg-red-100 transition-all duration-200 group/btn"
+                      :class="{
+                        'bg-red-100 text-red-700 shadow-sm':
+                          feedbacks.item1.disliked,
+                      }"
+                      @click="handleFeedback('item1', 'dislike')"
+                    >
+                      <svg
+                        class="w-5 h-5 text-red-600 group-hover/btn:scale-110 transition-transform"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          stroke-linecap="round"
+                          stroke-linejoin="round"
+                          stroke-width="2"
+                          d="M10 14H5.236a2 2 0 01-1.789-2.894l3.5-7A2 2 0 018.736 3h4.018c.163 0 .326.02.485.06L17 4m-7 10v2a2 2 0 002 2h.095c.5 0 .905-.405.905-.905 0-.714.211-1.412.608-2.006L17 13V4m-7 10h2m5-10h2a2 2 0 012 2v6a2 2 0 01-2 2h-2.5"
+                        ></path>
+                      </svg>
+                    </button>
+                  </div>
+                </div>
+              </div>
+
+              <!-- 卡片內容 -->
+              <div class="p-6">
+                <!-- 分析描述 -->
+                <div class="mb-6">
+                  <p class="text-slate-700 leading-relaxed mb-4">
+                    使用過於精確的數字（30%、40%、90%）但缺乏計算方法說明，顯示AI傾向於產生整齊的百分比數據。時間線存在重疊矛盾，工作經驗總和與學歷期間不符，無法自圓其說，這是AI合成履歷常見的邏輯問題。
+                  </p>
+                </div>
+
+                <!-- 履歷內文區塊 -->
+                <div class="mb-6">
+                  <h4
+                    class="text-sm font-semibold text-slate-900 mb-3 flex items-center"
+                  >
+                    <svg
+                      class="w-4 h-4 mr-2 text-slate-500"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                        stroke-width="2"
+                        d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+                      ></path>
+                    </svg>
+                    履歷內文
+                  </h4>
+                  <div
+                    class="bg-gradient-to-r from-slate-50 to-slate-100 border border-slate-200 rounded-xl p-4 hover:border-cyan-300 hover:shadow-md transition-all duration-200 cursor-pointer group/content"
+                  >
+                    <div
+                      class="flex items-start justify-between"
+                      @click="
+                        scrollToSection(
+                          'experience-section',
+                          '【數位轉型平台】成效'
+                        )
+                      "
+                    >
+                      <div class="flex-1">
+                        <p
+                          class="text-slate-800 font-medium leading-relaxed group-hover/content:text-slate-900"
+                        >
+                          【數位轉型平台】成效：成功將傳統系統遷移至雲端，降低
+                          40% 運營成本，業績增長 15%。
+                        </p>
+                      </div>
+                      <div class="ml-4 flex-shrink-0">
+                        <div
+                          class="w-8 h-8 bg-cyan-100 rounded-lg flex items-center justify-center group-hover/content:bg-cyan-200 transition-colors"
+                        >
+                          <svg
+                            class="w-4 h-4 text-cyan-600"
+                            fill="none"
+                            stroke="currentColor"
+                            viewBox="0 0 24 24"
+                          >
+                            <path
+                              stroke-linecap="round"
+                              stroke-linejoin="round"
+                              stroke-width="2"
+                              d="M9 5l7 7-7 7"
+                            ></path>
+                          </svg>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- 建議提問區塊 -->
+                <div>
+                  <h4
+                    class="text-sm font-semibold text-slate-900 mb-3 flex items-center"
+                  >
+                    <svg
+                      class="w-4 h-4 mr-2 text-slate-500"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                        stroke-width="2"
+                        d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                      ></path>
+                    </svg>
+                    建議提問
+                  </h4>
+                  <div
+                    class="bg-gradient-to-r from-purple-50 to-indigo-50 border border-purple-200 rounded-xl p-5 cursor-pointer hover:shadow-lg transition-all duration-300 group/question relative overflow-hidden"
+                    @click="
+                      copyToClipboard(
+                        '面試提問建議：\n\n闇於數據準確性，您可以請求求職者分享更詳細的計算方法，例如詢問系統可擴展性提升30%的具體指標，以及40%運營成本降低的計算基礎。\n\n關於時間線方面，可以委婉地請求確認在XYZ公司的確切在職時間，以及詢問碩士學位與第一份全職工作時間重疊的情況，了解求職者是如何兼顧的。透過這些對話，您能更全面評估履歷的真實性。'
+                      )
+                    "
+                  >
+                    <!-- 複製圖標 -->
+                    <div
+                      class="absolute top-4 right-4 opacity-0 group-hover/question:opacity-100 transition-all duration-200"
+                    >
+                      <div
+                        class="w-8 h-8 bg-white/80 backdrop-blur-sm rounded-lg flex items-center justify-center shadow-sm"
+                      >
+                        <svg
+                          class="w-4 h-4 text-purple-600"
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                        >
+                          <path
+                            stroke-linecap="round"
+                            stroke-linejoin="round"
+                            stroke-width="2"
+                            d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"
+                          ></path>
+                        </svg>
+                      </div>
+                    </div>
+
+                    <!-- 漸層裝飾 -->
+                    <div
+                      class="absolute inset-0 bg-gradient-to-r from-purple-500/5 to-indigo-500/5 opacity-0 group-hover/question:opacity-100 transition-opacity duration-300"
+                    ></div>
+
+                    <div class="relative">
+                      <p class="text-slate-700 leading-relaxed mb-0">
+                        您可以詢問數據背後的計算方法，例如系統可擴展性提升30%的具體指標和運營成本降低40%的計算基礎。同時，委婉地核對時間線問題，如不同公司的在職時間及碩士學位與工作的時間重疊，這些對話有助於評估履歷真實性。
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- 卡片2：堆砌熱門關鍵字但缺乏上下文 -->
+            <div
+              class="group bg-white rounded-xl shadow-lg border border-slate-200 hover:shadow-xl transition-all duration-300 overflow-hidden"
+            >
+              <!-- 卡片頭部 -->
+              <div
+                class="bg-gradient-to-r from-yellow-50 to-amber-50 border-b border-yellow-200 p-6"
+              >
+                <div class="flex justify-between items-center">
+                  <div class="flex items-center space-x-4">
+                    <div class="flex-shrink-0">
+                      <div
+                        class="w-10 h-10 bg-gradient-to-br from-yellow-400 to-amber-500 rounded-lg flex items-center justify-center shadow-sm"
+                      >
+                        <svg
+                          class="w-5 h-5 text-white"
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                        >
+                          <path
+                            stroke-linecap="round"
+                            stroke-linejoin="round"
+                            stroke-width="2"
+                            d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a1.994 1.994 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z"
+                          ></path>
+                        </svg>
+                      </div>
+                    </div>
+                    <div>
+                      <h3 class="text-xl font-bold text-slate-900 mb-1">
+                        堆砌熱門關鍵字但缺乏上下文
+                      </h3>
+                      <div class="flex items-center space-x-2">
+                        <span
+                          class="inline-flex items-center px-2 py-1 rounded-md text-xs font-medium bg-yellow-100 text-yellow-800"
+                          >中風險</span
+                        >
+                        <span class="text-sm text-slate-500">技術深度分析</span>
+                      </div>
+                    </div>
+                  </div>
+                  <div class="flex items-center space-x-2">
+                    <button
+                      class="p-2 rounded-lg hover:bg-emerald-100 transition-all duration-200 group/btn"
+                      :class="{
+                        'bg-emerald-100 text-emerald-700 shadow-sm':
+                          feedbacks.item2.liked,
+                      }"
+                      @click="handleFeedback('item2', 'like')"
+                    >
+                      <svg
+                        class="w-5 h-5 text-emerald-600 group-hover/btn:scale-110 transition-transform"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          stroke-linecap="round"
+                          stroke-linejoin="round"
+                          stroke-width="2"
+                          d="M14 10h4.764a2 2 0 011.789 2.894l-3.5 7A2 2 0 0115.263 21h-4.017c-.163 0-.326-.02-.485-.06L7 20m7-10V5a2 2 0 00-2-2h-.095c-.5 0-.905.405-.905.905 0 .714-.211 1.412-.608 2.006L7 11v9m7-10h-2M7 20H5a2 2 0 01-2-2v-6a2 2 0 012-2h2.5"
+                        ></path>
+                      </svg>
+                    </button>
+                    <button
+                      class="p-2 rounded-lg hover:bg-red-100 transition-all duration-200 group/btn"
+                      :class="{
+                        'bg-red-100 text-red-700 shadow-sm':
+                          feedbacks.item2.disliked,
+                      }"
+                      @click="handleFeedback('item2', 'dislike')"
+                    >
+                      <svg
+                        class="w-5 h-5 text-red-600 group-hover/btn:scale-110 transition-transform"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          stroke-linecap="round"
+                          stroke-linejoin="round"
+                          stroke-width="2"
+                          d="M10 14H5.236a2 2 0 01-1.789-2.894l3.5-7A2 2 0 018.736 3h4.018c.163 0 .326.02.485.06L17 4m-7 10v2a2 2 0 002 2h.095c.5 0 .905-.405.905-.905 0-.714.211-1.412.608-2.006L17 13V4m-7 10h2m5-10h2a2 2 0 012 2v6a2 2 0 01-2 2h-2.5"
+                        ></path>
+                      </svg>
+                    </button>
+                  </div>
+                </div>
+              </div>
+
+              <!-- 卡片內容 -->
+              <div class="p-6">
+                <!-- 分析描述 -->
+                <div class="mb-6">
+                  <p class="text-slate-700 leading-relaxed mb-4">
+                    羅列多種技術但缺乏實際應用案例，未提供技術掌握程度的具體證明，無法判斷技術深度真實性。
+                  </p>
+                </div>
+
+                <!-- 履歷內文區塊 -->
+                <div class="mb-6">
+                  <h4
+                    class="text-sm font-semibold text-slate-900 mb-3 flex items-center"
+                  >
+                    <svg
+                      class="w-4 h-4 mr-2 text-slate-500"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                        stroke-width="2"
+                        d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+                      ></path>
+                    </svg>
+                    履歷內文
+                  </h4>
+                  <div class="space-y-3">
+                    <!-- 項目1 -->
+                    <div
+                      class="bg-gradient-to-r from-slate-50 to-slate-100 border border-slate-200 rounded-xl p-4 hover:border-cyan-300 hover:shadow-md transition-all duration-200 cursor-pointer group/content"
+                    >
+                      <div
+                        class="flex items-start justify-between"
+                        @click="
+                          scrollToSection('skills-section', '高級程式設計')
+                        "
+                      >
+                        <div class="flex-1">
+                          <p
+                            class="text-slate-800 font-medium leading-relaxed group-hover/content:text-slate-900"
+                          >
+                            高級程式設計：精通
+                            Python、JavaScript、Java，具備跨平台全端開發能力，驅動高效能系統建構。
+                          </p>
+                        </div>
+                        <div class="ml-4 flex-shrink-0">
+                          <div
+                            class="w-8 h-8 bg-cyan-100 rounded-lg flex items-center justify-center group-hover/content:bg-cyan-200 transition-colors"
+                          >
+                            <svg
+                              class="w-4 h-4 text-cyan-600"
+                              fill="none"
+                              stroke="currentColor"
+                              viewBox="0 0 24 24"
+                            >
+                              <path
+                                stroke-linecap="round"
+                                stroke-linejoin="round"
+                                stroke-width="2"
+                                d="M9 5l7 7-7 7"
+                              ></path>
+                            </svg>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+
+                    <!-- 項目2 -->
                     <div
                       class="bg-gradient-to-r from-slate-50 to-slate-100 border border-slate-200 rounded-xl p-4 hover:border-cyan-300 hover:shadow-md transition-all duration-200 cursor-pointer group/content"
                     >
@@ -1878,7 +2608,7 @@ onUnmounted(() => {
                         @click="
                           scrollToSection(
                             'experience-section',
-                            '【數位轉型平台】成效'
+                            '系統架構設計：主導企業級應用程式架構'
                           )
                         "
                       >
@@ -1886,8 +2616,51 @@ onUnmounted(() => {
                           <p
                             class="text-slate-800 font-medium leading-relaxed group-hover/content:text-slate-900"
                           >
-                            【數位轉型平台】成效：成功將傳統系統遷移至雲端，降低
-                            40% 運營成本，業績增長 15%。
+                            系統架構設計：主導企業級應用程式架構，運用微服務與
+                            AWS 雲端技術，提升系統可擴展性 30%。
+                          </p>
+                        </div>
+                        <div class="ml-4 flex-shrink-0">
+                          <div
+                            class="w-8 h-8 bg-cyan-100 rounded-lg flex items-center justify-center group-hover/content:bg-cyan-200 transition-colors"
+                          >
+                            <svg
+                              class="w-4 h-4 text-cyan-600"
+                              fill="none"
+                              stroke="currentColor"
+                              viewBox="0 0 24 24"
+                            >
+                              <path
+                                stroke-linecap="round"
+                                stroke-linejoin="round"
+                                stroke-width="2"
+                                d="M9 5l7 7-7 7"
+                              ></path>
+                            </svg>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+
+                    <!-- 項目3 -->
+                    <div
+                      class="bg-gradient-to-r from-slate-50 to-slate-100 border border-slate-200 rounded-xl p-4 hover:border-cyan-300 hover:shadow-md transition-all duration-200 cursor-pointer group/content"
+                    >
+                      <div
+                        class="flex items-start justify-between"
+                        @click="
+                          scrollToSection(
+                            'experience-section',
+                            '專案領導：帶領 10'
+                          )
+                        "
+                      >
+                        <div class="flex-1">
+                          <p
+                            class="text-slate-800 font-medium leading-relaxed group-hover/content:text-slate-900"
+                          >
+                            專案領導：帶領 10
+                            人開發團隊，負責需求分析、功能規劃與敏捷開發，確保專案如期交付。
                           </p>
                         </div>
                         <div class="ml-4 flex-shrink-0">
@@ -1912,128 +2685,90 @@ onUnmounted(() => {
                       </div>
                     </div>
                   </div>
+                </div>
 
-                  <!-- 建議提問區塊 -->
-                  <div>
-                    <h4
-                      class="text-sm font-semibold text-slate-900 mb-3 flex items-center"
+                <!-- 建議提問區塊 -->
+                <div>
+                  <h4
+                    class="text-sm font-semibold text-slate-900 mb-3 flex items-center"
+                  >
+                    <svg
+                      class="w-4 h-4 mr-2 text-slate-500"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
                     >
-                      <svg
-                        class="w-4 h-4 mr-2 text-slate-500"
-                        fill="none"
-                        stroke="currentColor"
-                        viewBox="0 0 24 24"
-                      >
-                        <path
-                          stroke-linecap="round"
-                          stroke-linejoin="round"
-                          stroke-width="2"
-                          d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-                        ></path>
-                      </svg>
-                      建議提問
-                    </h4>
+                      <path
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                        stroke-width="2"
+                        d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                      ></path>
+                    </svg>
+                    建議提問
+                  </h4>
+                  <div
+                    class="bg-gradient-to-r from-purple-50 to-indigo-50 border border-purple-200 rounded-xl p-5 cursor-pointer hover:shadow-lg transition-all duration-300 group/question relative overflow-hidden"
+                    @click="
+                      copyToClipboard(
+                        '面試提問建議：\n\n您可以邀請求職者深入分享技術經驗，例如詢問在列出的技術中（Python、JavaScript、Java）最擅長哪一項，以及使用這項技術解決過的具體挑戰。\n\n同時，關於專案經驗，您可以請求分享帶領10人開發團隊的管理方法，以及在微服務架構實踐中遇到的具體挑戰和解決方案。這些對話能幫助您評估求職者技術能力的真實深度。'
+                      )
+                    "
+                  >
+                    <!-- 複製圖標 -->
                     <div
-                      class="bg-gradient-to-r from-purple-50 to-indigo-50 border border-purple-200 rounded-xl p-5 cursor-pointer hover:shadow-lg transition-all duration-300 group/question relative overflow-hidden"
-                      @click="
-                        copyToClipboard(
-                          '面試提問建議：\n\n闇於數據準確性，您可以請求求職者分享更詳細的計算方法，例如詢問系統可擴展性提升30%的具體指標，以及40%運營成本降低的計算基礎。\n\n關於時間線方面，可以委婉地請求確認在XYZ公司的確切在職時間，以及詢問碩士學位與第一份全職工作時間重疊的情況，了解求職者是如何兼顧的。透過這些對話，您能更全面評估履歷的真實性。'
-                        )
-                      "
+                      class="absolute top-4 right-4 opacity-0 group-hover/question:opacity-100 transition-all duration-200"
                     >
-                      <!-- 複製圖標 -->
                       <div
-                        class="absolute top-4 right-4 opacity-0 group-hover/question:opacity-100 transition-all duration-200"
+                        class="w-8 h-8 bg-white/80 backdrop-blur-sm rounded-lg flex items-center justify-center shadow-sm"
                       >
-                        <div
-                          class="w-8 h-8 bg-white/80 backdrop-blur-sm rounded-lg flex items-center justify-center shadow-sm"
+                        <svg
+                          class="w-4 h-4 text-purple-600"
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
                         >
-                          <svg
-                            class="w-4 h-4 text-purple-600"
-                            fill="none"
-                            stroke="currentColor"
-                            viewBox="0 0 24 24"
-                          >
-                            <path
-                              stroke-linecap="round"
-                              stroke-linejoin="round"
-                              stroke-width="2"
-                              d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"
-                            ></path>
-                          </svg>
-                        </div>
+                          <path
+                            stroke-linecap="round"
+                            stroke-linejoin="round"
+                            stroke-width="2"
+                            d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"
+                          ></path>
+                        </svg>
                       </div>
+                    </div>
 
-                      <!-- 漸層裝飾 -->
-                      <div
-                        class="absolute inset-0 bg-gradient-to-r from-purple-500/5 to-indigo-500/5 opacity-0 group-hover/question:opacity-100 transition-opacity duration-300"
-                      ></div>
+                    <!-- 漸層裝飾 -->
+                    <div
+                      class="absolute inset-0 bg-gradient-to-r from-purple-500/5 to-indigo-500/5 opacity-0 group-hover/question:opacity-100 transition-opacity duration-300"
+                    ></div>
 
-                      <div class="relative">
-                        <p class="text-slate-700 leading-relaxed mb-0">
-                          您可以詢問數據背後的計算方法，例如系統可擴展性提升30%的具體指標和運營成本降低40%的計算基礎。同時，委婉地核對時間線問題，如不同公司的在職時間及碩士學位與工作的時間重疊，這些對話有助於評估履歷真實性。
-                        </p>
-                      </div>
+                    <div class="relative">
+                      <p class="text-slate-700 leading-relaxed mb-0">
+                        您可以請求職者分享技術專長的具體應用，例如在列出的技術中最擅長哪一項，以及解決過的實際挑戰。同時詢問團隊管理經驗和微服務架構實踐中遇到的困難，這有助於了解求職者技術深度與解決問題的能力。
+                      </p>
                     </div>
                   </div>
                 </div>
               </div>
+            </div>
 
-              <!-- 卡片2：堆砌熱門關鍵字但缺乏上下文 -->
+            <!-- 卡片3：敘述抽象、缺乏細節 -->
+            <div
+              class="group bg-white rounded-xl shadow-lg border border-slate-200 hover:shadow-xl transition-all duration-300 overflow-hidden"
+            >
+              <!-- 卡片頭部 -->
               <div
-                class="group bg-white rounded-xl shadow-lg border border-slate-200 hover:shadow-xl transition-all duration-300 overflow-hidden"
+                class="bg-gradient-to-r from-blue-50 to-indigo-50 border-b border-blue-200 p-6"
               >
-                <!-- 卡片頭部 -->
-                <div
-                  class="bg-gradient-to-r from-yellow-50 to-amber-50 border-b border-yellow-200 p-6"
-                >
-                  <div class="flex justify-between items-center">
-                    <div class="flex items-center space-x-4">
-                      <div class="flex-shrink-0">
-                        <div
-                          class="w-10 h-10 bg-gradient-to-br from-yellow-400 to-amber-500 rounded-lg flex items-center justify-center shadow-sm"
-                        >
-                          <svg
-                            class="w-5 h-5 text-white"
-                            fill="none"
-                            stroke="currentColor"
-                            viewBox="0 0 24 24"
-                          >
-                            <path
-                              stroke-linecap="round"
-                              stroke-linejoin="round"
-                              stroke-width="2"
-                              d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a1.994 1.994 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z"
-                            ></path>
-                          </svg>
-                        </div>
-                      </div>
-                      <div>
-                        <h3 class="text-xl font-bold text-slate-900 mb-1">
-                          堆砌熱門關鍵字但缺乏上下文
-                        </h3>
-                        <div class="flex items-center space-x-2">
-                          <span
-                            class="inline-flex items-center px-2 py-1 rounded-md text-xs font-medium bg-yellow-100 text-yellow-800"
-                            >中風險</span
-                          >
-                          <span class="text-sm text-slate-500"
-                            >技術深度分析</span
-                          >
-                        </div>
-                      </div>
-                    </div>
-                    <div class="flex items-center space-x-2">
-                      <button
-                        class="p-2 rounded-lg hover:bg-emerald-100 transition-all duration-200 group/btn"
-                        :class="{
-                          'bg-emerald-100 text-emerald-700 shadow-sm':
-                            feedbacks.item2.liked,
-                        }"
-                        @click="handleFeedback('item2', 'like')"
+                <div class="flex justify-between items-center">
+                  <div class="flex items-center space-x-4">
+                    <div class="flex-shrink-0">
+                      <div
+                        class="w-10 h-10 bg-gradient-to-br from-blue-400 to-indigo-500 rounded-lg flex items-center justify-center shadow-sm"
                       >
                         <svg
-                          class="w-5 h-5 text-emerald-600 group-hover/btn:scale-110 transition-transform"
+                          class="w-5 h-5 text-white"
                           fill="none"
                           stroke="currentColor"
                           viewBox="0 0 24 24"
@@ -2042,589 +2777,32 @@ onUnmounted(() => {
                             stroke-linecap="round"
                             stroke-linejoin="round"
                             stroke-width="2"
-                            d="M14 10h4.764a2 2 0 011.789 2.894l-3.5 7A2 2 0 0115.263 21h-4.017c-.163 0-.326-.02-.485-.06L7 20m7-10V5a2 2 0 00-2-2h-.095c-.5 0-.905.405-.905.905 0 .714-.211 1.412-.608 2.006L7 11v9m7-10h-2M7 20H5a2 2 0 01-2-2v-6a2 2 0 012-2h2.5"
+                            d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"
                           ></path>
                         </svg>
-                      </button>
-                      <button
-                        class="p-2 rounded-lg hover:bg-red-100 transition-all duration-200 group/btn"
-                        :class="{
-                          'bg-red-100 text-red-700 shadow-sm':
-                            feedbacks.item2.disliked,
-                        }"
-                        @click="handleFeedback('item2', 'dislike')"
-                      >
-                        <svg
-                          class="w-5 h-5 text-red-600 group-hover/btn:scale-110 transition-transform"
-                          fill="none"
-                          stroke="currentColor"
-                          viewBox="0 0 24 24"
-                        >
-                          <path
-                            stroke-linecap="round"
-                            stroke-linejoin="round"
-                            stroke-width="2"
-                            d="M10 14H5.236a2 2 0 01-1.789-2.894l3.5-7A2 2 0 018.736 3h4.018c.163 0 .326.02.485.06L17 4m-7 10v2a2 2 0 002 2h.095c.5 0 .905-.405.905-.905 0-.714.211-1.412.608-2.006L17 13V4m-7 10h2m5-10h2a2 2 0 012 2v6a2 2 0 01-2 2h-2.5"
-                          ></path>
-                        </svg>
-                      </button>
+                      </div>
                     </div>
-                  </div>
-                </div>
-
-                <!-- 卡片內容 -->
-                <div class="p-6">
-                  <!-- 分析描述 -->
-                  <div class="mb-6">
-                    <p class="text-slate-700 leading-relaxed mb-4">
-                      羅列多種技術但缺乏實際應用案例，未提供技術掌握程度的具體證明，無法判斷技術深度真實性。
-                    </p>
-                  </div>
-
-                  <!-- 履歷內文區塊 -->
-                  <div class="mb-6">
-                    <h4
-                      class="text-sm font-semibold text-slate-900 mb-3 flex items-center"
-                    >
-                      <svg
-                        class="w-4 h-4 mr-2 text-slate-500"
-                        fill="none"
-                        stroke="currentColor"
-                        viewBox="0 0 24 24"
-                      >
-                        <path
-                          stroke-linecap="round"
-                          stroke-linejoin="round"
-                          stroke-width="2"
-                          d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
-                        ></path>
-                      </svg>
-                      履歷內文
-                    </h4>
-                    <div class="space-y-3">
-                      <!-- 項目1 -->
-                      <div
-                        class="bg-gradient-to-r from-slate-50 to-slate-100 border border-slate-200 rounded-xl p-4 hover:border-cyan-300 hover:shadow-md transition-all duration-200 cursor-pointer group/content"
-                      >
-                        <div
-                          class="flex items-start justify-between"
-                          @click="
-                            scrollToSection('skills-section', '高級程式設計')
-                          "
+                    <div>
+                      <h3 class="text-xl font-bold text-slate-900 mb-1">
+                        敘述抽象、缺乏細節
+                      </h3>
+                      <div class="flex items-center space-x-2">
+                        <span
+                          class="inline-flex items-center px-2 py-1 rounded-md text-xs font-medium bg-blue-100 text-blue-800"
+                          >中風險</span
                         >
-                          <div class="flex-1">
-                            <p
-                              class="text-slate-800 font-medium leading-relaxed group-hover/content:text-slate-900"
-                            >
-                              高級程式設計：精通
-                              Python、JavaScript、Java，具備跨平台全端開發能力，驅動高效能系統建構。
-                            </p>
-                          </div>
-                          <div class="ml-4 flex-shrink-0">
-                            <div
-                              class="w-8 h-8 bg-cyan-100 rounded-lg flex items-center justify-center group-hover/content:bg-cyan-200 transition-colors"
-                            >
-                              <svg
-                                class="w-4 h-4 text-cyan-600"
-                                fill="none"
-                                stroke="currentColor"
-                                viewBox="0 0 24 24"
-                              >
-                                <path
-                                  stroke-linecap="round"
-                                  stroke-linejoin="round"
-                                  stroke-width="2"
-                                  d="M9 5l7 7-7 7"
-                                ></path>
-                              </svg>
-                            </div>
-                          </div>
-                        </div>
-                      </div>
-
-                      <!-- 項目2 -->
-                      <div
-                        class="bg-gradient-to-r from-slate-50 to-slate-100 border border-slate-200 rounded-xl p-4 hover:border-cyan-300 hover:shadow-md transition-all duration-200 cursor-pointer group/content"
-                      >
-                        <div
-                          class="flex items-start justify-between"
-                          @click="
-                            scrollToSection(
-                              'experience-section',
-                              '系統架構設計：主導企業級應用程式架構'
-                            )
-                          "
-                        >
-                          <div class="flex-1">
-                            <p
-                              class="text-slate-800 font-medium leading-relaxed group-hover/content:text-slate-900"
-                            >
-                              系統架構設計：主導企業級應用程式架構，運用微服務與
-                              AWS 雲端技術，提升系統可擴展性 30%。
-                            </p>
-                          </div>
-                          <div class="ml-4 flex-shrink-0">
-                            <div
-                              class="w-8 h-8 bg-cyan-100 rounded-lg flex items-center justify-center group-hover/content:bg-cyan-200 transition-colors"
-                            >
-                              <svg
-                                class="w-4 h-4 text-cyan-600"
-                                fill="none"
-                                stroke="currentColor"
-                                viewBox="0 0 24 24"
-                              >
-                                <path
-                                  stroke-linecap="round"
-                                  stroke-linejoin="round"
-                                  stroke-width="2"
-                                  d="M9 5l7 7-7 7"
-                                ></path>
-                              </svg>
-                            </div>
-                          </div>
-                        </div>
-                      </div>
-
-                      <!-- 項目3 -->
-                      <div
-                        class="bg-gradient-to-r from-slate-50 to-slate-100 border border-slate-200 rounded-xl p-4 hover:border-cyan-300 hover:shadow-md transition-all duration-200 cursor-pointer group/content"
-                      >
-                        <div
-                          class="flex items-start justify-between"
-                          @click="
-                            scrollToSection(
-                              'experience-section',
-                              '專案領導：帶領 10'
-                            )
-                          "
-                        >
-                          <div class="flex-1">
-                            <p
-                              class="text-slate-800 font-medium leading-relaxed group-hover/content:text-slate-900"
-                            >
-                              專案領導：帶領 10
-                              人開發團隊，負責需求分析、功能規劃與敏捷開發，確保專案如期交付。
-                            </p>
-                          </div>
-                          <div class="ml-4 flex-shrink-0">
-                            <div
-                              class="w-8 h-8 bg-cyan-100 rounded-lg flex items-center justify-center group-hover/content:bg-cyan-200 transition-colors"
-                            >
-                              <svg
-                                class="w-4 h-4 text-cyan-600"
-                                fill="none"
-                                stroke="currentColor"
-                                viewBox="0 0 24 24"
-                              >
-                                <path
-                                  stroke-linecap="round"
-                                  stroke-linejoin="round"
-                                  stroke-width="2"
-                                  d="M9 5l7 7-7 7"
-                                ></path>
-                              </svg>
-                            </div>
-                          </div>
-                        </div>
+                        <span class="text-sm text-slate-500">內容品質分析</span>
                       </div>
                     </div>
                   </div>
-
-                  <!-- 建議提問區塊 -->
-                  <div>
-                    <h4
-                      class="text-sm font-semibold text-slate-900 mb-3 flex items-center"
-                    >
-                      <svg
-                        class="w-4 h-4 mr-2 text-slate-500"
-                        fill="none"
-                        stroke="currentColor"
-                        viewBox="0 0 24 24"
-                      >
-                        <path
-                          stroke-linecap="round"
-                          stroke-linejoin="round"
-                          stroke-width="2"
-                          d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-                        ></path>
-                      </svg>
-                      建議提問
-                    </h4>
-                    <div
-                      class="bg-gradient-to-r from-purple-50 to-indigo-50 border border-purple-200 rounded-xl p-5 cursor-pointer hover:shadow-lg transition-all duration-300 group/question relative overflow-hidden"
-                      @click="
-                        copyToClipboard(
-                          '面試提問建議：\n\n您可以邀請求職者深入分享技術經驗，例如詢問在列出的技術中（Python、JavaScript、Java）最擅長哪一項，以及使用這項技術解決過的具體挑戰。\n\n同時，關於專案經驗，您可以請求分享帶領10人開發團隊的管理方法，以及在微服務架構實踐中遇到的具體挑戰和解決方案。這些對話能幫助您評估求職者技術能力的真實深度。'
-                        )
-                      "
-                    >
-                      <!-- 複製圖標 -->
-                      <div
-                        class="absolute top-4 right-4 opacity-0 group-hover/question:opacity-100 transition-all duration-200"
-                      >
-                        <div
-                          class="w-8 h-8 bg-white/80 backdrop-blur-sm rounded-lg flex items-center justify-center shadow-sm"
-                        >
-                          <svg
-                            class="w-4 h-4 text-purple-600"
-                            fill="none"
-                            stroke="currentColor"
-                            viewBox="0 0 24 24"
-                          >
-                            <path
-                              stroke-linecap="round"
-                              stroke-linejoin="round"
-                              stroke-width="2"
-                              d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"
-                            ></path>
-                          </svg>
-                        </div>
-                      </div>
-
-                      <!-- 漸層裝飾 -->
-                      <div
-                        class="absolute inset-0 bg-gradient-to-r from-purple-500/5 to-indigo-500/5 opacity-0 group-hover/question:opacity-100 transition-opacity duration-300"
-                      ></div>
-
-                      <div class="relative">
-                        <p class="text-slate-700 leading-relaxed mb-0">
-                          您可以請求職者分享技術專長的具體應用，例如在列出的技術中最擅長哪一項，以及解決過的實際挑戰。同時詢問團隊管理經驗和微服務架構實踐中遇到的困難，這有助於了解求職者技術深度與解決問題的能力。
-                        </p>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              <!-- 卡片3：敘述抽象、缺乏細節 -->
-              <div
-                class="group bg-white rounded-xl shadow-lg border border-slate-200 hover:shadow-xl transition-all duration-300 overflow-hidden"
-              >
-                <!-- 卡片頭部 -->
-                <div
-                  class="bg-gradient-to-r from-blue-50 to-indigo-50 border-b border-blue-200 p-6"
-                >
-                  <div class="flex justify-between items-center">
-                    <div class="flex items-center space-x-4">
-                      <div class="flex-shrink-0">
-                        <div
-                          class="w-10 h-10 bg-gradient-to-br from-blue-400 to-indigo-500 rounded-lg flex items-center justify-center shadow-sm"
-                        >
-                          <svg
-                            class="w-5 h-5 text-white"
-                            fill="none"
-                            stroke="currentColor"
-                            viewBox="0 0 24 24"
-                          >
-                            <path
-                              stroke-linecap="round"
-                              stroke-linejoin="round"
-                              stroke-width="2"
-                              d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"
-                            ></path>
-                          </svg>
-                        </div>
-                      </div>
-                      <div>
-                        <h3 class="text-xl font-bold text-slate-900 mb-1">
-                          敘述抽象、缺乏細節
-                        </h3>
-                        <div class="flex items-center space-x-2">
-                          <span
-                            class="inline-flex items-center px-2 py-1 rounded-md text-xs font-medium bg-blue-100 text-blue-800"
-                            >中風險</span
-                          >
-                          <span class="text-sm text-slate-500"
-                            >內容品質分析</span
-                          >
-                        </div>
-                      </div>
-                    </div>
-                    <div class="flex items-center space-x-2">
-                      <button
-                        class="p-2 rounded-lg hover:bg-emerald-100 transition-all duration-200 group/btn"
-                        :class="{
-                          'bg-emerald-100 text-emerald-700 shadow-sm':
-                            feedbacks.item3.liked,
-                        }"
-                        @click="handleFeedback('item3', 'like')"
-                      >
-                        <svg
-                          class="w-5 h-5 text-emerald-600 group-hover/btn:scale-110 transition-transform"
-                          fill="none"
-                          stroke="currentColor"
-                          viewBox="0 0 24 24"
-                        >
-                          <path
-                            stroke-linecap="round"
-                            stroke-linejoin="round"
-                            stroke-width="2"
-                            d="M14 10h4.764a2 2 0 011.789 2.894l-3.5 7A2 2 0 0115.263 21h-4.017c-.163 0-.326-.02-.485-.06L7 20m7-10V5a2 2 0 00-2-2h-.095c-.5 0-.905.405-.905.905 0 .714-.211 1.412-.608 2.006L7 11v9m7-10h-2M7 20H5a2 2 0 01-2-2v-6a2 2 0 012-2h2.5"
-                          ></path>
-                        </svg>
-                      </button>
-                      <button
-                        class="p-2 rounded-lg hover:bg-red-100 transition-all duration-200 group/btn"
-                        :class="{
-                          'bg-red-100 text-red-700 shadow-sm':
-                            feedbacks.item3.disliked,
-                        }"
-                        @click="handleFeedback('item3', 'dislike')"
-                      >
-                        <svg
-                          class="w-5 h-5 text-red-600 group-hover/btn:scale-110 transition-transform"
-                          fill="none"
-                          stroke="currentColor"
-                          viewBox="0 0 24 24"
-                        >
-                          <path
-                            stroke-linecap="round"
-                            stroke-linejoin="round"
-                            stroke-width="2"
-                            d="M10 14H5.236a2 2 0 01-1.789-2.894l3.5-7A2 2 0 018.736 3h4.018c.163 0 .326.02.485.06L17 4m-7 10v2a2 2 0 002 2h.095c.5 0 .905-.405.905-.905 0-.714.211-1.412.608-2.006L17 13V4m-7 10h2m5-10h2a2 2 0 012 2v6a2 2 0 01-2 2h-2.5"
-                          ></path>
-                        </svg>
-                      </button>
-                    </div>
-                  </div>
-                </div>
-
-                <!-- 卡片內容 -->
-                <div class="p-6">
-                  <!-- 分析描述 -->
-                  <div class="mb-6">
-                    <p class="text-slate-700 leading-relaxed mb-4">
-                      使用抽象通用詞彙描述工作內容，缺少具體何種後端重構方法、如何優化雲端部署、實際解決了什麼技術挑戰等細節。AI傾向於提供籠統描述而非工作中可能遇到的實際問題與具體解決方案。
-                    </p>
-                  </div>
-
-                  <!-- 履歷內文區塊 -->
-                  <div class="mb-6">
-                    <h4
-                      class="text-sm font-semibold text-slate-900 mb-3 flex items-center"
-                    >
-                      <svg
-                        class="w-4 h-4 mr-2 text-slate-500"
-                        fill="none"
-                        stroke="currentColor"
-                        viewBox="0 0 24 24"
-                      >
-                        <path
-                          stroke-linecap="round"
-                          stroke-linejoin="round"
-                          stroke-width="2"
-                          d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
-                        ></path>
-                      </svg>
-                      履歷內文
-                    </h4>
-                    <div class="space-y-3">
-                      <!-- 項目1 -->
-                      <div
-                        class="bg-gradient-to-r from-slate-50 to-slate-100 border border-slate-200 rounded-xl p-4 hover:border-cyan-300 hover:shadow-md transition-all duration-200 cursor-pointer group/content"
-                      >
-                        <div
-                          class="flex items-start justify-between"
-                          @click="
-                            scrollToSection('skills-section', '雲端與 DevOps')
-                          "
-                        >
-                          <div class="flex-1">
-                            <p
-                              class="text-slate-800 font-medium leading-relaxed group-hover/content:text-slate-900"
-                            >
-                              雲端與 DevOps：掌握
-                              AWS、Docker、Kubernetes，實現自動化部署與雲端優化。
-                            </p>
-                          </div>
-                          <div class="ml-4 flex-shrink-0">
-                            <div
-                              class="w-8 h-8 bg-cyan-100 rounded-lg flex items-center justify-center group-hover/content:bg-cyan-200 transition-colors"
-                            >
-                              <svg
-                                class="w-4 h-4 text-cyan-600"
-                                fill="none"
-                                stroke="currentColor"
-                                viewBox="0 0 24 24"
-                              >
-                                <path
-                                  stroke-linecap="round"
-                                  stroke-linejoin="round"
-                                  stroke-width="2"
-                                  d="M9 5l7 7-7 7"
-                                ></path>
-                              </svg>
-                            </div>
-                          </div>
-                        </div>
-                      </div>
-
-                      <!-- 項目2 -->
-                      <div
-                        class="bg-gradient-to-r from-slate-50 to-slate-100 border border-slate-200 rounded-xl p-4 hover:border-cyan-300 hover:shadow-md transition-all duration-200 cursor-pointer group/content"
-                      >
-                        <div
-                          class="flex items-start justify-between"
-                          @click="
-                            scrollToSection(
-                              'experience-section',
-                              '效能優化：重構後端程式碼'
-                            )
-                          "
-                        >
-                          <div class="flex-1">
-                            <p
-                              class="text-slate-800 font-medium leading-relaxed group-hover/content:text-slate-900"
-                            >
-                              效能優化：重構後端程式碼，縮短 API 響應時間
-                              25%，顯著提升用戶滿意度。
-                            </p>
-                          </div>
-                          <div class="ml-4 flex-shrink-0">
-                            <div
-                              class="w-8 h-8 bg-cyan-100 rounded-lg flex items-center justify-center group-hover/content:bg-cyan-200 transition-colors"
-                            >
-                              <svg
-                                class="w-4 h-4 text-cyan-600"
-                                fill="none"
-                                stroke="currentColor"
-                                viewBox="0 0 24 24"
-                              >
-                                <path
-                                  stroke-linecap="round"
-                                  stroke-linejoin="round"
-                                  stroke-width="2"
-                                  d="M9 5l7 7-7 7"
-                                ></path>
-                              </svg>
-                            </div>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-
-                  <!-- 建議提問區塊 -->
-                  <div>
-                    <h4
-                      class="text-sm font-semibold text-slate-900 mb-3 flex items-center"
-                    >
-                      <svg
-                        class="w-4 h-4 mr-2 text-slate-500"
-                        fill="none"
-                        stroke="currentColor"
-                        viewBox="0 0 24 24"
-                      >
-                        <path
-                          stroke-linecap="round"
-                          stroke-linejoin="round"
-                          stroke-width="2"
-                          d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-                        ></path>
-                      </svg>
-                      建議提問
-                    </h4>
-                    <div
-                      class="bg-gradient-to-r from-purple-50 to-indigo-50 border border-purple-200 rounded-xl p-5 cursor-pointer hover:shadow-lg transition-all duration-300 group/question relative overflow-hidden"
-                      @click="
-                        copyToClipboard(
-                          '面試提問建議：\n\n您可以請求職者分享具體方法，例如詢問雲端優化方面的具體做法，如使用了哪些 AWS 服務、為什麼選擇 Docker 而非其他容器方案。\n\n關於效能優化，可以詢問後端程式碼重構的具體技術，API 響應時間縮短 25% 的實現方式，以及用什麼方法衡量用戶滿意度。這些問題能幫助您了解求職者真正的技術能力與經驗。'
-                        )
-                      "
-                    >
-                      <!-- 複製圖標 -->
-                      <div
-                        class="absolute top-4 right-4 opacity-0 group-hover/question:opacity-100 transition-all duration-200"
-                      >
-                        <div
-                          class="w-8 h-8 bg-white/80 backdrop-blur-sm rounded-lg flex items-center justify-center shadow-sm"
-                        >
-                          <svg
-                            class="w-4 h-4 text-purple-600"
-                            fill="none"
-                            stroke="currentColor"
-                            viewBox="0 0 24 24"
-                          >
-                            <path
-                              stroke-linecap="round"
-                              stroke-linejoin="round"
-                              stroke-width="2"
-                              d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"
-                            ></path>
-                          </svg>
-                        </div>
-                      </div>
-
-                      <!-- 漸層裝飾 -->
-                      <div
-                        class="absolute inset-0 bg-gradient-to-r from-purple-500/5 to-indigo-500/5 opacity-0 group-hover/question:opacity-100 transition-opacity duration-300"
-                      ></div>
-
-                      <div class="relative">
-                        <p class="text-slate-700 leading-relaxed mb-0">
-                          您可以請求就雲端優化和效能提升的具體作法做更深入的探討，例如使用了哪些
-                          AWS
-                          服務、重構後端的具體技術手段，以及如何衡量效能改善。這樣能更好地評估求職者的技術深度。
-                        </p>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              <div class="border-solid border-b-2 border-#eee my-5"></div>
-
-              <!-- 卡片4：語言過於通用或制式 -->
-              <div
-                class="group bg-white rounded-xl shadow-lg border border-slate-200 hover:shadow-xl transition-all duration-300 overflow-hidden"
-              >
-                <!-- 卡片頭部 -->
-                <div
-                  class="bg-gradient-to-r from-green-50 to-teal-50 border-b border-green-200 p-6"
-                >
-                  <div class="flex justify-between items-center">
-                    <div class="flex items-center space-x-4">
-                      <div class="flex-shrink-0">
-                        <div
-                          class="w-10 h-10 bg-gradient-to-br from-green-400 to-teal-500 rounded-lg flex items-center justify-center shadow-sm"
-                        >
-                          <svg
-                            class="w-5 h-5 text-white"
-                            fill="none"
-                            stroke="currentColor"
-                            viewBox="0 0 24 24"
-                          >
-                            <path
-                              stroke-linecap="round"
-                              stroke-linejoin="round"
-                              stroke-width="2"
-                              d="M7 8h10M7 12h4m1 8l-4-4H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-3l-4 4z"
-                            ></path>
-                          </svg>
-                        </div>
-                      </div>
-                      <div>
-                        <h3 class="text-xl font-bold text-slate-900 mb-1">
-                          語言過於通用或制式
-                        </h3>
-                        <div class="flex items-center space-x-2">
-                          <span
-                            class="inline-flex items-center px-2 py-1 rounded-md text-xs font-medium bg-green-100 text-green-800"
-                            >低風險</span
-                          >
-                          <span class="text-sm text-slate-500"
-                            >語言風格分析</span
-                          >
-                        </div>
-                      </div>
-                    </div>
+                  <div class="flex items-center space-x-2">
                     <button
                       class="p-2 rounded-lg hover:bg-emerald-100 transition-all duration-200 group/btn"
                       :class="{
                         'bg-emerald-100 text-emerald-700 shadow-sm':
-                          feedbacks.item4.liked,
+                          feedbacks.item3.liked,
                       }"
-                      @click="handleFeedback('item4', 'like')"
+                      @click="handleFeedback('item3', 'like')"
                     >
                       <svg
                         class="w-5 h-5 text-emerald-600 group-hover/btn:scale-110 transition-transform"
@@ -2644,9 +2822,9 @@ onUnmounted(() => {
                       class="p-2 rounded-lg hover:bg-red-100 transition-all duration-200 group/btn"
                       :class="{
                         'bg-red-100 text-red-700 shadow-sm':
-                          feedbacks.item4.disliked,
+                          feedbacks.item3.disliked,
                       }"
-                      @click="handleFeedback('item4', 'dislike')"
+                      @click="handleFeedback('item3', 'dislike')"
                     >
                       <svg
                         class="w-5 h-5 text-red-600 group-hover/btn:scale-110 transition-transform"
@@ -2668,254 +2846,156 @@ onUnmounted(() => {
 
               <!-- 卡片內容 -->
               <div class="p-6">
-                <div class="mb-2">
-                  <div class="flex items-start mb-1">
-                    <div class="w-full">
-                      <div>
-                        <p class="text-20px leading-24px text-#555 mt-0">
-                          使用「深耕逾十年」「奠定堅實基礎」等過於正式且通用的詞彙，缺乏個人口吻和真實經歷描述。
-                        </p>
-                      </div>
-                      <p class="text-14px text-#292929 mt-3">履歷內文</p>
-                      <div
-                        class="border-1 border-solid border-#ddd rounded-4px p-3 mb-3"
-                      >
-                        <div
-                          class="flex items-center justify-between cursor-pointer hover:opacity-80 transition-opacity duration-200"
-                          @click="
-                            scrollToSection(
-                              'autobiography-section',
-                              '本人在資訊科技領域深耕逾十年'
-                            )
-                          "
-                        >
-                          <span
-                            class="text-18px text-#292929 font-bold line-clamp-2"
-                          >
-                            本人在資訊科技領域深耕逾十年，畢業於國立中興大學資訊管理學系，並於國立清華大學取得資訊工程碩士學位，奠定堅實的技術基礎。
-                          </span>
-                          <span
-                            class="flex items-center justify-center ml-2 flex-shrink-0"
-                          >
-                            <img
-                              src="@/assets/images/ai/arrow_circle_right_green.svg"
-                              alt=""
-                              class="text-#00afb8"
-                            />
-                          </span>
-                        </div>
-                      </div>
+                <!-- 分析描述 -->
+                <div class="mb-6">
+                  <p class="text-slate-700 leading-relaxed mb-4">
+                    使用抽象通用詞彙描述工作內容，缺少具體何種後端重構方法、如何優化雲端部署、實際解決了什麼技術挑戰等細節。AI傾向於提供籠統描述而非工作中可能遇到的實際問題與具體解決方案。
+                  </p>
+                </div>
 
-                      <div class="text-20px leading-24px text-#555 mt-0">
-                        建議提問：
-                        <div
-                          class="p-4 bg-#f4eff9 rounded-8px mt-2 border-l-4 border-l-#00afb8 relative group cursor-pointer hover:bg-#e6daf2 transition-colors shadow-sm"
-                          @click="
-                            copyToClipboard(
-                              '面試提問建議：\n\n您可以邀請求職者分享具體經歷，例如詢問在資訊科技領域十年中最印象深刻的專案或挑戰，以及哪些具體經歷讓他的技術基礎變得堅實。\n\n同時，您也可以探詢求職者的專業成長歷程，例如詢問職業生涯中遇到的挑戰與學習，以及碩士研究方向對職業發展的影響。這樣的對話能幫助您了解求職者真實的職業經歷與專業成長。'
-                            )
-                          "
-                        >
+                <!-- 履歷內文區塊 -->
+                <div class="mb-6">
+                  <h4
+                    class="text-sm font-semibold text-slate-900 mb-3 flex items-center"
+                  >
+                    <svg
+                      class="w-4 h-4 mr-2 text-slate-500"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                        stroke-width="2"
+                        d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+                      ></path>
+                    </svg>
+                    履歷內文
+                  </h4>
+                  <div class="space-y-3">
+                    <!-- 項目1 -->
+                    <div
+                      class="bg-gradient-to-r from-slate-50 to-slate-100 border border-slate-200 rounded-xl p-4 hover:border-cyan-300 hover:shadow-md transition-all duration-200 cursor-pointer group/content"
+                    >
+                      <div
+                        class="flex items-start justify-between"
+                        @click="
+                          scrollToSection('skills-section', '雲端與 DevOps')
+                        "
+                      >
+                        <div class="flex-1">
+                          <p
+                            class="text-slate-800 font-medium leading-relaxed group-hover/content:text-slate-900"
+                          >
+                            雲端與 DevOps：掌握
+                            AWS、Docker、Kubernetes，實現自動化部署與雲端優化。
+                          </p>
+                        </div>
+                        <div class="ml-4 flex-shrink-0">
                           <div
-                            class="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity duration-200"
+                            class="w-8 h-8 bg-cyan-100 rounded-lg flex items-center justify-center group-hover/content:bg-cyan-200 transition-colors"
                           >
                             <svg
-                              xmlns="http://www.w3.org/2000/svg"
-                              width="16"
-                              height="16"
-                              viewBox="0 0 24 24"
+                              class="w-4 h-4 text-cyan-600"
                               fill="none"
-                              stroke="#00AFB8"
-                              stroke-width="2"
-                              stroke-linecap="round"
-                              stroke-linejoin="round"
+                              stroke="currentColor"
+                              viewBox="0 0 24 24"
                             >
-                              <rect
-                                x="9"
-                                y="9"
-                                width="13"
-                                height="13"
-                                rx="2"
-                                ry="2"
-                              ></rect>
                               <path
-                                d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"
+                                stroke-linecap="round"
+                                stroke-linejoin="round"
+                                stroke-width="2"
+                                d="M9 5l7 7-7 7"
                               ></path>
                             </svg>
                           </div>
-                          <div class="font-normal">
-                            <p class="m-0">
-                              您可以友善地邀請求職者分享在資訊科技領域十年中最難忘的專案或挑戰，以及哪些經歷幫助他建立了堅實的技術基礎。同時，探詢他的碩士研究方向如何影響職業發展，藉此了解求職者的真實經歷與成長歷程。
-                            </p>
+                        </div>
+                      </div>
+                    </div>
+
+                    <!-- 項目2 -->
+                    <div
+                      class="bg-gradient-to-r from-slate-50 to-slate-100 border border-slate-200 rounded-xl p-4 hover:border-cyan-300 hover:shadow-md transition-all duration-200 cursor-pointer group/content"
+                    >
+                      <div
+                        class="flex items-start justify-between"
+                        @click="
+                          scrollToSection(
+                            'experience-section',
+                            '效能優化：重構後端程式碼'
+                          )
+                        "
+                      >
+                        <div class="flex-1">
+                          <p
+                            class="text-slate-800 font-medium leading-relaxed group-hover/content:text-slate-900"
+                          >
+                            效能優化：重構後端程式碼，縮短 API 響應時間
+                            25%，顯著提升用戶滿意度。
+                          </p>
+                        </div>
+                        <div class="ml-4 flex-shrink-0">
+                          <div
+                            class="w-8 h-8 bg-cyan-100 rounded-lg flex items-center justify-center group-hover/content:bg-cyan-200 transition-colors"
+                          >
+                            <svg
+                              class="w-4 h-4 text-cyan-600"
+                              fill="none"
+                              stroke="currentColor"
+                              viewBox="0 0 24 24"
+                            >
+                              <path
+                                stroke-linecap="round"
+                                stroke-linejoin="round"
+                                stroke-width="2"
+                                d="M9 5l7 7-7 7"
+                              ></path>
+                            </svg>
                           </div>
                         </div>
                       </div>
                     </div>
                   </div>
                 </div>
-              </div>
 
-              <div class="border-solid border-b-2 border-#eee my-5"></div>
-
-              <!-- 卡片5：語句與結構過度一致 -->
-              <div class="bg-#fff8e1 p-4 rounded-4px mb-4">
-                <div class="flex justify-between items-center">
-                  <h3 class="text-24px font-bold">語句與結構過度一致</h3>
-                  <div class="flex justify-end">
-                    <button
-                      class="p-2 mr-2 rounded-full hover:bg-#eee transition-colors w-10 h-10"
-                      :class="{ 'bg-#e6f7f6': feedbacks.item5.liked }"
-                      @click="handleFeedback('item5', 'like')"
+                <!-- 建議提問區塊 -->
+                <div>
+                  <h4
+                    class="text-sm font-semibold text-slate-900 mb-3 flex items-center"
+                  >
+                    <svg
+                      class="w-4 h-4 mr-2 text-slate-500"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
                     >
-                      <svg
-                        xmlns="http://www.w3.org/2000/svg"
-                        width="20"
-                        height="20"
-                        viewBox="0 0 24 24"
-                        fill="none"
-                        stroke="currentColor"
-                        stroke-width="2"
+                      <path
                         stroke-linecap="round"
                         stroke-linejoin="round"
-                        class="text-#00AFB8"
-                      >
-                        <path
-                          d="M14 9V5a3 3 0 0 0-3-3l-4 9v11h11.28a2 2 0 0 0 2-1.7l1.38-9a2 2 0 0 0-2-2.3zM7 22H4a2 2 0 0 1-2-2v-7a2 2 0 0 1 2-2h3"
-                        ></path>
-                      </svg>
-                    </button>
-                    <button
-                      class="p-2 rounded-full hover:bg-#eee transition-colors w-10 h-10"
-                      :class="{
-                        'bg-#ffeaea': feedbacks.item5.disliked,
-                      }"
-                      @click="handleFeedback('item5', 'dislike')"
-                    >
-                      <svg
-                        xmlns="http://www.w3.org/2000/svg"
-                        width="20"
-                        height="20"
-                        viewBox="0 0 24 24"
-                        fill="none"
-                        stroke="currentColor"
                         stroke-width="2"
-                        stroke-linecap="round"
-                        stroke-linejoin="round"
-                        class="text-#ff5252"
-                      >
-                        <path
-                          d="M10 15v4a3 3 0 0 0 3 3l4-9V2H5.72a2 2 0 0 0-2 1.7l-1.38 9a2 2 0 0 0 2 2.3zm7-13h2.67A2.31 2.31 0 0 1 22 4v7a2.31 2.31 0 0 1-2.33 2H17"
-                        ></path>
-                      </svg>
-                    </button>
-                  </div>
-                </div>
-                <div class="mb-2">
-                  <div class="flex items-start mb-1">
-                    <div class="w-full">
-                      <div>
-                        <p class="text-20px leading-24px text-#555 mt-0">
-                          充滿套話與形容詞如「堅信」「積極」，工作描述格式高度一致，每段皆用數字列表開頭並含「重要專案」段落。
-                        </p>
-                      </div>
-                      <p class="text-14px text-#292929 mt-3">履歷內文</p>
+                        d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                      ></path>
+                    </svg>
+                    建議提問
+                  </h4>
+                  <div
+                    class="bg-gradient-to-r from-purple-50 to-indigo-50 border border-purple-200 rounded-xl p-5 cursor-pointer hover:shadow-lg transition-all duration-300 group/question relative overflow-hidden"
+                    @click="
+                      copyToClipboard(
+                        '面試提問建議：\n\n您可以請求職者分享具體方法，例如詢問雲端優化方面的具體做法，如使用了哪些 AWS 服務、為什麼選擇 Docker 而非其他容器方案。\n\n關於效能優化，可以詢問後端程式碼重構的具體技術，API 響應時間縮短 25% 的實現方式，以及用什麼方法衡量用戶滿意度。這些問題能幫助您了解求職者真正的技術能力與經驗。'
+                      )
+                    "
+                  >
+                    <!-- 複製圖標 -->
+                    <div
+                      class="absolute top-4 right-4 opacity-0 group-hover/question:opacity-100 transition-all duration-200"
+                    >
                       <div
-                        class="border-1 border-solid border-#ddd rounded-4px p-3 mb-3"
-                      >
-                        <div
-                          class="flex items-center justify-between cursor-pointer hover:opacity-80 transition-opacity duration-200"
-                          @click="
-                            scrollToSection(
-                              'autobiography-section',
-                              '我堅信技術創新與團隊協作是驅動成功的核心'
-                            )
-                          "
-                        >
-                          <span
-                            class="text-18px text-#292929 font-bold line-clamp-2"
-                          >
-                            我堅信技術創新與團隊協作是驅動成功的核心，始終以積極的學習態度與卓越的執行力迎接挑戰。
-                          </span>
-                          <span
-                            class="flex items-center justify-center ml-2 flex-shrink-0"
-                          >
-                            <img
-                              src="@/assets/images/ai/arrow_circle_right_green.svg"
-                              alt=""
-                              class="text-#00afb8"
-                            />
-                          </span>
-                        </div>
-                      </div>
-
-                      <div class="text-20px leading-24px text-#555 mt-0">
-                        建議提問：
-                        <div
-                          class="p-4 bg-#f4eff9 rounded-8px mt-2 border-l-4 border-l-#00afb8 relative group cursor-pointer hover:bg-#e6daf2 transition-colors shadow-sm"
-                          @click="
-                            copyToClipboard(
-                              '面試提問建議：\n\n您可以挑戰履歷中的套話模式，例如請求職者分享一個具體案例，說明如何通過創新和協作解決技術挑戰，以及「積極的學習態度」在實際工作中的體現。\n\n同時，您也可以嘗試打破制式模板，邀請求職者談談職業生涯中的挫折經歷，或者請他分享如果重新設計數位轉型平台，會採取哪些不同的技術路線。這樣的對話能幫助您了解求職者真實的思維模式與經驗。'
-                            )
-                          "
-                        >
-                          <div
-                            class="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity duration-200"
-                          >
-                            <svg
-                              xmlns="http://www.w3.org/2000/svg"
-                              width="16"
-                              height="16"
-                              viewBox="0 0 24 24"
-                              fill="none"
-                              stroke="#00AFB8"
-                              stroke-width="2"
-                              stroke-linecap="round"
-                              stroke-linejoin="round"
-                            >
-                              <rect
-                                x="9"
-                                y="9"
-                                width="13"
-                                height="13"
-                                rx="2"
-                                ry="2"
-                              ></rect>
-                              <path
-                                d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"
-                              ></path>
-                            </svg>
-                          </div>
-                          <div class="font-normal">
-                            <p class="m-0">
-                              您可以請求職者用具體案例說明如何透過創新與協作解決技術挑戰，以及「積極學習態度」在工作中的實際體現。也可以請他分享職業生涯中的挫折經歷，藉此了解求職者的真實思維方式與解決問題的能力。
-                            </p>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            <!-- 事實查核內容區域 -->
-            <div
-              v-show="activeTab === 'fact-check'"
-              class="tab-content space-y-8"
-            >
-              <!-- 履歷上傳區域 -->
-              <div v-if="factCheckProgress === 0" class="space-y-6">
-                <!-- 特色介紹區塊 -->
-                <div
-                  class="bg-gradient-to-r from-emerald-50 to-teal-50 border border-emerald-200 rounded-xl p-6 shadow-sm"
-                >
-                  <div class="flex items-start space-x-4">
-                    <div class="flex-shrink-0">
-                      <div
-                        class="w-12 h-12 bg-gradient-to-br from-emerald-400 to-teal-500 rounded-lg flex items-center justify-center shadow-sm"
+                        class="w-8 h-8 bg-white/80 backdrop-blur-sm rounded-lg flex items-center justify-center shadow-sm"
                       >
                         <svg
-                          class="w-6 h-6 text-white"
+                          class="w-4 h-4 text-purple-600"
                           fill="none"
                           stroke="currentColor"
                           viewBox="0 0 24 24"
@@ -2924,33 +3004,371 @@ onUnmounted(() => {
                             stroke-linecap="round"
                             stroke-linejoin="round"
                             stroke-width="2"
-                            d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.031 9-11.622 0-1.042-.133-2.052-.382-3.016z"
+                            d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"
                           ></path>
                         </svg>
                       </div>
                     </div>
-                    <div class="flex-1">
-                      <h3 class="text-xl font-bold text-emerald-900 mb-2">
-                        智能履歷事實查核
-                      </h3>
+
+                    <!-- 漸層裝飾 -->
+                    <div
+                      class="absolute inset-0 bg-gradient-to-r from-purple-500/5 to-indigo-500/5 opacity-0 group-hover/question:opacity-100 transition-opacity duration-300"
+                    ></div>
+
+                    <div class="relative">
                       <p class="text-slate-700 leading-relaxed mb-0">
-                        上傳履歷內容，我們將透過 AI
-                        技術自動解析並查證履歷中的教育背景、工作經歷、技能和成就，提供詳細的事實查核報告。
+                        您可以請求就雲端優化和效能提升的具體作法做更深入的探討，例如使用了哪些
+                        AWS
+                        服務、重構後端的具體技術手段，以及如何衡量效能改善。這樣能更好地評估求職者的技術深度。
                       </p>
                     </div>
                   </div>
                 </div>
+              </div>
+            </div>
 
-                <!-- 輸入區塊 -->
-                <div
-                  class="bg-white rounded-xl shadow-lg border border-slate-200 overflow-hidden"
-                >
-                  <div
-                    class="bg-gradient-to-r from-slate-50 to-gray-50 border-b border-slate-200 p-6"
+            <div class="border-solid border-b-2 border-#eee my-5"></div>
+
+            <!-- 卡片4：語言過於通用或制式 -->
+            <div
+              class="group bg-white rounded-xl shadow-lg border border-slate-200 hover:shadow-xl transition-all duration-300 overflow-hidden"
+            >
+              <!-- 卡片頭部 -->
+              <div
+                class="bg-gradient-to-r from-green-50 to-teal-50 border-b border-green-200 p-6"
+              >
+                <div class="flex justify-between items-center">
+                  <div class="flex items-center space-x-4">
+                    <div class="flex-shrink-0">
+                      <div
+                        class="w-10 h-10 bg-gradient-to-br from-green-400 to-teal-500 rounded-lg flex items-center justify-center shadow-sm"
+                      >
+                        <svg
+                          class="w-5 h-5 text-white"
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                        >
+                          <path
+                            stroke-linecap="round"
+                            stroke-linejoin="round"
+                            stroke-width="2"
+                            d="M7 8h10M7 12h4m1 8l-4-4H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-3l-4 4z"
+                          ></path>
+                        </svg>
+                      </div>
+                    </div>
+                    <div>
+                      <h3 class="text-xl font-bold text-slate-900 mb-1">
+                        語言過於通用或制式
+                      </h3>
+                      <div class="flex items-center space-x-2">
+                        <span
+                          class="inline-flex items-center px-2 py-1 rounded-md text-xs font-medium bg-green-100 text-green-800"
+                          >低風險</span
+                        >
+                        <span class="text-sm text-slate-500">語言風格分析</span>
+                      </div>
+                    </div>
+                  </div>
+                  <button
+                    class="p-2 rounded-lg hover:bg-emerald-100 transition-all duration-200 group/btn"
+                    :class="{
+                      'bg-emerald-100 text-emerald-700 shadow-sm':
+                        feedbacks.item4.liked,
+                    }"
+                    @click="handleFeedback('item4', 'like')"
                   >
-                    <div class="flex items-center space-x-3">
+                    <svg
+                      class="w-5 h-5 text-emerald-600 group-hover/btn:scale-110 transition-transform"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                        stroke-width="2"
+                        d="M14 10h4.764a2 2 0 011.789 2.894l-3.5 7A2 2 0 0115.263 21h-4.017c-.163 0-.326-.02-.485-.06L7 20m7-10V5a2 2 0 00-2-2h-.095c-.5 0-.905.405-.905.905 0 .714-.211 1.412-.608 2.006L7 11v9m7-10h-2M7 20H5a2 2 0 01-2-2v-6a2 2 0 012-2h2.5"
+                      ></path>
+                    </svg>
+                  </button>
+                  <button
+                    class="p-2 rounded-lg hover:bg-red-100 transition-all duration-200 group/btn"
+                    :class="{
+                      'bg-red-100 text-red-700 shadow-sm':
+                        feedbacks.item4.disliked,
+                    }"
+                    @click="handleFeedback('item4', 'dislike')"
+                  >
+                    <svg
+                      class="w-5 h-5 text-red-600 group-hover/btn:scale-110 transition-transform"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                        stroke-width="2"
+                        d="M10 14H5.236a2 2 0 01-1.789-2.894l3.5-7A2 2 0 018.736 3h4.018c.163 0 .326.02.485.06L17 4m-7 10v2a2 2 0 002 2h.095c.5 0 .905-.405.905-.905 0-.714.211-1.412.608-2.006L17 13V4m-7 10h2m5-10h2a2 2 0 012 2v6a2 2 0 01-2 2h-2.5"
+                      ></path>
+                    </svg>
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            <!-- 卡片內容 -->
+            <div class="p-6">
+              <div class="mb-2">
+                <div class="flex items-start mb-1">
+                  <div class="w-full">
+                    <div>
+                      <p class="text-20px leading-24px text-#555 mt-0">
+                        使用「深耕逾十年」「奠定堅實基礎」等過於正式且通用的詞彙，缺乏個人口吻和真實經歷描述。
+                      </p>
+                    </div>
+                    <p class="text-14px text-#292929 mt-3">履歷內文</p>
+                    <div
+                      class="border-1 border-solid border-#ddd rounded-4px p-3 mb-3"
+                    >
+                      <div
+                        class="flex items-center justify-between cursor-pointer hover:opacity-80 transition-opacity duration-200"
+                        @click="
+                          scrollToSection(
+                            'autobiography-section',
+                            '本人在資訊科技領域深耕逾十年'
+                          )
+                        "
+                      >
+                        <span
+                          class="text-18px text-#292929 font-bold line-clamp-2"
+                        >
+                          本人在資訊科技領域深耕逾十年，畢業於國立中興大學資訊管理學系，並於國立清華大學取得資訊工程碩士學位，奠定堅實的技術基礎。
+                        </span>
+                        <span
+                          class="flex items-center justify-center ml-2 flex-shrink-0"
+                        >
+                          <img
+                            src="@/assets/images/ai/arrow_circle_right_green.svg"
+                            alt=""
+                            class="text-#00afb8"
+                          />
+                        </span>
+                      </div>
+                    </div>
+
+                    <div class="text-20px leading-24px text-#555 mt-0">
+                      建議提問：
+                      <div
+                        class="p-4 bg-#f4eff9 rounded-8px mt-2 border-l-4 border-l-#00afb8 relative group cursor-pointer hover:bg-#e6daf2 transition-colors shadow-sm"
+                        @click="
+                          copyToClipboard(
+                            '面試提問建議：\n\n您可以邀請求職者分享具體經歷，例如詢問在資訊科技領域十年中最印象深刻的專案或挑戰，以及哪些具體經歷讓他的技術基礎變得堅實。\n\n同時，您也可以探詢求職者的專業成長歷程，例如詢問職業生涯中遇到的挑戰與學習，以及碩士研究方向對職業發展的影響。這樣的對話能幫助您了解求職者真實的職業經歷與專業成長。'
+                          )
+                        "
+                      >
+                        <div
+                          class="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity duration-200"
+                        >
+                          <svg
+                            xmlns="http://www.w3.org/2000/svg"
+                            width="16"
+                            height="16"
+                            viewBox="0 0 24 24"
+                            fill="none"
+                            stroke="#00AFB8"
+                            stroke-width="2"
+                            stroke-linecap="round"
+                            stroke-linejoin="round"
+                          >
+                            <rect
+                              x="9"
+                              y="9"
+                              width="13"
+                              height="13"
+                              rx="2"
+                              ry="2"
+                            ></rect>
+                            <path
+                              d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"
+                            ></path>
+                          </svg>
+                        </div>
+                        <div class="font-normal">
+                          <p class="m-0">
+                            您可以友善地邀請求職者分享在資訊科技領域十年中最難忘的專案或挑戰，以及哪些經歷幫助他建立了堅實的技術基礎。同時，探詢他的碩士研究方向如何影響職業發展，藉此了解求職者的真實經歷與成長歷程。
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="border-solid border-b-2 border-#eee my-5"></div>
+
+            <!-- 卡片5：語句與結構過度一致 -->
+            <div class="bg-#fff8e1 p-4 rounded-4px mb-4">
+              <div class="flex justify-between items-center">
+                <h3 class="text-24px font-bold">語句與結構過度一致</h3>
+                <div class="flex justify-end">
+                  <button
+                    class="p-2 mr-2 rounded-full hover:bg-#eee transition-colors w-10 h-10"
+                    :class="{ 'bg-#e6f7f6': feedbacks.item5.liked }"
+                    @click="handleFeedback('item5', 'like')"
+                  >
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      width="20"
+                      height="20"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      stroke-width="2"
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      class="text-#00AFB8"
+                    >
+                      <path
+                        d="M14 9V5a3 3 0 0 0-3-3l-4 9v11h11.28a2 2 0 0 0 2-1.7l1.38-9a2 2 0 0 0-2-2.3zM7 22H4a2 2 0 0 1-2-2v-7a2 2 0 0 1 2-2h3"
+                      ></path>
+                    </svg>
+                  </button>
+                  <button
+                    class="p-2 rounded-full hover:bg-#eee transition-colors w-10 h-10"
+                    :class="{
+                      'bg-#ffeaea': feedbacks.item5.disliked,
+                    }"
+                    @click="handleFeedback('item5', 'dislike')"
+                  >
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      width="20"
+                      height="20"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      stroke-width="2"
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      class="text-#ff5252"
+                    >
+                      <path
+                        d="M10 15v4a3 3 0 0 0 3 3l4-9V2H5.72a2 2 0 0 0-2 1.7l-1.38 9a2 2 0 0 0 2 2.3zm7-13h2.67A2.31 2.31 0 0 1 22 4v7a2.31 2.31 0 0 1-2.33 2H17"
+                      ></path>
+                    </svg>
+                  </button>
+                </div>
+              </div>
+              <div class="mb-2">
+                <div class="flex items-start mb-1">
+                  <div class="w-full">
+                    <div>
+                      <p class="text-20px leading-24px text-#555 mt-0">
+                        充滿套話與形容詞如「堅信」「積極」，工作描述格式高度一致，每段皆用數字列表開頭並含「重要專案」段落。
+                      </p>
+                    </div>
+                    <p class="text-14px text-#292929 mt-3">履歷內文</p>
+                    <div
+                      class="border-1 border-solid border-#ddd rounded-4px p-3 mb-3"
+                    >
+                      <div
+                        class="flex items-center justify-between cursor-pointer hover:opacity-80 transition-opacity duration-200"
+                        @click="
+                          scrollToSection(
+                            'autobiography-section',
+                            '我堅信技術創新與團隊協作是驅動成功的核心'
+                          )
+                        "
+                      >
+                        <span
+                          class="text-18px text-#292929 font-bold line-clamp-2"
+                        >
+                          我堅信技術創新與團隊協作是驅動成功的核心，始終以積極的學習態度與卓越的執行力迎接挑戰。
+                        </span>
+                        <span
+                          class="flex items-center justify-center ml-2 flex-shrink-0"
+                        >
+                          <img
+                            src="@/assets/images/ai/arrow_circle_right_green.svg"
+                            alt=""
+                            class="text-#00afb8"
+                          />
+                        </span>
+                      </div>
+                    </div>
+
+                    <div class="text-20px leading-24px text-#555 mt-0">
+                      建議提問：
+                      <div
+                        class="p-4 bg-#f4eff9 rounded-8px mt-2 border-l-4 border-l-#00afb8 relative group cursor-pointer hover:bg-#e6daf2 transition-colors shadow-sm"
+                        @click="
+                          copyToClipboard(
+                            '面試提問建議：\n\n您可以挑戰履歷中的套話模式，例如請求職者分享一個具體案例，說明如何通過創新和協作解決技術挑戰，以及「積極的學習態度」在實際工作中的體現。\n\n同時，您也可以嘗試打破制式模板，邀請求職者談談職業生涯中的挫折經歷，或者請他分享如果重新設計數位轉型平台，會採取哪些不同的技術路線。這樣的對話能幫助您了解求職者真實的思維模式與經驗。'
+                          )
+                        "
+                      >
+                        <div
+                          class="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity duration-200"
+                        >
+                          <svg
+                            xmlns="http://www.w3.org/2000/svg"
+                            width="16"
+                            height="16"
+                            viewBox="0 0 24 24"
+                            fill="none"
+                            stroke="#00AFB8"
+                            stroke-width="2"
+                            stroke-linecap="round"
+                            stroke-linejoin="round"
+                          >
+                            <rect
+                              x="9"
+                              y="9"
+                              width="13"
+                              height="13"
+                              rx="2"
+                              ry="2"
+                            ></rect>
+                            <path
+                              d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"
+                            ></path>
+                          </svg>
+                        </div>
+                        <div class="font-normal">
+                          <p class="m-0">
+                            您可以請求職者用具體案例說明如何透過創新與協作解決技術挑戰，以及「積極學習態度」在工作中的實際體現。也可以請他分享職業生涯中的挫折經歷，藉此了解求職者的真實思維方式與解決問題的能力。
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- 事實查核內容區域 -->
+          <div
+            v-show="activeTab === 'fact-check'"
+            class="tab-content space-y-8"
+          >
+            <!-- 履歷上傳區域 -->
+            <div v-if="factCheckProgress === 0" class="space-y-6">
+              <!-- 特色介紹區塊 -->
+              <div
+                class="bg-gradient-to-r from-emerald-50 to-teal-50 border border-emerald-200 rounded-xl p-6 shadow-sm"
+              >
+                <div class="flex items-start space-x-4">
+                  <div class="flex-shrink-0">
+                    <div
+                      class="w-12 h-12 bg-gradient-to-br from-emerald-400 to-teal-500 rounded-lg flex items-center justify-center shadow-sm"
+                    >
                       <svg
-                        class="w-5 h-5 text-slate-600"
+                        class="w-6 h-6 text-white"
                         fill="none"
                         stroke="currentColor"
                         viewBox="0 0 24 24"
@@ -2959,31 +3377,205 @@ onUnmounted(() => {
                           stroke-linecap="round"
                           stroke-linejoin="round"
                           stroke-width="2"
-                          d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+                          d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.031 9-11.622 0-1.042-.133-2.052-.382-3.016z"
                         ></path>
                       </svg>
-                      <h4 class="text-lg font-semibold text-slate-900">
-                        履歷內容
-                      </h4>
+                    </div>
+                  </div>
+                  <div class="flex-1">
+                    <h3 class="text-xl font-bold text-emerald-900 mb-2">
+                      智能履歷事實查核
+                    </h3>
+                    <p class="text-slate-700 leading-relaxed mb-0">
+                      上傳履歷內容，我們將透過 AI
+                      技術自動解析並查證履歷中的教育背景、工作經歷、技能和成就，提供詳細的事實查核報告。
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              <!-- 輸入區塊 -->
+              <div
+                class="bg-white rounded-xl shadow-lg border border-slate-200 overflow-hidden"
+              >
+                <div
+                  class="bg-gradient-to-r from-slate-50 to-gray-50 border-b border-slate-200 p-6"
+                >
+                  <div class="flex items-center space-x-3">
+                    <svg
+                      class="w-5 h-5 text-slate-600"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                        stroke-width="2"
+                        d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+                      ></path>
+                    </svg>
+                    <h4 class="text-lg font-semibold text-slate-900">
+                      履歷內容
+                    </h4>
+                  </div>
+                </div>
+
+                <div class="p-6">
+                  <textarea
+                    v-model="resumeInput"
+                    rows="12"
+                    class="w-full px-4 py-3 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 text-sm leading-relaxed resize-none transition-all duration-200"
+                    placeholder="請貼上候選人的履歷內容，包含姓名、教育背景、工作經歷、技能和成就等資訊..."
+                  ></textarea>
+
+                  <!-- 錯誤訊息 -->
+                  <div
+                    v-if="factCheckError"
+                    class="mt-4 bg-red-50 border border-red-200 rounded-lg p-4"
+                  >
+                    <div class="flex items-start space-x-3">
+                      <svg
+                        class="w-5 h-5 text-red-500 mt-0.5 flex-shrink-0"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          stroke-linecap="round"
+                          stroke-linejoin="round"
+                          stroke-width="2"
+                          d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                        ></path>
+                      </svg>
+                      <p class="text-red-700 text-sm font-medium">
+                        {{ factCheckError }}
+                      </p>
                     </div>
                   </div>
 
-                  <div class="p-6">
-                    <textarea
-                      v-model="resumeInput"
-                      rows="12"
-                      class="w-full px-4 py-3 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 text-sm leading-relaxed resize-none transition-all duration-200"
-                      placeholder="請貼上候選人的履歷內容，包含姓名、教育背景、工作經歷、技能和成就等資訊..."
-                    ></textarea>
-
-                    <!-- 錯誤訊息 -->
-                    <div
-                      v-if="factCheckError"
-                      class="mt-4 bg-red-50 border border-red-200 rounded-lg p-4"
+                  <div class="mt-6 flex gap-3">
+                    <button
+                      :disabled="isFactChecking || !resumeInput.trim()"
+                      class="inline-flex items-center px-6 py-3 bg-gradient-to-r from-emerald-500 to-teal-500 text-white rounded-lg hover:from-emerald-600 hover:to-teal-600 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 font-medium shadow-sm hover:shadow-md"
+                      @click="startFactCheck"
                     >
-                      <div class="flex items-start space-x-3">
+                      <svg
+                        v-if="isFactChecking"
+                        class="animate-spin -ml-1 mr-3 h-4 w-4 text-white"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                      >
+                        <circle
+                          class="opacity-25"
+                          cx="12"
+                          cy="12"
+                          r="10"
+                          stroke="currentColor"
+                          stroke-width="4"
+                        ></circle>
+                        <path
+                          class="opacity-75"
+                          fill="currentColor"
+                          d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                        ></path>
+                      </svg>
+                      <svg
+                        v-else
+                        class="w-4 h-4 mr-2"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          stroke-linecap="round"
+                          stroke-linejoin="round"
+                          stroke-width="2"
+                          d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
+                        ></path>
+                      </svg>
+                      {{ isFactChecking ? "處理中..." : "開始事實查核" }}
+                    </button>
+                    <button
+                      v-if="factCheckResult"
+                      class="inline-flex items-center px-6 py-3 bg-slate-500 text-white rounded-lg hover:bg-slate-600 transition-all duration-200 font-medium shadow-sm hover:shadow-md"
+                      @click="resetFactCheck"
+                    >
+                      <svg
+                        class="w-4 h-4 mr-2"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          stroke-linecap="round"
+                          stroke-linejoin="round"
+                          stroke-width="2"
+                          d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
+                        ></path>
+                      </svg>
+                      重新查核
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- 處理進度指示器 -->
+            <div
+              v-if="
+                isFactChecking ||
+                (factCheckProgress > 0 && factCheckProgress < 4)
+              "
+              class="space-y-6"
+            >
+              <div
+                class="bg-white rounded-xl shadow-lg border border-slate-200 overflow-hidden"
+              >
+                <!-- 進度標題 -->
+                <div
+                  class="bg-gradient-to-r from-blue-50 to-indigo-50 border-b border-blue-200 p-6"
+                >
+                  <div class="flex items-center space-x-3">
+                    <div
+                      class="w-10 h-10 bg-gradient-to-br from-blue-400 to-indigo-500 rounded-lg flex items-center justify-center shadow-sm"
+                    >
+                      <svg
+                        class="w-5 h-5 text-white"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          stroke-linecap="round"
+                          stroke-linejoin="round"
+                          stroke-width="2"
+                          d="M13 10V3L4 14h7v7l9-11h-7z"
+                        />
+                      </svg>
+                    </div>
+                    <h3 class="text-xl font-bold text-slate-900">
+                      事實查核進度
+                    </h3>
+                  </div>
+                </div>
+
+                <!-- 進度步驟 -->
+                <div class="p-6">
+                  <div class="flex items-center justify-between mb-8">
+                    <!-- 步驟 1 -->
+                    <div class="flex flex-col items-center">
+                      <div
+                        class="w-10 h-10 rounded-full flex items-center justify-center text-white text-sm font-bold shadow-md transition-all duration-300"
+                        :class="
+                          factCheckProgress >= 1
+                            ? 'bg-gradient-to-br from-emerald-400 to-teal-500'
+                            : 'bg-slate-300'
+                        "
+                      >
                         <svg
-                          class="w-5 h-5 text-red-500 mt-0.5 flex-shrink-0"
+                          v-if="factCheckProgress >= 1"
+                          class="w-5 h-5"
                           fill="none"
                           stroke="currentColor"
                           viewBox="0 0 24 24"
@@ -2992,890 +3584,907 @@ onUnmounted(() => {
                             stroke-linecap="round"
                             stroke-linejoin="round"
                             stroke-width="2"
-                            d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-                          ></path>
+                            d="M5 13l4 4L19 7"
+                          />
                         </svg>
-                        <p class="text-red-700 text-sm font-medium">
-                          {{ factCheckError }}
+                        <span v-else>1</span>
+                      </div>
+                      <span
+                        class="mt-2 text-sm font-medium text-center"
+                        :class="
+                          factCheckProgress >= 1
+                            ? 'text-emerald-600'
+                            : 'text-slate-500'
+                        "
+                      >
+                        履歷解析
+                      </span>
+                    </div>
+
+                    <!-- 連接線 1-2 -->
+                    <div
+                      class="flex-1 h-1 mx-4 bg-slate-200 rounded-full overflow-hidden"
+                    >
+                      <div
+                        class="h-full bg-gradient-to-r from-emerald-400 to-teal-500 rounded-full transition-all duration-500"
+                        :class="factCheckProgress >= 2 ? 'w-full' : 'w-0'"
+                      />
+                    </div>
+
+                    <!-- 步驟 2 -->
+                    <div class="flex flex-col items-center">
+                      <div
+                        class="w-10 h-10 rounded-full flex items-center justify-center text-white text-sm font-bold shadow-md transition-all duration-300"
+                        :class="
+                          factCheckProgress >= 2
+                            ? 'bg-gradient-to-br from-emerald-400 to-teal-500'
+                            : 'bg-slate-300'
+                        "
+                      >
+                        <svg
+                          v-if="factCheckProgress >= 2"
+                          class="w-5 h-5"
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                        >
+                          <path
+                            stroke-linecap="round"
+                            stroke-linejoin="round"
+                            stroke-width="2"
+                            d="M5 13l4 4L19 7"
+                          />
+                        </svg>
+                        <span v-else>2</span>
+                      </div>
+                      <span
+                        class="mt-2 text-sm font-medium text-center"
+                        :class="
+                          factCheckProgress >= 2
+                            ? 'text-emerald-600'
+                            : 'text-slate-500'
+                        "
+                      >
+                        資料搜尋
+                      </span>
+                    </div>
+
+                    <!-- 連接線 2-3 -->
+                    <div
+                      class="flex-1 h-1 mx-4 bg-slate-200 rounded-full overflow-hidden"
+                    >
+                      <div
+                        class="h-full bg-gradient-to-r from-emerald-400 to-teal-500 rounded-full transition-all duration-500"
+                        :class="factCheckProgress >= 3 ? 'w-full' : 'w-0'"
+                      />
+                    </div>
+
+                    <!-- 步驟 3 -->
+                    <div class="flex flex-col items-center">
+                      <div
+                        class="w-10 h-10 rounded-full flex items-center justify-center text-white text-sm font-bold shadow-md transition-all duration-300"
+                        :class="
+                          factCheckProgress >= 3
+                            ? 'bg-gradient-to-br from-emerald-400 to-teal-500'
+                            : 'bg-slate-300'
+                        "
+                      >
+                        <svg
+                          v-if="factCheckProgress >= 3"
+                          class="w-5 h-5"
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                        >
+                          <path
+                            stroke-linecap="round"
+                            stroke-linejoin="round"
+                            stroke-width="2"
+                            d="M5 13l4 4L19 7"
+                          />
+                        </svg>
+                        <span v-else>3</span>
+                      </div>
+                      <span
+                        class="mt-2 text-sm font-medium text-center"
+                        :class="
+                          factCheckProgress >= 3
+                            ? 'text-emerald-600'
+                            : 'text-slate-500'
+                        "
+                      >
+                        結果分析
+                      </span>
+                    </div>
+
+                    <!-- 連接線 3-4 -->
+                    <div
+                      class="flex-1 h-1 mx-4 bg-slate-200 rounded-full overflow-hidden"
+                    >
+                      <div
+                        class="h-full bg-gradient-to-r from-emerald-400 to-teal-500 rounded-full transition-all duration-500"
+                        :class="factCheckProgress >= 4 ? 'w-full' : 'w-0'"
+                      />
+                    </div>
+
+                    <!-- 步驟 4 -->
+                    <div class="flex flex-col items-center">
+                      <div
+                        class="w-10 h-10 rounded-full flex items-center justify-center text-white text-sm font-bold shadow-md transition-all duration-300"
+                        :class="
+                          factCheckProgress >= 4
+                            ? 'bg-gradient-to-br from-emerald-400 to-teal-500'
+                            : 'bg-slate-300'
+                        "
+                      >
+                        <svg
+                          v-if="factCheckProgress >= 4"
+                          class="w-5 h-5"
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                        >
+                          <path
+                            stroke-linecap="round"
+                            stroke-linejoin="round"
+                            stroke-width="2"
+                            d="M5 13l4 4L19 7"
+                          />
+                        </svg>
+                        <span v-else>4</span>
+                      </div>
+                      <span
+                        class="mt-2 text-sm font-medium text-center"
+                        :class="
+                          factCheckProgress >= 4
+                            ? 'text-emerald-600'
+                            : 'text-slate-500'
+                        "
+                      >
+                        完成
+                      </span>
+                    </div>
+                  </div>
+
+                  <!-- 處理狀態 -->
+                  <div
+                    v-if="isFactChecking"
+                    class="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-lg p-6"
+                  >
+                    <div class="flex items-center justify-center">
+                      <div
+                        class="animate-spin rounded-full h-10 w-10 border-4 border-blue-200 border-t-blue-500"
+                      />
+                      <div class="ml-4">
+                        <p class="text-slate-700 font-medium">
+                          正在處理中，請稍候...
+                        </p>
+                        <p class="text-slate-500 text-sm">
+                          我們正在分析您的履歷內容
                         </p>
                       </div>
                     </div>
-
-                    <div class="mt-6 flex gap-3">
-                      <button
-                        :disabled="isFactChecking || !resumeInput.trim()"
-                        class="inline-flex items-center px-6 py-3 bg-gradient-to-r from-emerald-500 to-teal-500 text-white rounded-lg hover:from-emerald-600 hover:to-teal-600 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 font-medium shadow-sm hover:shadow-md"
-                        @click="startFactCheck"
-                      >
-                        <svg
-                          v-if="isFactChecking"
-                          class="animate-spin -ml-1 mr-3 h-4 w-4 text-white"
-                          fill="none"
-                          viewBox="0 0 24 24"
-                        >
-                          <circle
-                            class="opacity-25"
-                            cx="12"
-                            cy="12"
-                            r="10"
-                            stroke="currentColor"
-                            stroke-width="4"
-                          ></circle>
-                          <path
-                            class="opacity-75"
-                            fill="currentColor"
-                            d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-                          ></path>
-                        </svg>
-                        <svg
-                          v-else
-                          class="w-4 h-4 mr-2"
-                          fill="none"
-                          stroke="currentColor"
-                          viewBox="0 0 24 24"
-                        >
-                          <path
-                            stroke-linecap="round"
-                            stroke-linejoin="round"
-                            stroke-width="2"
-                            d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
-                          ></path>
-                        </svg>
-                        {{ isFactChecking ? "處理中..." : "開始事實查核" }}
-                      </button>
-                      <button
-                        v-if="factCheckResult"
-                        class="inline-flex items-center px-6 py-3 bg-slate-500 text-white rounded-lg hover:bg-slate-600 transition-all duration-200 font-medium shadow-sm hover:shadow-md"
-                        @click="resetFactCheck"
-                      >
-                        <svg
-                          class="w-4 h-4 mr-2"
-                          fill="none"
-                          stroke="currentColor"
-                          viewBox="0 0 24 24"
-                        >
-                          <path
-                            stroke-linecap="round"
-                            stroke-linejoin="round"
-                            stroke-width="2"
-                            d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
-                          ></path>
-                        </svg>
-                        重新查核
-                      </button>
-                    </div>
                   </div>
                 </div>
               </div>
+            </div>
 
-              <!-- 處理進度指示器 -->
+            <!-- 事實查核結果展示 -->
+            <div
+              v-if="factCheckResult && factCheckProgress === 4"
+              class="space-y-6"
+            >
+              <!-- 總體摘要 -->
               <div
-                v-if="
-                  isFactChecking ||
-                  (factCheckProgress > 0 && factCheckProgress < 4)
-                "
-                class="space-y-6"
+                class="bg-white rounded-xl shadow-lg border border-slate-200 overflow-hidden"
               >
-                <div class="bg-white rounded-xl shadow-lg border border-slate-200 overflow-hidden">
-                  <!-- 進度標題 -->
-                  <div class="bg-gradient-to-r from-blue-50 to-indigo-50 border-b border-blue-200 p-6">
+                <!-- 報告標題 -->
+                <div
+                  class="bg-gradient-to-r from-green-50 to-emerald-50 border-b border-green-200 p-6"
+                >
+                  <div class="flex items-center justify-between">
                     <div class="flex items-center space-x-3">
-                      <div class="w-10 h-10 bg-gradient-to-br from-blue-400 to-indigo-500 rounded-lg flex items-center justify-center shadow-sm">
-                        <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
+                      <div
+                        class="w-10 h-10 bg-gradient-to-br from-green-400 to-emerald-500 rounded-lg flex items-center justify-center shadow-sm"
+                      >
+                        <svg
+                          class="w-5 h-5 text-white"
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                        >
+                          <path
+                            stroke-linecap="round"
+                            stroke-linejoin="round"
+                            stroke-width="2"
+                            d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
+                          />
                         </svg>
                       </div>
-                      <h3 class="text-xl font-bold text-slate-900">事實查核進度</h3>
+                      <h3 class="text-xl font-bold text-slate-900">
+                        事實查核報告
+                      </h3>
+                    </div>
+                    <!-- 總體匹配度圓餅 -->
+                    <div class="flex items-center space-x-3">
+                      <span class="text-sm font-medium text-slate-600"
+                        >總體匹配度</span
+                      >
+                      <div
+                        class="w-16 h-16 rounded-full flex items-center justify-center text-white text-sm font-bold shadow-lg"
+                        :style="{
+                          backgroundColor: getConfidenceColor(
+                            factCheckResult.fact_check_results.overall_score
+                          ),
+                        }"
+                      >
+                        {{
+                          Math.round(
+                            factCheckResult.fact_check_results.overall_score *
+                              100
+                          )
+                        }}%
+                      </div>
                     </div>
                   </div>
-                  
-                  <!-- 進度步驟 -->
-                  <div class="p-6">
-                    <div class="flex items-center justify-between mb-8">
-                      <!-- 步驟 1 -->
-                      <div class="flex flex-col items-center">
-                        <div class="w-10 h-10 rounded-full flex items-center justify-center text-white text-sm font-bold shadow-md transition-all duration-300"
-                             :class="factCheckProgress >= 1 ? 'bg-gradient-to-br from-emerald-400 to-teal-500' : 'bg-slate-300'">
-                          <svg v-if="factCheckProgress >= 1" class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
-                          </svg>
-                          <span v-else>1</span>
-                        </div>
-                        <span class="mt-2 text-sm font-medium text-center" :class="factCheckProgress >= 1 ? 'text-emerald-600' : 'text-slate-500'">
-                          履歷解析
-                        </span>
+                </div>
+
+                <div class="p-6">
+                  <!-- 候選人資訊 -->
+                  <div class="mb-6">
+                    <div class="flex items-center space-x-2 mb-2">
+                      <svg
+                        class="w-5 h-5 text-slate-500"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          stroke-linecap="round"
+                          stroke-linejoin="round"
+                          stroke-width="2"
+                          d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
+                        />
+                      </svg>
+                      <span class="font-semibold text-slate-700">候選人：</span>
+                      <span class="text-slate-600">{{
+                        factCheckResult.candidate.name
+                      }}</span>
+                    </div>
+                    <p class="text-slate-600 leading-relaxed">
+                      {{ factCheckResult.fact_check_results.summary }}
+                    </p>
+                  </div>
+
+                  <!-- 關鍵指標卡片 -->
+                  <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+                    <div
+                      class="bg-gradient-to-br from-blue-50 to-blue-100 rounded-lg p-4 text-center border border-blue-200"
+                    >
+                      <div class="text-2xl font-bold text-blue-600 mb-1">
+                        {{ factCheckResult.extraction.queries_generated }}
                       </div>
-                      
-                      <!-- 連接線 1-2 -->
-                      <div class="flex-1 h-1 mx-4 bg-slate-200 rounded-full overflow-hidden">
-                        <div class="h-full bg-gradient-to-r from-emerald-400 to-teal-500 rounded-full transition-all duration-500" 
-                             :class="factCheckProgress >= 2 ? 'w-full' : 'w-0'" />
-                      </div>
-                      
-                      <!-- 步驟 2 -->
-                      <div class="flex flex-col items-center">
-                        <div class="w-10 h-10 rounded-full flex items-center justify-center text-white text-sm font-bold shadow-md transition-all duration-300"
-                             :class="factCheckProgress >= 2 ? 'bg-gradient-to-br from-emerald-400 to-teal-500' : 'bg-slate-300'">
-                          <svg v-if="factCheckProgress >= 2" class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
-                          </svg>
-                          <span v-else>2</span>
-                        </div>
-                        <span class="mt-2 text-sm font-medium text-center" :class="factCheckProgress >= 2 ? 'text-emerald-600' : 'text-slate-500'">
-                          資料搜尋
-                        </span>
-                      </div>
-                      
-                      <!-- 連接線 2-3 -->
-                      <div class="flex-1 h-1 mx-4 bg-slate-200 rounded-full overflow-hidden">
-                        <div class="h-full bg-gradient-to-r from-emerald-400 to-teal-500 rounded-full transition-all duration-500" 
-                             :class="factCheckProgress >= 3 ? 'w-full' : 'w-0'" />
-                      </div>
-                      
-                      <!-- 步驟 3 -->
-                      <div class="flex flex-col items-center">
-                        <div class="w-10 h-10 rounded-full flex items-center justify-center text-white text-sm font-bold shadow-md transition-all duration-300"
-                             :class="factCheckProgress >= 3 ? 'bg-gradient-to-br from-emerald-400 to-teal-500' : 'bg-slate-300'">
-                          <svg v-if="factCheckProgress >= 3" class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
-                          </svg>
-                          <span v-else>3</span>
-                        </div>
-                        <span class="mt-2 text-sm font-medium text-center" :class="factCheckProgress >= 3 ? 'text-emerald-600' : 'text-slate-500'">
-                          結果分析
-                        </span>
-                      </div>
-                      
-                      <!-- 連接線 3-4 -->
-                      <div class="flex-1 h-1 mx-4 bg-slate-200 rounded-full overflow-hidden">
-                        <div class="h-full bg-gradient-to-r from-emerald-400 to-teal-500 rounded-full transition-all duration-500" 
-                             :class="factCheckProgress >= 4 ? 'w-full' : 'w-0'" />
-                      </div>
-                      
-                      <!-- 步驟 4 -->
-                      <div class="flex flex-col items-center">
-                        <div class="w-10 h-10 rounded-full flex items-center justify-center text-white text-sm font-bold shadow-md transition-all duration-300"
-                             :class="factCheckProgress >= 4 ? 'bg-gradient-to-br from-emerald-400 to-teal-500' : 'bg-slate-300'">
-                          <svg v-if="factCheckProgress >= 4" class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
-                          </svg>
-                          <span v-else>4</span>
-                        </div>
-                        <span class="mt-2 text-sm font-medium text-center" :class="factCheckProgress >= 4 ? 'text-emerald-600' : 'text-slate-500'">
-                          完成
-                        </span>
+                      <div class="text-xs font-medium text-blue-800">
+                        查詢項目
                       </div>
                     </div>
-                    
-                    <!-- 處理狀態 -->
-                    <div v-if="isFactChecking" class="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-lg p-6">
-                      <div class="flex items-center justify-center">
-                        <div class="animate-spin rounded-full h-10 w-10 border-4 border-blue-200 border-t-blue-500" />
-                        <div class="ml-4">
-                          <p class="text-slate-700 font-medium">正在處理中，請稍候...</p>
-                          <p class="text-slate-500 text-sm">我們正在分析您的履歷內容</p>
-                        </div>
+                    <div
+                      class="bg-gradient-to-br from-green-50 to-green-100 rounded-lg p-4 text-center border border-green-200"
+                    >
+                      <div class="text-2xl font-bold text-green-600 mb-1">
+                        {{
+                          factCheckResult.process_metadata.step2_searches
+                            .successful_queries
+                        }}
+                      </div>
+                      <div class="text-xs font-medium text-green-800">
+                        成功搜尋
+                      </div>
+                    </div>
+                    <div
+                      class="bg-gradient-to-br from-emerald-50 to-emerald-100 rounded-lg p-4 text-center border border-emerald-200"
+                    >
+                      <div class="text-2xl font-bold text-emerald-600 mb-1">
+                        {{
+                          factCheckResult.fact_check_results.verified_items
+                            .length
+                        }}
+                      </div>
+                      <div class="text-xs font-medium text-emerald-800">
+                        已驗證項目
+                      </div>
+                    </div>
+                    <div
+                      class="bg-gradient-to-br from-red-50 to-red-100 rounded-lg p-4 text-center border border-red-200"
+                    >
+                      <div class="text-2xl font-bold text-red-600 mb-1">
+                        {{
+                          factCheckResult.fact_check_results.red_flags.length
+                        }}
+                      </div>
+                      <div class="text-xs font-medium text-red-800">
+                        可疑項目
                       </div>
                     </div>
                   </div>
                 </div>
               </div>
 
-              <!-- 事實查核結果展示 -->
-              <div
-                v-if="factCheckResult && factCheckProgress === 4"
-                class="space-y-6"
-              >
-                <!-- 總體摘要 -->
-                <div class="bg-white rounded-xl shadow-lg border border-slate-200 overflow-hidden">
-                  <!-- 報告標題 -->
-                  <div class="bg-gradient-to-r from-green-50 to-emerald-50 border-b border-green-200 p-6">
+              <!-- 分類結果詳情 -->
+              <div class="space-y-4">
+                <div
+                  v-for="match in factCheckResult.fact_check_results.matches"
+                  :key="match.category"
+                  class="bg-white rounded-xl shadow-md border border-slate-200 overflow-hidden hover:shadow-lg transition-all duration-300"
+                >
+                  <!-- 卡片頭部 -->
+                  <div
+                    class="bg-gradient-to-r from-slate-50 to-gray-50 border-b border-slate-200 p-4"
+                  >
                     <div class="flex items-center justify-between">
                       <div class="flex items-center space-x-3">
-                        <div class="w-10 h-10 bg-gradient-to-br from-green-400 to-emerald-500 rounded-lg flex items-center justify-center shadow-sm">
-                          <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                          </svg>
-                        </div>
-                        <h3 class="text-xl font-bold text-slate-900">事實查核報告</h3>
-                      </div>
-                      <!-- 總體匹配度圓餅 -->
-                      <div class="flex items-center space-x-3">
-                        <span class="text-sm font-medium text-slate-600">總體匹配度</span>
+                        <!-- 類別圖標 -->
                         <div
-                          class="w-16 h-16 rounded-full flex items-center justify-center text-white text-sm font-bold shadow-lg"
-                          :style="{
-                            backgroundColor: getConfidenceColor(
-                              factCheckResult.fact_check_results.overall_score
-                            ),
-                          }"
+                          class="w-8 h-8 bg-gradient-to-br from-slate-400 to-slate-500 rounded-lg flex items-center justify-center"
                         >
-                          {{
-                            Math.round(
-                              factCheckResult.fact_check_results.overall_score *
-                                100
-                            )
-                          }}%
+                          <svg
+                            v-if="match.category === 'education'"
+                            class="w-4 h-4 text-white"
+                            fill="none"
+                            stroke="currentColor"
+                            viewBox="0 0 24 24"
+                          >
+                            <path
+                              stroke-linecap="round"
+                              stroke-linejoin="round"
+                              stroke-width="2"
+                              d="M12 14l9-5-9-5-9 5 9 5z"
+                            />
+                            <path
+                              stroke-linecap="round"
+                              stroke-linejoin="round"
+                              stroke-width="2"
+                              d="M12 14l6.16-3.422a12.083 12.083 0 01.665 6.479A11.952 11.952 0 0012 20.055a11.952 11.952 0 00-6.824-2.998 12.078 12.078 0 01.665-6.479L12 14z"
+                            />
+                          </svg>
+                          <svg
+                            v-else-if="match.category === 'experience'"
+                            class="w-4 h-4 text-white"
+                            fill="none"
+                            stroke="currentColor"
+                            viewBox="0 0 24 24"
+                          >
+                            <path
+                              stroke-linecap="round"
+                              stroke-linejoin="round"
+                              stroke-width="2"
+                              d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2-2v2m8 0V6a2 2 0 012 2v6a2 2 0 01-2 2H6a2 2 0 01-2-2V8a2 2 0 012-2V6"
+                            />
+                          </svg>
+                          <svg
+                            v-else-if="match.category === 'skills'"
+                            class="w-4 h-4 text-white"
+                            fill="none"
+                            stroke="currentColor"
+                            viewBox="0 0 24 24"
+                          >
+                            <path
+                              stroke-linecap="round"
+                              stroke-linejoin="round"
+                              stroke-width="2"
+                              d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014.846 21H9.154a3.374 3.374 0 00-2.894-1.789L5.712 18.3z"
+                            />
+                          </svg>
+                          <svg
+                            v-else
+                            class="w-4 h-4 text-white"
+                            fill="none"
+                            stroke="currentColor"
+                            viewBox="0 0 24 24"
+                          >
+                            <path
+                              stroke-linecap="round"
+                              stroke-linejoin="round"
+                              stroke-width="2"
+                              d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z"
+                            />
+                          </svg>
                         </div>
-                      </div>
-                    </div>
-                  </div>
-
-                  <div class="p-6">
-                    <!-- 候選人資訊 -->
-                    <div class="mb-6">
-                      <div class="flex items-center space-x-2 mb-2">
-                        <svg class="w-5 h-5 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-                        </svg>
-                        <span class="font-semibold text-slate-700">候選人：</span>
-                        <span class="text-slate-600">{{ factCheckResult.candidate.name }}</span>
-                      </div>
-                      <p class="text-slate-600 leading-relaxed">
-                        {{ factCheckResult.fact_check_results.summary }}
-                      </p>
-                    </div>
-
-                    <!-- 關鍵指標卡片 -->
-                    <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
-                      <div class="bg-gradient-to-br from-blue-50 to-blue-100 rounded-lg p-4 text-center border border-blue-200">
-                        <div class="text-2xl font-bold text-blue-600 mb-1">
-                          {{ factCheckResult.extraction.queries_generated }}
-                        </div>
-                        <div class="text-xs font-medium text-blue-800">查詢項目</div>
-                      </div>
-                      <div class="bg-gradient-to-br from-green-50 to-green-100 rounded-lg p-4 text-center border border-green-200">
-                        <div class="text-2xl font-bold text-green-600 mb-1">
+                        <h4 class="text-lg font-bold text-slate-800">
                           {{
-                            factCheckResult.process_metadata.step2_searches
-                              .successful_queries
+                            match.category === "education"
+                              ? "教育背景"
+                              : match.category === "experience"
+                              ? "工作經歷"
+                              : match.category === "skills"
+                              ? "技能"
+                              : "成就"
                           }}
-                        </div>
-                        <div class="text-xs font-medium text-green-800">成功搜尋</div>
+                        </h4>
                       </div>
-                      <div class="bg-gradient-to-br from-emerald-50 to-emerald-100 rounded-lg p-4 text-center border border-emerald-200">
-                        <div class="text-2xl font-bold text-emerald-600 mb-1">
-                          {{
-                            factCheckResult.fact_check_results.verified_items
-                              .length
-                          }}
-                        </div>
-                        <div class="text-xs font-medium text-emerald-800">已驗證項目</div>
-                      </div>
-                      <div class="bg-gradient-to-br from-red-50 to-red-100 rounded-lg p-4 text-center border border-red-200">
-                        <div class="text-2xl font-bold text-red-600 mb-1">
-                          {{
-                            factCheckResult.fact_check_results.red_flags.length
-                          }}
-                        </div>
-                        <div class="text-xs font-medium text-red-800">可疑項目</div>
-                      </div>
-                    </div>
-                  </div>
-                </div>
 
-                <!-- 分類結果詳情 -->
-                <div class="space-y-4">
-                  <div
-                    v-for="match in factCheckResult.fact_check_results.matches"
-                    :key="match.category"
-                    class="bg-white rounded-xl shadow-md border border-slate-200 overflow-hidden hover:shadow-lg transition-all duration-300"
-                  >
-                    <!-- 卡片頭部 -->
-                    <div class="bg-gradient-to-r from-slate-50 to-gray-50 border-b border-slate-200 p-4">
-                      <div class="flex items-center justify-between">
-                        <div class="flex items-center space-x-3">
-                          <!-- 類別圖標 -->
-                          <div class="w-8 h-8 bg-gradient-to-br from-slate-400 to-slate-500 rounded-lg flex items-center justify-center">
-                            <svg v-if="match.category === 'education'" class="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 14l9-5-9-5-9 5 9 5z" />
-                              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 14l6.16-3.422a12.083 12.083 0 01.665 6.479A11.952 11.952 0 0012 20.055a11.952 11.952 0 00-6.824-2.998 12.078 12.078 0 01.665-6.479L12 14z" />
-                            </svg>
-                            <svg v-else-if="match.category === 'experience'" class="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2-2v2m8 0V6a2 2 0 012 2v6a2 2 0 01-2 2H6a2 2 0 01-2-2V8a2 2 0 012-2V6" />
-                            </svg>
-                            <svg v-else-if="match.category === 'skills'" class="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014.846 21H9.154a3.374 3.374 0 00-2.894-1.789L5.712 18.3z" />
-                            </svg>
-                            <svg v-else class="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z" />
-                            </svg>
-                          </div>
-                          <h4 class="text-lg font-bold text-slate-800">
-                            {{
-                              match.category === "education"
-                                ? "教育背景"
-                                : match.category === "experience"
-                                ? "工作經歷"
-                                : match.category === "skills"
-                                ? "技能"
-                                : "成就"
-                            }}
-                          </h4>
-                        </div>
-                        
-                        <!-- 狀態指標 -->
-                        <div class="flex items-center space-x-4">
-                          <!-- 匹配狀態 -->
-                          <div class="flex items-center space-x-2">
-                            <span class="text-xs font-medium text-slate-500">匹配</span>
-                            <div
-                              class="w-7 h-7 rounded-full flex items-center justify-center shadow-sm"
-                              :class="match.match ? 'bg-green-500' : 'bg-red-500'"
+                      <!-- 狀態指標 -->
+                      <div class="flex items-center space-x-4">
+                        <!-- 匹配狀態 -->
+                        <div class="flex items-center space-x-2">
+                          <span class="text-xs font-medium text-slate-500"
+                            >匹配</span
+                          >
+                          <div
+                            class="w-7 h-7 rounded-full flex items-center justify-center shadow-sm"
+                            :class="match.match ? 'bg-green-500' : 'bg-red-500'"
+                          >
+                            <svg
+                              v-if="match.match"
+                              class="w-4 h-4 text-white"
+                              fill="none"
+                              stroke="currentColor"
+                              viewBox="0 0 24 24"
                             >
-                              <svg v-if="match.match" class="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
-                              </svg>
-                              <svg v-else class="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
-                              </svg>
-                            </div>
-                          </div>
-                          
-                          <!-- 置信度 -->
-                          <div class="flex items-center space-x-2">
-                            <span class="text-xs font-medium text-slate-500">置信度</span>
-                            <div
-                              class="px-3 py-1 rounded-full text-xs font-bold text-white"
-                              :style="{
-                                backgroundColor: getConfidenceColor(match.confidence),
-                              }"
+                              <path
+                                stroke-linecap="round"
+                                stroke-linejoin="round"
+                                stroke-width="2"
+                                d="M5 13l4 4L19 7"
+                              />
+                            </svg>
+                            <svg
+                              v-else
+                              class="w-4 h-4 text-white"
+                              fill="none"
+                              stroke="currentColor"
+                              viewBox="0 0 24 24"
                             >
-                              {{ Math.round(match.confidence * 100) }}%
-                            </div>
+                              <path
+                                stroke-linecap="round"
+                                stroke-linejoin="round"
+                                stroke-width="2"
+                                d="M6 18L18 6M6 6l12 12"
+                              />
+                            </svg>
+                          </div>
+                        </div>
+
+                        <!-- 置信度 -->
+                        <div class="flex items-center space-x-2">
+                          <span class="text-xs font-medium text-slate-500"
+                            >置信度</span
+                          >
+                          <div
+                            class="px-3 py-1 rounded-full text-xs font-bold text-white"
+                            :style="{
+                              backgroundColor: getConfidenceColor(
+                                match.confidence
+                              ),
+                            }"
+                          >
+                            {{ Math.round(match.confidence * 100) }}%
                           </div>
                         </div>
                       </div>
                     </div>
-                    
-                    <!-- 卡片內容 -->
-                    <div class="p-4">
-                      <div class="text-slate-600 leading-relaxed mb-4">
-                        {{ match.notes }}
-                      </div>
-                      
-                      <!-- 來源連結 -->
-                      <div v-if="match.url" class="flex items-center space-x-2 text-sm">
-                        <svg class="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
-                        </svg>
-                        <span class="text-slate-500">來源：</span>
-                        <a
-                          :href="match.url"
-                          target="_blank"
-                          class="text-blue-600 hover:text-blue-700 hover:underline font-medium"
-                        >
-                          {{ match.source }}
-                        </a>
-                      </div>
-                    </div>
                   </div>
-                </div>
 
-                <!-- 可疑項目警告 -->
-                <div
-                  v-if="factCheckResult.fact_check_results.red_flags.length > 0"
-                  class="bg-gradient-to-r from-amber-50 to-orange-50 border border-amber-200 rounded-xl p-6 shadow-sm"
-                >
-                  <div class="flex items-start space-x-3">
-                    <div class="w-8 h-8 bg-gradient-to-br from-amber-400 to-orange-500 rounded-lg flex items-center justify-center flex-shrink-0">
-                      <svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  <!-- 卡片內容 -->
+                  <div class="p-4">
+                    <div class="text-slate-600 leading-relaxed mb-4">
+                      {{ match.notes }}
+                    </div>
+
+                    <!-- 來源連結 -->
+                    <div
+                      v-if="match.url"
+                      class="flex items-center space-x-2 text-sm"
+                    >
+                      <svg
+                        class="w-4 h-4 text-slate-400"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          stroke-linecap="round"
+                          stroke-linejoin="round"
+                          stroke-width="2"
+                          d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"
+                        />
                       </svg>
-                    </div>
-                    <div class="flex-1">
-                      <h4 class="text-lg font-bold text-amber-800 mb-3">需要注意的項目</h4>
-                      <ul class="space-y-2">
-                        <li
-                          v-for="flag in factCheckResult.fact_check_results.red_flags"
-                          :key="flag"
-                          class="flex items-start space-x-2"
-                        >
-                          <div class="w-2 h-2 bg-amber-500 rounded-full mt-2 flex-shrink-0" />
-                          <span class="text-amber-700 leading-relaxed">{{ flag }}</span>
-                        </li>
-                      </ul>
+                      <span class="text-slate-500">來源：</span>
+                      <a
+                        :href="match.url"
+                        target="_blank"
+                        class="text-blue-600 hover:text-blue-700 hover:underline font-medium"
+                      >
+                        {{ match.source }}
+                      </a>
                     </div>
                   </div>
-                </div>
-
-                <!-- 處理資訊 -->
-                <details class="bg-gradient-to-r from-slate-50 to-gray-50 border border-slate-200 rounded-xl overflow-hidden">
-                  <summary class="cursor-pointer p-4 hover:bg-slate-100 transition-colors flex items-center space-x-2">
-                    <svg class="w-4 h-4 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                    </svg>
-                    <span class="text-sm font-medium text-slate-700">處理詳情</span>
-                  </summary>
-                  <div class="p-4 border-t border-slate-200 bg-white">
-                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
-                      <div class="flex items-center space-x-2">
-                        <span class="font-medium text-slate-600">OpenAI Tokens:</span>
-                        <span class="text-slate-500">
-                          {{
-                            factCheckResult.process_metadata.total_cost_estimate
-                              .openai_tokens
-                          }}
-                        </span>
-                      </div>
-                      <div class="flex items-center space-x-2">
-                        <span class="font-medium text-slate-600">Perplexity Tokens:</span>
-                        <span class="text-slate-500">
-                          {{
-                            factCheckResult.process_metadata.total_cost_estimate
-                              .perplexity_tokens
-                          }}
-                        </span>
-                      </div>
-                      <div class="flex items-center space-x-2">
-                        <span class="font-medium text-slate-600">處理時間:</span>
-                        <span class="text-slate-500">
-                          {{
-                            new Date(
-                              factCheckResult.process_metadata.processing_time
-                            ).toLocaleString()
-                          }}
-                        </span>
-                      </div>
-                    </div>
-                  </div>
-                </details>
-
-                <!-- 操作按鈕 -->
-                <div class="flex justify-center">
-                  <button
-                    class="inline-flex items-center px-6 py-3 bg-gradient-to-r from-slate-500 to-gray-600 text-white rounded-lg hover:from-slate-600 hover:to-gray-700 transition-all duration-200 font-medium shadow-sm hover:shadow-md"
-                    @click="resetFactCheck"
-                  >
-                    <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-                    </svg>
-                    重新查核
-                  </button>
                 </div>
               </div>
-            </div>
 
-            <!-- 結束 v-show="activeTab === 'ai'" 區塊 -->
-            <!-- Tab 導航 -->
+              <!-- 可疑項目警告 -->
+              <div
+                v-if="factCheckResult.fact_check_results.red_flags.length > 0"
+                class="bg-gradient-to-r from-amber-50 to-orange-50 border border-amber-200 rounded-xl p-6 shadow-sm"
+              >
+                <div class="flex items-start space-x-3">
+                  <div
+                    class="w-8 h-8 bg-gradient-to-br from-amber-400 to-orange-500 rounded-lg flex items-center justify-center flex-shrink-0"
+                  >
+                    <svg
+                      class="w-4 h-4 text-white"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                        stroke-width="2"
+                        d="M12 9v2m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                      />
+                    </svg>
+                  </div>
+                  <div class="flex-1">
+                    <h4 class="text-lg font-bold text-amber-800 mb-3">
+                      需要注意的項目
+                    </h4>
+                    <ul class="space-y-2">
+                      <li
+                        v-for="flag in factCheckResult.fact_check_results
+                          .red_flags"
+                        :key="flag"
+                        class="flex items-start space-x-2"
+                      >
+                        <div
+                          class="w-2 h-2 bg-amber-500 rounded-full mt-2 flex-shrink-0"
+                        />
+                        <span class="text-amber-700 leading-relaxed">{{
+                          flag
+                        }}</span>
+                      </li>
+                    </ul>
+                  </div>
+                </div>
+              </div>
+
+              <!-- 處理資訊 -->
+              <details
+                class="bg-gradient-to-r from-slate-50 to-gray-50 border border-slate-200 rounded-xl overflow-hidden"
+              >
+                <summary
+                  class="cursor-pointer p-4 hover:bg-slate-100 transition-colors flex items-center space-x-2"
+                >
+                  <svg
+                    class="w-4 h-4 text-slate-500"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      stroke-width="2"
+                      d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                    />
+                  </svg>
+                  <span class="text-sm font-medium text-slate-700"
+                    >處理詳情</span
+                  >
+                </summary>
+                <div class="p-4 border-t border-slate-200 bg-white">
+                  <div class="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
+                    <div class="flex items-center space-x-2">
+                      <span class="font-medium text-slate-600"
+                        >OpenAI Tokens:</span
+                      >
+                      <span class="text-slate-500">
+                        {{
+                          factCheckResult.process_metadata.total_cost_estimate
+                            .openai_tokens
+                        }}
+                      </span>
+                    </div>
+                    <div class="flex items-center space-x-2">
+                      <span class="font-medium text-slate-600"
+                        >Perplexity Tokens:</span
+                      >
+                      <span class="text-slate-500">
+                        {{
+                          factCheckResult.process_metadata.total_cost_estimate
+                            .perplexity_tokens
+                        }}
+                      </span>
+                    </div>
+                    <div class="flex items-center space-x-2">
+                      <span class="font-medium text-slate-600">處理時間:</span>
+                      <span class="text-slate-500">
+                        {{
+                          new Date(
+                            factCheckResult.process_metadata.processing_time
+                          ).toLocaleString()
+                        }}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              </details>
+
+              <!-- 操作按鈕 -->
+              <div class="flex justify-center">
+                <button
+                  class="inline-flex items-center px-6 py-3 bg-gradient-to-r from-slate-500 to-gray-600 text-white rounded-lg hover:from-slate-600 hover:to-gray-700 transition-all duration-200 font-medium shadow-sm hover:shadow-md"
+                  @click="resetFactCheck"
+                >
+                  <svg
+                    class="w-4 h-4 mr-2"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      stroke-width="2"
+                      d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
+                    />
+                  </svg>
+                  重新查核
+                </button>
+              </div>
+            </div>
           </div>
 
-          <!-- 問題引導區域 -->
+          <!-- 結束 v-show="activeTab === 'ai'" 區塊 -->
+          <!-- Tab 導航 -->
+        </div>
+
+        <!-- 問題引導區域 -->
+        <div
+          v-if="showQuestionPrompt"
+          class="bg-#f9f4ff p-8 rounded-8px mb-10 border-1 border-solid border-#eee shadow-md"
+        >
+          <div v-if="!isQuestionsLoading">
+            <p class="text-22px leading-28px mb-5 text-center">
+              我可以幫您總結提問求職者的方向，是否為您提供相關問題？
+            </p>
+            <div class="flex gap-5 justify-center">
+              <button
+                class="py-3 px-8 bg-#6a3ea1 text-white border-none rounded-6px cursor-pointer hover:bg- transition-colors text-20px"
+                @click="handleQuestionsRequest(true)"
+              >
+                需要
+              </button>
+              <button
+                class="py-3 px-8 bg-transparent border-1 border-solid border-#6a3ea1 text-#6a3ea1 rounded-6px cursor-pointer hover:bg-#6a3ea1 hover:text-white transition-colors text-20px"
+                @click="handleQuestionsRequest(false)"
+              >
+                不需要
+              </button>
+            </div>
+          </div>
+          <!-- 不需要時的溫馨提示 -->
           <div
-            v-if="showQuestionPrompt"
-            class="bg-#f9f4ff p-8 rounded-8px mb-10 border-1 border-solid border-#eee shadow-md"
+            v-if="showDenyTip"
+            id="question-section"
+            class="mt-5 p-4 bg-#FFF8E1 text-#856404 rounded-6px text-18px"
           >
-            <div v-if="!isQuestionsLoading">
-              <p class="text-22px leading-28px mb-5 text-center">
-                我可以幫您總結提問求職者的方向，是否為您提供相關問題？
-              </p>
-              <div class="flex gap-5 justify-center">
-                <button
-                  class="py-3 px-8 bg-#6a3ea1 text-white border-none rounded-6px cursor-pointer hover:bg- transition-colors text-20px"
-                  @click="handleQuestionsRequest(true)"
-                >
-                  需要
-                </button>
-                <button
-                  class="py-3 px-8 bg-transparent border-1 border-solid border-#6a3ea1 text-#6a3ea1 rounded-6px cursor-pointer hover:bg-#6a3ea1 hover:text-white transition-colors text-20px"
-                  @click="handleQuestionsRequest(false)"
-                >
-                  不需要
-                </button>
-              </div>
-            </div>
-            <!-- 不需要時的溫馨提示 -->
+            <p class="m-0 text-center">
+              以上為我們提供的分析報告，建議與候選人更深入交流，更完整認識對方的專業歷程
+            </p>
+          </div>
+          <!-- 需要時的載入動畫 -->
+          <div v-if="isQuestionsLoading" class="mt-5 text-center">
             <div
-              v-if="showDenyTip"
-              id="question-section"
-              class="mt-5 p-4 bg-#FFF8E1 text-#856404 rounded-6px text-18px"
+              class="inline-block w-8 h-8 border-3 border-t-#6a3ea1 border-r-#6a3ea1 border-b-transparent border-l-transparent rounded-full animate-spin"
+            ></div>
+            <p
+              class="text-18px text-#555 flex items-center justify-center mt-3"
             >
-              <p class="m-0 text-center">
-                以上為我們提供的分析報告，建議與候選人更深入交流，更完整認識對方的專業歷程
-              </p>
-            </div>
-            <!-- 需要時的載入動畫 -->
-            <div v-if="isQuestionsLoading" class="mt-5 text-center">
+              <span class="mr-3">正在生成問題建議</span>
+              <span class="inline-flex">
+                <span class="animate-pulse">.</span>
+                <span class="animate-pulse" style="animation-delay: 0.2s"
+                  >.</span
+                >
+                <span class="animate-pulse" style="animation-delay: 0.4s"
+                  >.</span
+                >
+              </span>
+            </p>
+          </div>
+        </div>
+
+        <!-- 建議提問內容區域 -->
+        <div v-show="activeTab === 'questions'" class="tab-content">
+          <!-- 現代化標題卡片 -->
+          <div
+            class="mb-8 p-6 bg-gradient-to-r from-purple-50 to-indigo-50 rounded-xl border border-purple-100 shadow-sm"
+          >
+            <div class="flex items-center mb-3">
               <div
-                class="inline-block w-8 h-8 border-3 border-t-#6a3ea1 border-r-#6a3ea1 border-b-transparent border-l-transparent rounded-full animate-spin"
-              ></div>
-              <p
-                class="text-18px text-#555 flex items-center justify-center mt-3"
+                class="w-10 h-10 bg-gradient-to-r from-purple-500 to-indigo-500 rounded-lg flex items-center justify-center mr-3"
               >
-                <span class="mr-3">正在生成問題建議</span>
-                <span class="inline-flex">
-                  <span class="animate-pulse">.</span>
-                  <span class="animate-pulse" style="animation-delay: 0.2s"
-                    >.</span
-                  >
-                  <span class="animate-pulse" style="animation-delay: 0.4s"
-                    >.</span
-                  >
-                </span>
-              </p>
+                <svg
+                  class="w-5 h-5 text-white"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-width="2"
+                    d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                  />
+                </svg>
+              </div>
+              <h3 class="text-xl font-bold text-gray-800 mb-0">建議面試問題</h3>
             </div>
+            <p class="text-gray-600 leading-relaxed mb-0">
+              根據履歷內容生成專業的面試問題，幫助您深入了解候選人的能力和經驗。
+            </p>
           </div>
 
-          <!-- 建議提問內容區域 -->
-          <div v-show="activeTab === 'questions'" class="tab-content">
-            <!-- 現代化標題卡片 -->
-            <div class="mb-8 p-6 bg-gradient-to-r from-purple-50 to-indigo-50 rounded-xl border border-purple-100 shadow-sm">
-              <div class="flex items-center mb-3">
-                <div class="w-10 h-10 bg-gradient-to-r from-purple-500 to-indigo-500 rounded-lg flex items-center justify-center mr-3">
-                  <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
-                  </svg>
-                </div>
-                <h3 class="text-xl font-bold text-gray-800 mb-0">
-                  建議面試問題
-                </h3>
-              </div>
-              <p class="text-gray-600 leading-relaxed mb-0">
-                根據履歷內容生成專業的面試問題，幫助您深入了解候選人的能力和經驗。
-              </p>
-            </div>
-
-            <!-- 現代化問題範本卡片 -->
-            <div class="bg-white rounded-xl shadow-lg border border-gray-100 overflow-hidden">
-              <div
-                class="flex justify-between items-center cursor-pointer p-6 hover:bg-gray-50 transition-colors"
-                @click="toggleInterviewQuestions"
-              >
-                <div class="flex items-center">
-                  <div class="w-8 h-8 bg-gradient-to-r from-purple-500 to-indigo-500 rounded-lg flex items-center justify-center mr-3">
-                    <svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
-                    </svg>
-                  </div>
-                  <h3 class="text-lg font-bold text-gray-800 mb-0">
-                    建議問題範本
-                  </h3>
-                  <!-- 現代化重置按鈕 -->
-                  <button
-                    class="ml-4 px-3 py-1.5 text-sm text-gray-600 hover:text-gray-800 hover:bg-gray-100 border border-gray-200 rounded-lg transition-all duration-200 flex items-center"
-                    @click.stop="resetQuestionSection"
+          <!-- 現代化問題範本卡片 -->
+          <div
+            class="bg-white rounded-xl shadow-lg border border-gray-100 overflow-hidden"
+          >
+            <div
+              class="flex justify-between items-center cursor-pointer p-6 hover:bg-gray-50 transition-colors"
+              @click="toggleInterviewQuestions"
+            >
+              <div class="flex items-center">
+                <div
+                  class="w-8 h-8 bg-gradient-to-r from-purple-500 to-indigo-500 rounded-lg flex items-center justify-center mr-3"
+                >
+                  <svg
+                    class="w-4 h-4 text-white"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
                   >
-                    <svg
-                      xmlns="http://www.w3.org/2000/svg"
-                      width="14"
-                      height="14"
-                      viewBox="0 0 24 24"
-                      fill="none"
-                      stroke="currentColor"
-                      stroke-width="2"
+                    <path
                       stroke-linecap="round"
                       stroke-linejoin="round"
-                      class="mr-1.5"
-                    >
-                      <polyline points="1 4 1 10 7 10"></polyline>
-                      <path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"></path>
-                    </svg>
-                    重置
-                  </button>
-                </div>
-                <div class="flex items-center">
-                  <div class="w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center">
-                    <svg
-                      xmlns="http://www.w3.org/2000/svg"
-                      width="16"
-                      height="16"
-                      viewBox="0 0 24 24"
-                      fill="none"
-                      stroke="currentColor"
                       stroke-width="2"
-                      stroke-linecap="round"
-                      stroke-linejoin="round"
-                      class="transform transition-all duration-300"
-                      :class="{ 'rotate-180': isInterviewQuestionsExpanded }"
-                    >
-                      <polyline points="6 9 12 15 18 9"></polyline>
-                    </svg>
-                  </div>
-                </div>
-              </div>
-
-              <!-- 現代化問題內容展開區域 -->
-              <template v-if="isInterviewQuestionsExpanded">
-                <div class="border-t border-gray-100">
-                  <div class="p-6 space-y-8">
-                    
-                    <!-- 技術深度問題 -->
-                    <div class="bg-gradient-to-r from-blue-50 to-cyan-50 rounded-xl p-6 border-l-4 border-blue-400">
-                      <div class="flex items-center mb-4">
-                        <div class="w-8 h-8 bg-gradient-to-r from-blue-500 to-cyan-500 rounded-lg flex items-center justify-center mr-3">
-                          <svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4"/>
-                          </svg>
-                        </div>
-                        <h4 class="text-lg font-bold text-gray-800">技術深度問題</h4>
-                      </div>
-                      <div class="space-y-4">
-                        <div class="bg-white rounded-lg p-4 shadow-sm border border-blue-100">
-                          <div class="flex items-start">
-                            <div class="w-6 h-6 bg-blue-500 text-white rounded-full flex items-center justify-center text-xs font-bold mr-3 mt-0.5 flex-shrink-0">1</div>
-                            <div>
-                              <h5 class="font-semibold text-gray-800 mb-2">具體實作經驗</h5>
-                              <p class="text-gray-600 text-sm leading-relaxed">請詳細說明您在ABC科技時如何實現40%運營成本降低？能否分享具體的技術方案和實施過程？</p>
-                            </div>
-                          </div>
-                        </div>
-                        <div class="bg-white rounded-lg p-4 shadow-sm border border-blue-100">
-                          <div class="flex items-start">
-                            <div class="w-6 h-6 bg-blue-500 text-white rounded-full flex items-center justify-center text-xs font-bold mr-3 mt-0.5 flex-shrink-0">2</div>
-                            <div>
-                              <h5 class="font-semibold text-gray-800 mb-2">技術選型能力</h5>
-                              <p class="text-gray-600 text-sm leading-relaxed">在全端開發中，您如何處理前後端的技術選型？請舉例說明您的決策過程和考量因素。</p>
-                            </div>
-                          </div>
-                        </div>
-                        <div class="bg-white rounded-lg p-4 shadow-sm border border-blue-100">
-                          <div class="flex items-start">
-                            <div class="w-6 h-6 bg-blue-500 text-white rounded-full flex items-center justify-center text-xs font-bold mr-3 mt-0.5 flex-shrink-0">3</div>
-                            <div>
-                              <h5 class="font-semibold text-gray-800 mb-2">系統架構設計</h5>
-                              <p class="text-gray-600 text-sm leading-relaxed">請描述您設計過最複雜的系統架構，包括技術棧選擇、擴展性考慮和性能優化策略。</p>
-                            </div>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-
-                    <!-- 團隊協作問題 -->
-                    <div class="bg-gradient-to-r from-green-50 to-emerald-50 rounded-xl p-6 border-l-4 border-green-400">
-                      <div class="flex items-center mb-4">
-                        <div class="w-8 h-8 bg-gradient-to-r from-green-500 to-emerald-500 rounded-lg flex items-center justify-center mr-3">
-                          <svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"/>
-                          </svg>
-                        </div>
-                        <h4 class="text-lg font-bold text-gray-800">團隊協作問題</h4>
-                      </div>
-                      <div class="space-y-4">
-                        <div class="bg-white rounded-lg p-4 shadow-sm border border-green-100">
-                          <div class="flex items-start">
-                            <div class="w-6 h-6 bg-green-500 text-white rounded-full flex items-center justify-center text-xs font-bold mr-3 mt-0.5 flex-shrink-0">4</div>
-                            <div>
-                              <h5 class="font-semibold text-gray-800 mb-2">領導經驗</h5>
-                              <p class="text-gray-600 text-sm leading-relaxed">請分享一個您領導團隊解決技術難題的經驗，包括遇到的挑戰和解決方案。</p>
-                            </div>
-                          </div>
-                        </div>
-                        <div class="bg-white rounded-lg p-4 shadow-sm border border-green-100">
-                          <div class="flex items-start">
-                            <div class="w-6 h-6 bg-green-500 text-white rounded-full flex items-center justify-center text-xs font-bold mr-3 mt-0.5 flex-shrink-0">5</div>
-                            <div>
-                              <h5 class="font-semibold text-gray-800 mb-2">溝通協調</h5>
-                              <p class="text-gray-600 text-sm leading-relaxed">如何與非技術團隊成員（如產品經理、設計師）溝通複雜的技術問題？</p>
-                            </div>
-                          </div>
-                        </div>
-                        <div class="bg-white rounded-lg p-4 shadow-sm border border-green-100">
-                          <div class="flex items-start">
-                            <div class="w-6 h-6 bg-green-500 text-white rounded-full flex items-center justify-center text-xs font-bold mr-3 mt-0.5 flex-shrink-0">6</div>
-                            <div>
-                              <h5 class="font-semibold text-gray-800 mb-2">知識分享</h5>
-                              <p class="text-gray-600 text-sm leading-relaxed">您如何幫助團隊成員提升技術能力？有沒有建立過技術分享或培訓機制？</p>
-                            </div>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-
-                    <!-- 職涯發展問題 -->
-                    <div class="bg-gradient-to-r from-purple-50 to-pink-50 rounded-xl p-6 border-l-4 border-purple-400">
-                      <div class="flex items-center mb-4">
-                        <div class="w-8 h-8 bg-gradient-to-r from-purple-500 to-pink-500 rounded-lg flex items-center justify-center mr-3">
-                          <svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/>
-                          </svg>
-                        </div>
-                        <h4 class="text-lg font-bold text-gray-800">職涯發展問題</h4>
-                      </div>
-                      <div class="space-y-4">
-                        <div class="bg-white rounded-lg p-4 shadow-sm border border-purple-100">
-                          <div class="flex items-start">
-                            <div class="w-6 h-6 bg-purple-500 text-white rounded-full flex items-center justify-center text-xs font-bold mr-3 mt-0.5 flex-shrink-0">7</div>
-                            <div>
-                              <h5 class="font-semibold text-gray-800 mb-2">職業規劃</h5>
-                              <p class="text-gray-600 text-sm leading-relaxed">您期待在我們公司獲得什麼樣的成長機會？未來3-5年的職業目標是什麼？</p>
-                            </div>
-                          </div>
-                        </div>
-                        <div class="bg-white rounded-lg p-4 shadow-sm border border-purple-100">
-                          <div class="flex items-start">
-                            <div class="w-6 h-6 bg-purple-500 text-white rounded-full flex items-center justify-center text-xs font-bold mr-3 mt-0.5 flex-shrink-0">8</div>
-                            <div>
-                              <h5 class="font-semibold text-gray-800 mb-2">挑戰認知</h5>
-                              <p class="text-gray-600 text-sm leading-relaxed">對於這個職位，您認為最大的挑戰是什麼？您會如何應對？</p>
-                            </div>
-                          </div>
-                        </div>
-                        <div class="bg-white rounded-lg p-4 shadow-sm border border-purple-100">
-                          <div class="flex items-start">
-                            <div class="w-6 h-6 bg-purple-500 text-white rounded-full flex items-center justify-center text-xs font-bold mr-3 mt-0.5 flex-shrink-0">9</div>
-                            <div>
-                              <h5 class="font-semibold text-gray-800 mb-2">學習能力</h5>
-                              <p class="text-gray-600 text-sm leading-relaxed">面對新技術或不熟悉的領域，您的學習方法是什麼？能否舉例說明？</p>
-                            </div>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-
-                <!-- 現代化按鈕區域 -->
-                <div class="border-t border-gray-100 pt-6 mt-8">
-                  <div class="flex flex-col sm:flex-row gap-4 justify-center items-center">
-                    <router-link
-                      to="/bc"
-                      class="w-full sm:w-auto inline-flex items-center justify-center px-6 py-3 text-base font-medium text-white bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 rounded-xl shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 transition-all duration-200"
-                    >
-                      <svg
-                        xmlns="http://www.w3.org/2000/svg"
-                        width="20"
-                        height="20"
-                        viewBox="0 0 24 24"
-                        fill="none"
-                        stroke="currentColor"
-                        stroke-width="2"
-                        stroke-linecap="round"
-                        stroke-linejoin="round"
-                        class="mr-2"
-                      >
-                        <path
-                          d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"
-                        ></path>
-                      </svg>
-                      問問求職者
-                    </router-link>
-                    <button
-                      class="w-full sm:w-auto inline-flex items-center justify-center px-6 py-3 text-base font-medium text-purple-600 bg-white hover:bg-purple-50 border-2 border-purple-200 hover:border-purple-300 rounded-xl shadow-md hover:shadow-lg transform hover:-translate-y-0.5 transition-all duration-200"
-                      @click="downloadQuestions"
-                    >
-                      <svg
-                        xmlns="http://www.w3.org/2000/svg"
-                        width="20"
-                        height="20"
-                        viewBox="0 0 24 24"
-                        fill="none"
-                        stroke="currentColor"
-                        stroke-width="2"
-                        stroke-linecap="round"
-                        stroke-linejoin="round"
-                        class="mr-2"
-                      >
-                        <path
-                          d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"
-                        ></path>
-                        <polyline points="7 10 12 15 17 10"></polyline>
-                        <line x1="12" y1="15" x2="12" y2="3"></line>
-                      </svg>
-                      下載問題範本
-                    </button>
-                  </div>
-                </div>
-              </template>
-            </div>
-          </div>
-
-          <!-- AI 聊天室內容區域 -->
-          <div v-show="activeTab === 'chat'" class="tab-content">
-            <!-- 現代化 AI 助手標題卡片 -->
-            <div class="mb-8 p-6 bg-gradient-to-r from-blue-50 to-cyan-50 rounded-xl border border-blue-100 shadow-sm">
-              <div class="flex items-center mb-3">
-                <div class="w-10 h-10 bg-gradient-to-r from-blue-500 to-cyan-500 rounded-lg flex items-center justify-center mr-3">
-                  <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"/>
+                      d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+                    />
                   </svg>
                 </div>
-                <h3 class="text-xl font-bold text-gray-800 mb-0">
-                  AI 人資助手
+                <h3 class="text-lg font-bold text-gray-800 mb-0">
+                  建議問題範本
                 </h3>
+                <!-- 現代化重置按鈕 -->
+                <button
+                  class="ml-4 px-3 py-1.5 text-sm text-gray-600 hover:text-gray-800 hover:bg-gray-100 border border-gray-200 rounded-lg transition-all duration-200 flex items-center"
+                  @click.stop="resetQuestionSection"
+                >
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    width="14"
+                    height="14"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    class="mr-1.5"
+                  >
+                    <polyline points="1 4 1 10 7 10"></polyline>
+                    <path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"></path>
+                  </svg>
+                  重置
+                </button>
               </div>
-              <p class="text-gray-600 leading-relaxed mb-0">
-                專為人資設計的 AI 助手，可以幫您分析履歷、生成面試問題、提供招募建議等。
-              </p>
+              <div class="flex items-center">
+                <div
+                  class="w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center"
+                >
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    width="16"
+                    height="16"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    class="transform transition-all duration-300"
+                    :class="{ 'rotate-180': isInterviewQuestionsExpanded }"
+                  >
+                    <polyline points="6 9 12 15 18 9"></polyline>
+                  </svg>
+                </div>
+              </div>
             </div>
 
-            <!-- 現代化聊天訊息區域 -->
-            <div class="bg-white rounded-xl shadow-lg border border-gray-100 overflow-hidden">
-              <div class="h-96 overflow-y-auto bg-gradient-to-b from-gray-50 to-white" id="chat-messages">
-                <!-- 現代化歡迎訊息 -->
-                <div v-if="chatMessages.length === 0" class="h-full flex flex-col items-center justify-center p-8">
-                  <div class="w-16 h-16 bg-gradient-to-r from-blue-500 to-cyan-500 rounded-full flex items-center justify-center mb-6 shadow-lg">
-                    <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"/>
-                    </svg>
-                  </div>
-                  <h4 class="text-xl font-bold text-gray-800 mb-2">您好！我是您的 AI 人資助手</h4>
-                  <p class="text-gray-600 mb-6 text-center">我可以協助您：</p>
-                  <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 w-full max-w-md">
-                    <button
-                      @click="sendQuickMessage('分析這份履歷的優缺點')"
-                      class="flex items-center justify-center p-4 bg-gradient-to-r from-blue-50 to-cyan-50 hover:from-blue-100 hover:to-cyan-100 border border-blue-200 rounded-xl text-sm font-medium text-gray-700 hover:text-gray-800 transition-all duration-200 shadow-sm hover:shadow-md transform hover:-translate-y-0.5"
-                    >
-                      <svg class="w-4 h-4 mr-2 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
-                      </svg>
-                      分析履歷優缺點
-                    </button>
-                    <button
-                      @click="sendQuickMessage('建議適合的面試問題')"
-                      class="flex items-center justify-center p-4 bg-gradient-to-r from-green-50 to-emerald-50 hover:from-green-100 hover:to-emerald-100 border border-green-200 rounded-xl text-sm font-medium text-gray-700 hover:text-gray-800 transition-all duration-200 shadow-sm hover:shadow-md transform hover:-translate-y-0.5"
-                    >
-                      <svg class="w-4 h-4 mr-2 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
-                      </svg>
-                      建議面試問題
-                    </button>
-                    <button
-                      @click="sendQuickMessage('評估候選人的適合度')"
-                      class="flex items-center justify-center p-4 bg-gradient-to-r from-purple-50 to-pink-50 hover:from-purple-100 hover:to-pink-100 border border-purple-200 rounded-xl text-sm font-medium text-gray-700 hover:text-gray-800 transition-all duration-200 shadow-sm hover:shadow-md transform hover:-translate-y-0.5"
-                    >
-                      <svg class="w-4 h-4 mr-2 text-purple-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z"/>
-                      </svg>
-                      評估適合度
-                    </button>
-                    <button
-                      @click="sendQuickMessage('薪資談判建議')"
-                      class="flex items-center justify-center p-4 bg-gradient-to-r from-amber-50 to-orange-50 hover:from-amber-100 hover:to-orange-100 border border-amber-200 rounded-xl text-sm font-medium text-gray-700 hover:text-gray-800 transition-all duration-200 shadow-sm hover:shadow-md transform hover:-translate-y-0.5"
-                    >
-                      <svg class="w-4 h-4 mr-2 text-amber-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1"/>
-                      </svg>
-                      薪資談判建議
-                    </button>
-                  </div>
-                </div>
-
-                <!-- 現代化聊天訊息列表 -->
-                <div class="p-4 space-y-4">
+            <!-- 現代化問題內容展開區域 -->
+            <template v-if="isInterviewQuestionsExpanded">
+              <div class="border-t border-gray-100">
+                <div class="p-6 space-y-8">
+                  <!-- 技術深度問題 -->
                   <div
-                    v-for="(message, index) in chatMessages"
-                    :key="index"
-                    class="flex"
-                    :class="message.type === 'user' ? 'justify-end' : 'justify-start'"
+                    class="bg-gradient-to-r from-blue-50 to-cyan-50 rounded-xl p-6 border-l-4 border-blue-400"
                   >
-                    <!-- 用戶訊息 -->
-                    <div v-if="message.type === 'user'" class="max-w-[75%]">
-                      <div class="bg-gradient-to-r from-blue-500 to-cyan-500 text-white p-4 rounded-2xl rounded-br-md shadow-md">
-                        <p class="m-0 text-sm leading-relaxed">{{ message.content }}</p>
+                    <div class="flex items-center mb-4">
+                      <div
+                        class="w-8 h-8 bg-gradient-to-r from-blue-500 to-cyan-500 rounded-lg flex items-center justify-center mr-3"
+                      >
+                        <svg
+                          class="w-4 h-4 text-white"
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                        >
+                          <path
+                            stroke-linecap="round"
+                            stroke-linejoin="round"
+                            stroke-width="2"
+                            d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4"
+                          />
+                        </svg>
                       </div>
+                      <h4 class="text-lg font-bold text-gray-800">
+                        技術深度問題
+                      </h4>
                     </div>
-                    <!-- AI 回覆 -->
-                    <div v-else class="max-w-[75%]">
-                      <div class="bg-white border border-gray-200 p-4 rounded-2xl rounded-bl-md shadow-sm">
+                    <div class="space-y-4">
+                      <div
+                        class="bg-white rounded-lg p-4 shadow-sm border border-blue-100"
+                      >
                         <div class="flex items-start">
-                          <div class="w-7 h-7 bg-gradient-to-r from-blue-500 to-cyan-500 rounded-full flex items-center justify-center mr-3 flex-shrink-0">
-                            <svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"/>
-                            </svg>
+                          <div
+                            class="w-6 h-6 bg-blue-500 text-white rounded-full flex items-center justify-center text-xs font-bold mr-3 mt-0.5 flex-shrink-0"
+                          >
+                            1
                           </div>
-                          <div class="flex-1">
-                            <p class="m-0 text-sm text-gray-700 leading-relaxed whitespace-pre-line">
-                              {{ message.content }}
+                          <div>
+                            <h5 class="font-semibold text-gray-800 mb-2">
+                              具體實作經驗
+                            </h5>
+                            <p class="text-gray-600 text-sm leading-relaxed">
+                              請詳細說明您在ABC科技時如何實現40%運營成本降低？能否分享具體的技術方案和實施過程？
+                            </p>
+                          </div>
+                        </div>
+                      </div>
+                      <div
+                        class="bg-white rounded-lg p-4 shadow-sm border border-blue-100"
+                      >
+                        <div class="flex items-start">
+                          <div
+                            class="w-6 h-6 bg-blue-500 text-white rounded-full flex items-center justify-center text-xs font-bold mr-3 mt-0.5 flex-shrink-0"
+                          >
+                            2
+                          </div>
+                          <div>
+                            <h5 class="font-semibold text-gray-800 mb-2">
+                              技術選型能力
+                            </h5>
+                            <p class="text-gray-600 text-sm leading-relaxed">
+                              在全端開發中，您如何處理前後端的技術選型？請舉例說明您的決策過程和考量因素。
+                            </p>
+                          </div>
+                        </div>
+                      </div>
+                      <div
+                        class="bg-white rounded-lg p-4 shadow-sm border border-blue-100"
+                      >
+                        <div class="flex items-start">
+                          <div
+                            class="w-6 h-6 bg-blue-500 text-white rounded-full flex items-center justify-center text-xs font-bold mr-3 mt-0.5 flex-shrink-0"
+                          >
+                            3
+                          </div>
+                          <div>
+                            <h5 class="font-semibold text-gray-800 mb-2">
+                              系統架構設計
+                            </h5>
+                            <p class="text-gray-600 text-sm leading-relaxed">
+                              請描述您設計過最複雜的系統架構，包括技術棧選擇、擴展性考慮和性能優化策略。
                             </p>
                           </div>
                         </div>
@@ -3883,20 +4492,174 @@ onUnmounted(() => {
                     </div>
                   </div>
 
-                  <!-- 現代化 AI 載入動畫 -->
-                  <div v-if="isChatLoading" class="flex justify-start">
-                    <div class="max-w-[75%]">
-                      <div class="bg-white border border-gray-200 p-4 rounded-2xl rounded-bl-md shadow-sm">
-                        <div class="flex items-center">
-                          <div class="w-7 h-7 bg-gradient-to-r from-blue-500 to-cyan-500 rounded-full flex items-center justify-center mr-3 flex-shrink-0">
-                            <svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"/>
-                            </svg>
+                  <!-- 團隊協作問題 -->
+                  <div
+                    class="bg-gradient-to-r from-green-50 to-emerald-50 rounded-xl p-6 border-l-4 border-green-400"
+                  >
+                    <div class="flex items-center mb-4">
+                      <div
+                        class="w-8 h-8 bg-gradient-to-r from-green-500 to-emerald-500 rounded-lg flex items-center justify-center mr-3"
+                      >
+                        <svg
+                          class="w-4 h-4 text-white"
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                        >
+                          <path
+                            stroke-linecap="round"
+                            stroke-linejoin="round"
+                            stroke-width="2"
+                            d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"
+                          />
+                        </svg>
+                      </div>
+                      <h4 class="text-lg font-bold text-gray-800">
+                        團隊協作問題
+                      </h4>
+                    </div>
+                    <div class="space-y-4">
+                      <div
+                        class="bg-white rounded-lg p-4 shadow-sm border border-green-100"
+                      >
+                        <div class="flex items-start">
+                          <div
+                            class="w-6 h-6 bg-green-500 text-white rounded-full flex items-center justify-center text-xs font-bold mr-3 mt-0.5 flex-shrink-0"
+                          >
+                            4
                           </div>
-                          <div class="flex items-center space-x-1">
-                            <div class="w-2 h-2 bg-blue-400 rounded-full animate-bounce"></div>
-                            <div class="w-2 h-2 bg-blue-400 rounded-full animate-bounce" style="animation-delay: 0.1s"></div>
-                            <div class="w-2 h-2 bg-blue-400 rounded-full animate-bounce" style="animation-delay: 0.2s"></div>
+                          <div>
+                            <h5 class="font-semibold text-gray-800 mb-2">
+                              領導經驗
+                            </h5>
+                            <p class="text-gray-600 text-sm leading-relaxed">
+                              請分享一個您領導團隊解決技術難題的經驗，包括遇到的挑戰和解決方案。
+                            </p>
+                          </div>
+                        </div>
+                      </div>
+                      <div
+                        class="bg-white rounded-lg p-4 shadow-sm border border-green-100"
+                      >
+                        <div class="flex items-start">
+                          <div
+                            class="w-6 h-6 bg-green-500 text-white rounded-full flex items-center justify-center text-xs font-bold mr-3 mt-0.5 flex-shrink-0"
+                          >
+                            5
+                          </div>
+                          <div>
+                            <h5 class="font-semibold text-gray-800 mb-2">
+                              溝通協調
+                            </h5>
+                            <p class="text-gray-600 text-sm leading-relaxed">
+                              如何與非技術團隊成員（如產品經理、設計師）溝通複雜的技術問題？
+                            </p>
+                          </div>
+                        </div>
+                      </div>
+                      <div
+                        class="bg-white rounded-lg p-4 shadow-sm border border-green-100"
+                      >
+                        <div class="flex items-start">
+                          <div
+                            class="w-6 h-6 bg-green-500 text-white rounded-full flex items-center justify-center text-xs font-bold mr-3 mt-0.5 flex-shrink-0"
+                          >
+                            6
+                          </div>
+                          <div>
+                            <h5 class="font-semibold text-gray-800 mb-2">
+                              知識分享
+                            </h5>
+                            <p class="text-gray-600 text-sm leading-relaxed">
+                              您如何幫助團隊成員提升技術能力？有沒有建立過技術分享或培訓機制？
+                            </p>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  <!-- 職涯發展問題 -->
+                  <div
+                    class="bg-gradient-to-r from-purple-50 to-pink-50 rounded-xl p-6 border-l-4 border-purple-400"
+                  >
+                    <div class="flex items-center mb-4">
+                      <div
+                        class="w-8 h-8 bg-gradient-to-r from-purple-500 to-pink-500 rounded-lg flex items-center justify-center mr-3"
+                      >
+                        <svg
+                          class="w-4 h-4 text-white"
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                        >
+                          <path
+                            stroke-linecap="round"
+                            stroke-linejoin="round"
+                            stroke-width="2"
+                            d="M13 10V3L4 14h7v7l9-11h-7z"
+                          />
+                        </svg>
+                      </div>
+                      <h4 class="text-lg font-bold text-gray-800">
+                        職涯發展問題
+                      </h4>
+                    </div>
+                    <div class="space-y-4">
+                      <div
+                        class="bg-white rounded-lg p-4 shadow-sm border border-purple-100"
+                      >
+                        <div class="flex items-start">
+                          <div
+                            class="w-6 h-6 bg-purple-500 text-white rounded-full flex items-center justify-center text-xs font-bold mr-3 mt-0.5 flex-shrink-0"
+                          >
+                            7
+                          </div>
+                          <div>
+                            <h5 class="font-semibold text-gray-800 mb-2">
+                              職業規劃
+                            </h5>
+                            <p class="text-gray-600 text-sm leading-relaxed">
+                              您期待在我們公司獲得什麼樣的成長機會？未來3-5年的職業目標是什麼？
+                            </p>
+                          </div>
+                        </div>
+                      </div>
+                      <div
+                        class="bg-white rounded-lg p-4 shadow-sm border border-purple-100"
+                      >
+                        <div class="flex items-start">
+                          <div
+                            class="w-6 h-6 bg-purple-500 text-white rounded-full flex items-center justify-center text-xs font-bold mr-3 mt-0.5 flex-shrink-0"
+                          >
+                            8
+                          </div>
+                          <div>
+                            <h5 class="font-semibold text-gray-800 mb-2">
+                              挑戰認知
+                            </h5>
+                            <p class="text-gray-600 text-sm leading-relaxed">
+                              對於這個職位，您認為最大的挑戰是什麼？您會如何應對？
+                            </p>
+                          </div>
+                        </div>
+                      </div>
+                      <div
+                        class="bg-white rounded-lg p-4 shadow-sm border border-purple-100"
+                      >
+                        <div class="flex items-start">
+                          <div
+                            class="w-6 h-6 bg-purple-500 text-white rounded-full flex items-center justify-center text-xs font-bold mr-3 mt-0.5 flex-shrink-0"
+                          >
+                            9
+                          </div>
+                          <div>
+                            <h5 class="font-semibold text-gray-800 mb-2">
+                              學習能力
+                            </h5>
+                            <p class="text-gray-600 text-sm leading-relaxed">
+                              面對新技術或不熟悉的領域，您的學習方法是什麼？能否舉例說明？
+                            </p>
                           </div>
                         </div>
                       </div>
@@ -3905,53 +4668,380 @@ onUnmounted(() => {
                 </div>
               </div>
 
-              <!-- 現代化輸入區域 -->
-              <div class="border-t border-gray-200 bg-gray-50 p-4">
-                <div class="flex gap-3">
-                  <div class="flex-1 relative">
-                    <textarea
-                      v-model="chatInput"
-                      @keydown="handleKeydown"
-                      placeholder="輸入您的問題..."
-                      rows="2"
-                      class="w-full p-3 pr-12 border border-gray-300 rounded-xl resize-none focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm bg-white shadow-sm transition-all duration-200"
-                    ></textarea>
+              <!-- 現代化按鈕區域 -->
+              <div class="border-t border-gray-100 pt-6 mt-8">
+                <div
+                  class="flex flex-col sm:flex-row gap-4 justify-center items-center"
+                >
+                  <router-link
+                    to="/bc"
+                    class="w-full sm:w-auto inline-flex items-center justify-center px-6 py-3 text-base font-medium text-white bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 rounded-xl shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 transition-all duration-200"
+                  >
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      width="20"
+                      height="20"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      stroke-width="2"
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      class="mr-2"
+                    >
+                      <path
+                        d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"
+                      ></path>
+                    </svg>
+                    問問求職者
+                  </router-link>
+                  <button
+                    class="w-full sm:w-auto inline-flex items-center justify-center px-6 py-3 text-base font-medium text-purple-600 bg-white hover:bg-purple-50 border-2 border-purple-200 hover:border-purple-300 rounded-xl shadow-md hover:shadow-lg transform hover:-translate-y-0.5 transition-all duration-200"
+                    @click="downloadQuestions"
+                  >
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      width="20"
+                      height="20"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      stroke-width="2"
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      class="mr-2"
+                    >
+                      <path
+                        d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"
+                      ></path>
+                      <polyline points="7 10 12 15 17 10"></polyline>
+                      <line x1="12" y1="15" x2="12" y2="3"></line>
+                    </svg>
+                    下載問題範本
+                  </button>
+                </div>
+              </div>
+            </template>
+          </div>
+        </div>
+
+        <!-- AI 聊天室內容區域 -->
+        <div v-show="activeTab === 'chat'" class="tab-content">
+          <!-- 現代化 AI 助手標題卡片 -->
+          <div
+            class="mb-8 p-6 bg-gradient-to-r from-blue-50 to-cyan-50 rounded-xl border border-blue-100 shadow-sm"
+          >
+            <div class="flex items-center mb-3">
+              <div
+                class="w-10 h-10 bg-gradient-to-r from-blue-500 to-cyan-500 rounded-lg flex items-center justify-center mr-3"
+              >
+                <svg
+                  class="w-6 h-6 text-white"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-width="2"
+                    d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"
+                  />
+                </svg>
+              </div>
+              <h3 class="text-xl font-bold text-gray-800 mb-0">AI 人資助手</h3>
+            </div>
+            <p class="text-gray-600 leading-relaxed mb-0">
+              專為人資設計的 AI
+              助手，可以幫您分析履歷、生成面試問題、提供招募建議等。
+            </p>
+          </div>
+
+          <!-- 現代化聊天訊息區域 -->
+          <div
+            class="bg-white rounded-xl shadow-lg border border-gray-100 overflow-hidden"
+          >
+            <div
+              class="h-96 overflow-y-auto bg-gradient-to-b from-gray-50 to-white"
+              id="chat-messages"
+            >
+              <!-- 現代化歡迎訊息 -->
+              <div
+                v-if="chatMessages.length === 0"
+                class="h-full flex flex-col items-center justify-center p-8"
+              >
+                <div
+                  class="w-16 h-16 bg-gradient-to-r from-blue-500 to-cyan-500 rounded-full flex items-center justify-center mb-6 shadow-lg"
+                >
+                  <svg
+                    class="w-8 h-8 text-white"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      stroke-width="2"
+                      d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"
+                    />
+                  </svg>
+                </div>
+                <h4 class="text-xl font-bold text-gray-800 mb-2">
+                  您好！我是您的 AI 人資助手
+                </h4>
+                <p class="text-gray-600 mb-6 text-center">我可以協助您：</p>
+                <div
+                  class="grid grid-cols-1 sm:grid-cols-2 gap-3 w-full max-w-md"
+                >
+                  <button
+                    @click="sendQuickMessage('分析這份履歷的優缺點')"
+                    class="flex items-center justify-center p-4 bg-gradient-to-r from-blue-50 to-cyan-50 hover:from-blue-100 hover:to-cyan-100 border border-blue-200 rounded-xl text-sm font-medium text-gray-700 hover:text-gray-800 transition-all duration-200 shadow-sm hover:shadow-md transform hover:-translate-y-0.5"
+                  >
+                    <svg
+                      class="w-4 h-4 mr-2 text-blue-500"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                        stroke-width="2"
+                        d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+                      />
+                    </svg>
+                    分析履歷優缺點
+                  </button>
+                  <button
+                    @click="sendQuickMessage('建議適合的面試問題')"
+                    class="flex items-center justify-center p-4 bg-gradient-to-r from-green-50 to-emerald-50 hover:from-green-100 hover:to-emerald-100 border border-green-200 rounded-xl text-sm font-medium text-gray-700 hover:text-gray-800 transition-all duration-200 shadow-sm hover:shadow-md transform hover:-translate-y-0.5"
+                  >
+                    <svg
+                      class="w-4 h-4 mr-2 text-green-500"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                        stroke-width="2"
+                        d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                      />
+                    </svg>
+                    建議面試問題
+                  </button>
+                  <button
+                    @click="sendQuickMessage('評估候選人的適合度')"
+                    class="flex items-center justify-center p-4 bg-gradient-to-r from-purple-50 to-pink-50 hover:from-purple-100 hover:to-pink-100 border border-purple-200 rounded-xl text-sm font-medium text-gray-700 hover:text-gray-800 transition-all duration-200 shadow-sm hover:shadow-md transform hover:-translate-y-0.5"
+                  >
+                    <svg
+                      class="w-4 h-4 mr-2 text-purple-500"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                        stroke-width="2"
+                        d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z"
+                      />
+                    </svg>
+                    評估適合度
+                  </button>
+                  <button
+                    @click="sendQuickMessage('薪資談判建議')"
+                    class="flex items-center justify-center p-4 bg-gradient-to-r from-amber-50 to-orange-50 hover:from-amber-100 hover:to-orange-100 border border-amber-200 rounded-xl text-sm font-medium text-gray-700 hover:text-gray-800 transition-all duration-200 shadow-sm hover:shadow-md transform hover:-translate-y-0.5"
+                  >
+                    <svg
+                      class="w-4 h-4 mr-2 text-amber-500"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                        stroke-width="2"
+                        d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1"
+                      />
+                    </svg>
+                    薪資談判建議
+                  </button>
+                </div>
+              </div>
+
+              <!-- 現代化聊天訊息列表 -->
+              <div class="p-4 space-y-4">
+                <div
+                  v-for="(message, index) in chatMessages"
+                  :key="index"
+                  class="flex"
+                  :class="
+                    message.type === 'user' ? 'justify-end' : 'justify-start'
+                  "
+                >
+                  <!-- 用戶訊息 -->
+                  <div v-if="message.type === 'user'" class="max-w-[75%]">
+                    <div
+                      class="bg-gradient-to-r from-blue-500 to-cyan-500 text-white p-4 rounded-2xl rounded-br-md shadow-md"
+                    >
+                      <p class="m-0 text-sm leading-relaxed">
+                        {{ message.content }}
+                      </p>
+                    </div>
                   </div>
-                  <button
-                    @click="sendMessage"
-                    :disabled="!chatInput.trim() || isChatLoading"
-                    class="px-4 py-2 bg-gradient-to-r from-blue-500 to-cyan-500 hover:from-blue-600 hover:to-cyan-600 text-white rounded-xl disabled:from-gray-300 disabled:to-gray-300 disabled:cursor-not-allowed transition-all duration-200 shadow-md hover:shadow-lg transform hover:-translate-y-0.5 flex items-center justify-center min-w-[80px] font-medium"
-                  >
-                    <svg v-if="!isChatLoading" class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"/>
-                    </svg>
-                    <svg v-else class="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24">
-                      <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                      <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                    </svg>
-                  </button>
+                  <!-- AI 回覆 -->
+                  <div v-else class="max-w-[75%]">
+                    <div
+                      class="bg-white border border-gray-200 p-4 rounded-2xl rounded-bl-md shadow-sm"
+                    >
+                      <div class="flex items-start">
+                        <div
+                          class="w-7 h-7 bg-gradient-to-r from-blue-500 to-cyan-500 rounded-full flex items-center justify-center mr-3 flex-shrink-0"
+                        >
+                          <svg
+                            class="w-4 h-4 text-white"
+                            fill="none"
+                            stroke="currentColor"
+                            viewBox="0 0 24 24"
+                          >
+                            <path
+                              stroke-linecap="round"
+                              stroke-linejoin="round"
+                              stroke-width="2"
+                              d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"
+                            />
+                          </svg>
+                        </div>
+                        <div class="flex-1">
+                          <p
+                            class="m-0 text-sm text-gray-700 leading-relaxed whitespace-pre-line"
+                          >
+                            {{ message.content }}
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
                 </div>
-                <div class="flex justify-between items-center mt-3">
-                  <span class="text-xs text-gray-500">
-                    按 Enter 發送，Shift+Enter 換行
-                  </span>
-                  <button
-                    @click="clearChat"
-                    v-if="chatMessages.length > 0"
-                    class="text-xs text-gray-500 hover:text-gray-700 transition-colors px-2 py-1 rounded-md hover:bg-gray-200"
-                  >
-                    清除對話
-                  </button>
+
+                <!-- 現代化 AI 載入動畫 -->
+                <div v-if="isChatLoading" class="flex justify-start">
+                  <div class="max-w-[75%]">
+                    <div
+                      class="bg-white border border-gray-200 p-4 rounded-2xl rounded-bl-md shadow-sm"
+                    >
+                      <div class="flex items-center">
+                        <div
+                          class="w-7 h-7 bg-gradient-to-r from-blue-500 to-cyan-500 rounded-full flex items-center justify-center mr-3 flex-shrink-0"
+                        >
+                          <svg
+                            class="w-4 h-4 text-white"
+                            fill="none"
+                            stroke="currentColor"
+                            viewBox="0 0 24 24"
+                          >
+                            <path
+                              stroke-linecap="round"
+                              stroke-linejoin="round"
+                              stroke-width="2"
+                              d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"
+                            />
+                          </svg>
+                        </div>
+                        <div class="flex items-center space-x-1">
+                          <div
+                            class="w-2 h-2 bg-blue-400 rounded-full animate-bounce"
+                          ></div>
+                          <div
+                            class="w-2 h-2 bg-blue-400 rounded-full animate-bounce"
+                            style="animation-delay: 0.1s"
+                          ></div>
+                          <div
+                            class="w-2 h-2 bg-blue-400 rounded-full animate-bounce"
+                            style="animation-delay: 0.2s"
+                          ></div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
                 </div>
+              </div>
+            </div>
+
+            <!-- 現代化輸入區域 -->
+            <div class="border-t border-gray-200 bg-gray-50 p-4">
+              <div class="flex gap-3">
+                <div class="flex-1 relative">
+                  <textarea
+                    v-model="chatInput"
+                    @keydown="handleKeydown"
+                    placeholder="輸入您的問題..."
+                    rows="2"
+                    class="w-full p-3 pr-12 border border-gray-300 rounded-xl resize-none focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm bg-white shadow-sm transition-all duration-200"
+                  ></textarea>
+                </div>
+                <button
+                  @click="sendMessage"
+                  :disabled="!chatInput.trim() || isChatLoading"
+                  class="px-4 py-2 bg-gradient-to-r from-blue-500 to-cyan-500 hover:from-blue-600 hover:to-cyan-600 text-white rounded-xl disabled:from-gray-300 disabled:to-gray-300 disabled:cursor-not-allowed transition-all duration-200 shadow-md hover:shadow-lg transform hover:-translate-y-0.5 flex items-center justify-center min-w-[80px] font-medium"
+                >
+                  <svg
+                    v-if="!isChatLoading"
+                    class="w-4 h-4"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      stroke-width="2"
+                      d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"
+                    />
+                  </svg>
+                  <svg
+                    v-else
+                    class="w-4 h-4 animate-spin"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                  >
+                    <circle
+                      class="opacity-25"
+                      cx="12"
+                      cy="12"
+                      r="10"
+                      stroke="currentColor"
+                      stroke-width="4"
+                    ></circle>
+                    <path
+                      class="opacity-75"
+                      fill="currentColor"
+                      d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                    ></path>
+                  </svg>
+                </button>
+              </div>
+              <div class="flex justify-between items-center mt-3">
+                <span class="text-xs text-gray-500">
+                  按 Enter 發送，Shift+Enter 換行
+                </span>
+                <button
+                  @click="clearChat"
+                  v-if="chatMessages.length > 0"
+                  class="text-xs text-gray-500 hover:text-gray-700 transition-colors px-2 py-1 rounded-md hover:bg-gray-200"
+                >
+                  清除對話
+                </button>
               </div>
             </div>
           </div>
         </div>
       </div>
     </div>
-
-    <!-- 複製狀態提示 -->
-    <div v-if="isCopied" class="copy-success text-#fff">已複製到剪貼簿！</div>
   </div>
 </template>
 
@@ -4242,6 +5332,79 @@ main {
 
   &::-webkit-scrollbar {
     display: none;
+  }
+}
+
+/* 卡片滑動動畫優化 */
+.card-slider {
+  transition: transform 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+  will-change: transform;
+}
+
+/* 功能按鈕樣式優化 */
+.function-button {
+  transition: all 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+  transform: translateZ(0);
+
+  &:hover {
+    transform: translateY(-2px) scale(1.02);
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+  }
+
+  &:active {
+    transform: translateY(0) scale(0.98);
+  }
+}
+
+/* 卡片指示器動畫 */
+.card-indicator {
+  transition: all 0.3s ease;
+
+  &:hover {
+    transform: scale(1.2);
+  }
+}
+
+/* 卡片總結區域優化 */
+.summary-card {
+  backdrop-filter: blur(20px);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+
+  &:hover {
+    box-shadow: 0 12px 40px rgba(0, 0, 0, 0.15);
+  }
+}
+
+/* 按鈕懸浮效果 */
+.action-button {
+  transition: all 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+  position: relative;
+  overflow: hidden;
+
+  &::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(
+      90deg,
+      transparent,
+      rgba(255, 255, 255, 0.3),
+      transparent
+    );
+    transition: left 0.5s;
+  }
+
+  &:hover::before {
+    left: 100%;
+  }
+
+  &:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.2);
   }
 }
 </style>
