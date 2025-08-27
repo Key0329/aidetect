@@ -43,7 +43,7 @@ const cardSummary = ref({
 });
 
 // 新增功能選單狀態變數
-const activeFunction = ref("timeline"); // 可選值: 'job-match', 'context-analysis', 'timeline', 'fact-check', 'ai-chat'
+const activeFunction = ref("job-match"); // 可選值: 'job-match', 'context-analysis', 'timeline', 'fact-check', 'ai-chat'
 
 // 複製功能狀態管理
 const copiedQuestions = ref(new Set());
@@ -1856,8 +1856,8 @@ onUnmounted(() => {
           class="bg-white/90 backdrop-blur-sm p-4 md:p-6 rounded-xl mb-10 shadow-lg border border-slate-200/50"
         >
           <div v-show="activeTab === 'description'" class="tab-content">
-            <!-- 學經歷時間軸視覺化 -->
-            <div class="space-y-8">
+            <!-- 學經歷時間軸視覺化 - 只在非職缺符合度功能時顯示 -->
+            <div v-show="activeFunction !== 'job-match'" class="space-y-8">
               <!-- 教育背景區塊 -->
               <div class="relative">
                 <h3
@@ -2166,24 +2166,27 @@ onUnmounted(() => {
                 </h3>
 
                 <!-- 符合度總覽 -->
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+                <div class="mb-8">
                   <div
-                    class="bg-white rounded-xl p-4 border border-green-200 shadow-sm"
+                    class="bg-white rounded-xl p-6 border border-green-200 shadow-sm max-w-md mx-auto"
                   >
                     <div class="flex items-center justify-between">
                       <div>
-                        <h4 class="text-sm font-medium text-slate-600">
+                        <h4 class="text-lg font-medium text-slate-600">
                           符合項目
                         </h4>
-                        <p class="text-2xl font-bold text-green-600 mt-1">
+                        <p class="text-3xl font-bold text-green-600 mt-2">
                           8項
+                        </p>
+                        <p class="text-sm text-slate-500 mt-1">
+                          候選人符合職缺要求的技能項目
                         </p>
                       </div>
                       <div
-                        class="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center"
+                        class="w-16 h-16 bg-green-100 rounded-xl flex items-center justify-center"
                       >
                         <svg
-                          class="w-6 h-6 text-green-600"
+                          class="w-8 h-8 text-green-600"
                           fill="none"
                           stroke="currentColor"
                           viewBox="0 0 24 24"
@@ -2193,38 +2196,6 @@ onUnmounted(() => {
                             stroke-linejoin="round"
                             stroke-width="2"
                             d="M5 13l4 4L19 7"
-                          ></path>
-                        </svg>
-                      </div>
-                    </div>
-                  </div>
-
-                  <div
-                    class="bg-white rounded-xl p-4 border border-blue-200 shadow-sm"
-                  >
-                    <div class="flex items-center justify-between">
-                      <div>
-                        <h4 class="text-sm font-medium text-slate-600">
-                          經驗年限
-                        </h4>
-                        <p class="text-2xl font-bold text-blue-600 mt-1">
-                          5/3年
-                        </p>
-                      </div>
-                      <div
-                        class="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center"
-                      >
-                        <svg
-                          class="w-6 h-6 text-blue-600"
-                          fill="none"
-                          stroke="currentColor"
-                          viewBox="0 0 24 24"
-                        >
-                          <path
-                            stroke-linecap="round"
-                            stroke-linejoin="round"
-                            stroke-width="2"
-                            d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
                           ></path>
                         </svg>
                       </div>
