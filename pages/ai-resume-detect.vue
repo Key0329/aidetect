@@ -40,12 +40,12 @@ const cardSummary = ref({
   jobMatch: {
     position: "前端工程師",
     strengths: ["React 開發經驗", "UI/UX 設計能力"],
-    resumeHighlights: ["5年前端開發經驗", "曾主導大型電商專案開發"]
+    resumeHighlights: ["5年前端開發經驗", "曾主導大型電商專案開發"],
   },
   concerns: {
     areas: ["後端技術經驗相對較少", "團隊管理經驗仍在累積"],
-    source: "學經歷分析"
-  }
+    source: "學經歷分析",
+  },
 });
 
 // 新增功能選單狀態變數
@@ -101,21 +101,17 @@ const dogFeedback = ref({
   liked: false,
   disliked: false,
   showToast: false,
-  toastMessage: ""
+  toastMessage: "",
 });
 
 // 柴犬反饋訊息
 const feedbackMessages = {
-  like: [
-    "謝謝你的支持！",
-    "感謝你的讚美！", 
-    "你的鼓勵讓我們更有動力！"
-  ],
+  like: ["謝謝你的支持！", "感謝你的讚美！", "你的鼓勵讓我們更有動力！"],
   dislike: [
     "收到你的回饋，謝謝！",
     "感謝意見，我們會改進！",
-    "你的反饋很重要，謝謝！"
-  ]
+    "你的反饋很重要，謝謝！",
+  ],
 };
 
 // // 追蹤已點擊過的項目
@@ -202,19 +198,20 @@ const scheduleInterview = () => {
 
 // 柴犬反饋處理函數
 const handleDogFeedback = (type) => {
-  if (type === 'like') {
+  if (type === "like") {
     dogFeedback.value.liked = !dogFeedback.value.liked;
     dogFeedback.value.disliked = false;
   } else {
     dogFeedback.value.disliked = !dogFeedback.value.disliked;
     dogFeedback.value.liked = false;
   }
-  
+
   // 顯示隨機回饋訊息
   const messages = feedbackMessages[type];
-  dogFeedback.value.toastMessage = messages[Math.floor(Math.random() * messages.length)];
+  dogFeedback.value.toastMessage =
+    messages[Math.floor(Math.random() * messages.length)];
   dogFeedback.value.showToast = true;
-  
+
   // 3秒後隱藏提示
   setTimeout(() => {
     dogFeedback.value.showToast = false;
@@ -224,13 +221,21 @@ const handleDogFeedback = (type) => {
 // 生成個性化分析文案
 const generateAnalysisText = () => {
   const { recommendation, jobMatch, concerns } = cardSummary.value;
-  
-  let text = `這位求職者很符合你所開的【${jobMatch.position}】職務需求，特別是你在找尋的【${jobMatch.strengths.join('、')}】特質，這位求職者在【${jobMatch.resumeHighlights.join('、')}】中也有提到。`;
-  
+
+  let text = `這位求職者很符合你所開的【${
+    jobMatch.position
+  }】職務需求，特別是你在找尋的【${jobMatch.strengths.join(
+    "、"
+  )}】特質，這位求職者在【${jobMatch.resumeHighlights.join(
+    "、"
+  )}】中也有提到。`;
+
   if (concerns.areas.length > 0) {
-    text += `\n\n但同時我們也發現【${concerns.areas.join('、')}】這部分有需要關注的地方，建議在面試時可以多加了解。`;
+    text += `\n\n但同時我們也發現【${concerns.areas.join(
+      "、"
+    )}】這部分有需要關注的地方，建議在面試時可以多加了解。`;
   }
-  
+
   return text;
 };
 
@@ -830,7 +835,7 @@ onUnmounted(() => {
               <div class="relative bg-white pb-4 relative px-6">
                 <!-- avatar -->
                 <div
-                  class="flex justify-center items-center w-32 h-32 rounded-full bg-white absolute -top-8 -translate-y-8"
+                  class="flex justify-center items-center z-10 w-32 h-32 rounded-full bg-white absolute -top-8 -translate-y-8"
                 >
                   <img
                     src="@/assets/images/ai/avatar.svg"
@@ -1492,53 +1497,83 @@ onUnmounted(() => {
             >
               <!-- 總結卡片 -->
               <div class="w-[94%] flex-shrink-0">
-                <div
-                  class="relative h-[550px] sm:h-[600px] summary-card"
-                >
+                <div class="relative h-[550px] sm:h-[600px] summary-card overflow-hidden">
                   <!-- 柴犬角色 -->
-                  <div class="absolute -top-2 left-6 z-10">
+                  <div class="absolute top-4 left-6 z-20">
                     <div class="relative">
                       <!-- 柴犬頭部 -->
-                      <div 
+                      <div
                         class="w-16 h-16 rounded-full bg-gradient-to-br from-orange-300 to-orange-400 border-4 border-white shadow-lg relative overflow-hidden transition-all duration-500"
-                        :class="cardSummary.recommendation === '高度推薦' ? 'animate-bounce' : ''"
+                        :class="
+                          cardSummary.recommendation === '高度推薦'
+                            ? 'animate-bounce'
+                            : ''
+                        "
                       >
                         <!-- 柴犬面部特徵 -->
-                        <div class="absolute inset-0 flex flex-col items-center justify-center">
+                        <div
+                          class="absolute inset-0 flex flex-col items-center justify-center"
+                        >
                           <!-- 眼睛 -->
                           <div class="flex space-x-2 mb-1">
-                            <div 
+                            <div
                               class="w-2 h-2 bg-black rounded-full transition-all duration-300"
-                              :class="cardSummary.recommendation === '高度推薦' ? 'transform scale-110' : ''"
+                              :class="
+                                cardSummary.recommendation === '高度推薦'
+                                  ? 'transform scale-110'
+                                  : ''
+                              "
                             ></div>
-                            <div 
+                            <div
                               class="w-2 h-2 bg-black rounded-full transition-all duration-300"
-                              :class="cardSummary.recommendation === '高度推薦' ? 'transform scale-110' : ''"
+                              :class="
+                                cardSummary.recommendation === '高度推薦'
+                                  ? 'transform scale-110'
+                                  : ''
+                              "
                             ></div>
                           </div>
                           <!-- 鼻子 -->
-                          <div class="w-1.5 h-1 bg-black rounded-full mb-1"></div>
+                          <div
+                            class="w-1.5 h-1 bg-black rounded-full mb-1"
+                          ></div>
                           <!-- 嘴巴 -->
-                          <div 
+                          <div
                             class="w-3 h-1.5 border-b-2 border-black rounded-full transition-all duration-300"
-                            :class="cardSummary.recommendation === '高度推薦' ? 'transform rotate-12' : cardSummary.recommendation === '需關注問題' ? 'transform -rotate-12' : ''"
+                            :class="
+                              cardSummary.recommendation === '高度推薦'
+                                ? 'transform rotate-12'
+                                : cardSummary.recommendation === '需關注問題'
+                                ? 'transform -rotate-12'
+                                : ''
+                            "
                           ></div>
                         </div>
                         <!-- 耳朵 -->
-                        <div class="absolute -top-1 left-2 w-3 h-4 bg-orange-400 rounded-t-full transform -rotate-12"></div>
-                        <div class="absolute -top-1 right-2 w-3 h-4 bg-orange-400 rounded-t-full transform rotate-12"></div>
+                        <div
+                          class="absolute -top-1 left-2 w-3 h-4 bg-orange-400 rounded-t-full transform -rotate-12"
+                        ></div>
+                        <div
+                          class="absolute -top-1 right-2 w-3 h-4 bg-orange-400 rounded-t-full transform rotate-12"
+                        ></div>
                       </div>
                     </div>
                   </div>
 
                   <!-- 對話框 -->
-                  <div class="bg-gradient-to-br from-orange-50 via-white to-orange-50 border-2 border-orange-200 rounded-3xl p-6 h-full relative shadow-xl">
+                  <div
+                    class="bg-gradient-to-br from-orange-50 via-white to-orange-50 border-2 border-orange-200 rounded-3xl p-6 h-full relative shadow-xl overflow-hidden"
+                  >
                     <!-- 對話框尾巴 -->
-                    <div class="absolute -top-3 left-12 w-6 h-6 bg-white border-l-2 border-t-2 border-orange-200 transform rotate-45"></div>
-                    
+                    <div
+                      class="absolute top-3 left-12 w-6 h-6 bg-white border-l-2 border-t-2 border-orange-200 transform rotate-45 z-10"
+                    ></div>
+
                     <!-- 標題區域 -->
                     <div class="pt-8 mb-6">
-                      <h3 class="text-xl font-bold text-orange-800 mb-3 text-center">
+                      <h3
+                        class="text-xl font-bold text-orange-800 mb-3 text-center"
+                      >
                         🐕 柴犬 AI 分析師
                       </h3>
                       <div class="flex justify-center mb-4">
@@ -1556,8 +1591,12 @@ onUnmounted(() => {
                     </div>
 
                     <!-- 分析內容 -->
-                    <div class="bg-white/70 rounded-2xl p-4 mb-6 border border-orange-100 shadow-inner">
-                      <div class="text-slate-700 text-base leading-relaxed whitespace-pre-line">
+                    <div
+                      class="bg-white/70 rounded-2xl p-4 mb-6 border border-orange-100 shadow-inner"
+                    >
+                      <div
+                        class="text-slate-700 text-base leading-relaxed whitespace-pre-line"
+                      >
                         {{ generateAnalysisText() }}
                       </div>
                     </div>
@@ -1566,22 +1605,36 @@ onUnmounted(() => {
                     <div class="absolute bottom-4 right-4 flex space-x-2">
                       <button
                         @click="handleDogFeedback('like')"
-                        class="w-10 h-10 rounded-full transition-all duration-200 transform hover:scale-110 shadow-md"
-                        :class="dogFeedback.liked ? 'bg-green-500 text-white' : 'bg-white text-gray-400 hover:bg-green-50 hover:text-green-500'"
+                        class="w-10 h-10 rounded-full transition-all duration-200 transform hover:scale-110 shadow-md flex items-center justify-center"
+                        :class="
+                          dogFeedback.liked
+                            ? 'bg-green-500 text-white'
+                            : 'bg-white text-gray-400 hover:bg-green-50 hover:text-green-500'
+                        "
                       >
-                        👍
+                        <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
+                          <path d="M7.493 18.75c-.425 0-.82-.236-.975-.632A7.48 7.48 0 016 15.375c0-1.75.599-3.358 1.602-4.634.151-.192.373-.309.6-.397.473-.183.89-.514 1.212-.924a9.042 9.042 0 012.861-2.4c.723-.384 1.35-.956 1.653-1.715a4.498 4.498 0 00.322-1.672V3a.75.75 0 01.75-.75 2.25 2.25 0 012.25 2.25c0 1.152-.26 2.243-.723 3.218-.266.558-.107 1.282.725 1.282h3.126c1.026 0 1.945.694 2.054 1.715.045.422.068.85.068 1.285a11.95 11.95 0 01-2.649 7.521c-.388.482-.987.729-1.605.729H14.23c-.483 0-.964-.078-1.423-.230l-3.114-1.04a4.501 4.501 0 00-1.423-.23h-.777zM2.331 10.977a11.969 11.969 0 00-.831 4.398 12 12 0 00.52 3.507c.26.85 1.084 1.368 1.973 1.368H4.9c.445 0 .72-.498.523-.898a8.963 8.963 0 01-.924-3.977c0-1.708.476-3.305 1.302-4.666.245-.403-.028-.959-.5-.959H4.25c-.832 0-1.612.453-1.918 1.227z"/>
+                        </svg>
                       </button>
                       <button
                         @click="handleDogFeedback('dislike')"
-                        class="w-10 h-10 rounded-full transition-all duration-200 transform hover:scale-110 shadow-md"
-                        :class="dogFeedback.disliked ? 'bg-red-500 text-white' : 'bg-white text-gray-400 hover:bg-red-50 hover:text-red-500'"
+                        class="w-10 h-10 rounded-full transition-all duration-200 transform hover:scale-110 shadow-md flex items-center justify-center"
+                        :class="
+                          dogFeedback.disliked
+                            ? 'bg-red-500 text-white'
+                            : 'bg-white text-gray-400 hover:bg-red-50 hover:text-red-500'
+                        "
                       >
-                        👎
+                        <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24" style="transform: rotate(180deg);">
+                          <path d="M7.493 18.75c-.425 0-.82-.236-.975-.632A7.48 7.48 0 016 15.375c0-1.75.599-3.358 1.602-4.634.151-.192.373-.309.6-.397.473-.183.89-.514 1.212-.924a9.042 9.042 0 012.861-2.4c.723-.384 1.35-.956 1.653-1.715a4.498 4.498 0 00.322-1.672V3a.75.75 0 01.75-.75 2.25 2.25 0 012.25 2.25c0 1.152-.26 2.243-.723 3.218-.266.558-.107 1.282.725 1.282h3.126c1.026 0 1.945.694 2.054 1.715.045.422.068.85.068 1.285a11.95 11.95 0 01-2.649 7.521c-.388.482-.987.729-1.605.729H14.23c-.483 0-.964-.078-1.423-.230l-3.114-1.04a4.501 4.501 0 00-1.423-.23h-.777zM2.331 10.977a11.969 11.969 0 00-.831 4.398 12 12 0 00.52 3.507c.26.85 1.084 1.368 1.973 1.368H4.9c.445 0 .72-.498.523-.898a8.963 8.963 0 01-.924-3.977c0-1.708.476-3.305 1.302-4.666.245-.403-.028-.959-.5-.959H4.25c-.832 0-1.612.453-1.918 1.227z"/>
+                        </svg>
                       </button>
                     </div>
 
                     <!-- 操作按鈕 -->
-                    <div class="absolute bottom-4 left-4 flex flex-col space-y-2">
+                    <div
+                      class="absolute bottom-4 left-4 flex flex-col space-y-2"
+                    >
                       <!-- 建議問題按鈕 -->
                       <button
                         @click="showQuestionCard"
@@ -1613,7 +1666,7 @@ onUnmounted(() => {
               </div>
 
               <!-- 建議問題卡片 -->
-              <div class="w-[110%] flex-shrink-0">
+              <div class="w-full flex-shrink-0">
                 <div
                   class="bg-gradient-to-br from-white via-purple-50 to-indigo-50 border border-purple-200 rounded-xl p-4 sm:p-8 h-[550px] sm:h-[600px] summary-card flex flex-col relative"
                 >
@@ -1895,7 +1948,7 @@ onUnmounted(() => {
                   ? 'bg-gradient-to-r from-blue-500 to-cyan-500 text-white shadow-md'
                   : 'bg-white text-slate-600 border border-slate-200 hover:bg-slate-50'
               "
-              class="p-2 sm:p-3 rounded-xl aspect-square text-center function-button flex flex-col items-center justify-center"
+              class="p-2 sm:p-3 rounded-xl aspect-square text-center function-button flex flex-col items-center justify-center h-full"
             >
               <div class="flex flex-col items-center">
                 <svg
@@ -1923,7 +1976,7 @@ onUnmounted(() => {
                   ? 'bg-gradient-to-r from-indigo-500 to-purple-500 text-white shadow-md'
                   : 'bg-white text-slate-600 border border-slate-200 hover:bg-slate-50'
               "
-              class="p-2 sm:p-3 rounded-xl aspect-square text-center function-button flex flex-col items-center justify-center"
+              class="p-2 sm:p-3 rounded-xl aspect-square text-center function-button flex flex-col items-center justify-center h-full"
             >
               <div class="flex flex-col items-center">
                 <svg
@@ -1951,7 +2004,7 @@ onUnmounted(() => {
                   ? 'bg-gradient-to-r from-green-500 to-teal-500 text-white shadow-md'
                   : 'bg-white text-slate-600 border border-slate-200 hover:bg-slate-50'
               "
-              class="p-2 sm:p-3 rounded-xl aspect-square text-center function-button flex flex-col items-center justify-center"
+              class="p-2 sm:p-3 rounded-xl aspect-square text-center function-button flex flex-col items-center justify-center h-full"
             >
               <div class="flex flex-col items-center">
                 <svg
@@ -1979,7 +2032,7 @@ onUnmounted(() => {
                   ? 'bg-gradient-to-r from-orange-500 to-red-500 text-white shadow-md'
                   : 'bg-white text-slate-600 border border-slate-200 hover:bg-slate-50'
               "
-              class="p-2 sm:p-3 rounded-xl aspect-square text-center function-button flex flex-col items-center justify-center"
+              class="p-2 sm:p-3 rounded-xl aspect-square text-center function-button flex flex-col items-center justify-center h-full"
             >
               <div class="flex flex-col items-center">
                 <svg
@@ -2007,7 +2060,7 @@ onUnmounted(() => {
                   ? 'bg-gradient-to-r from-pink-500 to-rose-500 text-white shadow-md'
                   : 'bg-white text-slate-600 border border-slate-200 hover:bg-slate-50'
               "
-              class="p-2 sm:p-3 rounded-xl aspect-square text-center function-button flex flex-col items-center justify-center"
+              class="p-2 sm:p-3 rounded-xl aspect-square text-center function-button flex flex-col items-center justify-center h-full"
             >
               <div class="flex flex-col items-center">
                 <svg
