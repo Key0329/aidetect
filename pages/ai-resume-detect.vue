@@ -308,6 +308,18 @@ const switchFunction = (funcName) => {
     "ai-chat": "chat",
   };
   activeTab.value = functionTabMap[funcName];
+
+  // 滿動到功能選單區域頂部
+  setTimeout(() => {
+    const functionsElement = document.getElementById("advanced-functions");
+    if (functionsElement) {
+      functionsElement.scrollIntoView({
+        behavior: "smooth",
+        block: "start",
+        inline: "nearest",
+      });
+    }
+  }, 100); // 稍微延遲以確保 DOM 更新完成
 };
 
 const openAIDetectDrawer = () => {
@@ -1477,13 +1489,60 @@ onUnmounted(() => {
             <div class="skeleton-button"></div>
           </div>
 
-          <div class="skeleton-pulse text-center mt-6 text-white text-18px">
+          <!-- 「以上內容有幫助嗎？」區塊 skeleton -->
+          <div class="mt-8">
+            <div
+              class="bg-gradient-to-r from-blue-50 to-cyan-50 border border-blue-200 p-4 rounded-xl shadow-sm"
+            >
+              <div class="skeleton-line w-1/2 mb-3"></div>
+              <div class="skeleton-block w-3/4"></div>
+            </div>
+          </div>
+          <!-- 進階功能區塊 skeleton -->
+          <div class="mt-6">
+            <div
+              class="grid grid-cols-3 sm:grid-cols-5 gap-2 sm:gap-3 max-w-4xl mx-auto"
+            >
+              <div class="skeleton-block aspect-square rounded-xl"></div>
+              <div class="skeleton-block aspect-square rounded-xl"></div>
+              <div class="skeleton-block aspect-square rounded-xl"></div>
+              <div class="skeleton-block aspect-square rounded-xl"></div>
+              <div class="skeleton-block aspect-square rounded-xl"></div>
+            </div>
+          </div>
+          <div class="skeleton-pulse text-center mt-6 text-slate-800 text-18px">
             正在分析履歷內容...
           </div>
         </div>
 
         <!-- 實際內容 -->
         <div v-else>
+          <!-- 分析僅供參考提示 -->
+          <div class="mb-6">
+            <div
+              class="bg-gradient-to-r from-amber-50 to-yellow-50 border border-amber-200 p-4 rounded-xl shadow-sm"
+            >
+              <p
+                class="m-0 leading-6 text-amber-700 font-medium flex items-center text-sm"
+              >
+                <svg
+                  class="w-4 h-4 mr-2 text-amber-600"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-width="2"
+                    d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z"
+                  ></path>
+                </svg>
+                分析僅供參考，建議結合面試表現進行綜合評估。
+              </p>
+            </div>
+          </div>
+
           <!-- 卡片總結區 -->
           <div class="mb-6">
             <!-- 卡片容器 - 改用橫向滑動 -->
@@ -1497,7 +1556,7 @@ onUnmounted(() => {
             >
               <!-- 總結卡片 -->
               <div class="w-[94%] flex-shrink-0">
-                <div class="relative h-[550px] sm:h-[600px] summary-card overflow-hidden">
+                <div class="relative h-[450px] sm:h-[500px] summary-card">
                   <!-- 柴犬角色 -->
                   <div class="absolute top-4 left-6 z-20">
                     <div class="relative">
@@ -1562,7 +1621,7 @@ onUnmounted(() => {
 
                   <!-- 對話框 -->
                   <div
-                    class="bg-gradient-to-br from-orange-50 via-white to-orange-50 border-2 border-orange-200 rounded-3xl p-6 h-full relative shadow-xl overflow-hidden"
+                    class="bg-gradient-to-br from-orange-50 via-white to-orange-50 border-2 border-orange-200 rounded-3xl p-6 h-full relative shadow-xl"
                   >
                     <!-- 對話框尾巴 -->
                     <div
@@ -1571,11 +1630,6 @@ onUnmounted(() => {
 
                     <!-- 標題區域 -->
                     <div class="pt-8 mb-6">
-                      <h3
-                        class="text-xl font-bold text-orange-800 mb-3 text-center"
-                      >
-                        🐕 柴犬 AI 分析師
-                      </h3>
                       <div class="flex justify-center mb-4">
                         <span
                           :class="
@@ -1603,6 +1657,16 @@ onUnmounted(() => {
 
                     <!-- 讚/倒讚按鈕 -->
                     <div class="absolute bottom-4 right-4 flex space-x-2">
+                      <!-- 反饋提示訊息 -->
+                      <div
+                        v-if="dogFeedback.showToast"
+                        class="fixed top-20 left-1/2 transform -translate-x-1/2 bg-orange-500 text-white px-3 py-2 rounded-full shadow-lg z-50 animate-bounce whitespace-nowrap"
+                      >
+                        <div class="text-xs font-medium text-center">
+                          {{ dogFeedback.toastMessage }}
+                        </div>
+                      </div>
+
                       <button
                         @click="handleDogFeedback('like')"
                         class="w-10 h-10 rounded-full transition-all duration-200 transform hover:scale-110 shadow-md flex items-center justify-center"
@@ -1612,8 +1676,14 @@ onUnmounted(() => {
                             : 'bg-white text-gray-400 hover:bg-green-50 hover:text-green-500'
                         "
                       >
-                        <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
-                          <path d="M7.493 18.75c-.425 0-.82-.236-.975-.632A7.48 7.48 0 016 15.375c0-1.75.599-3.358 1.602-4.634.151-.192.373-.309.6-.397.473-.183.89-.514 1.212-.924a9.042 9.042 0 012.861-2.4c.723-.384 1.35-.956 1.653-1.715a4.498 4.498 0 00.322-1.672V3a.75.75 0 01.75-.75 2.25 2.25 0 012.25 2.25c0 1.152-.26 2.243-.723 3.218-.266.558-.107 1.282.725 1.282h3.126c1.026 0 1.945.694 2.054 1.715.045.422.068.85.068 1.285a11.95 11.95 0 01-2.649 7.521c-.388.482-.987.729-1.605.729H14.23c-.483 0-.964-.078-1.423-.230l-3.114-1.04a4.501 4.501 0 00-1.423-.23h-.777zM2.331 10.977a11.969 11.969 0 00-.831 4.398 12 12 0 00.52 3.507c.26.85 1.084 1.368 1.973 1.368H4.9c.445 0 .72-.498.523-.898a8.963 8.963 0 01-.924-3.977c0-1.708.476-3.305 1.302-4.666.245-.403-.028-.959-.5-.959H4.25c-.832 0-1.612.453-1.918 1.227z"/>
+                        <svg
+                          class="w-5 h-5"
+                          fill="currentColor"
+                          viewBox="0 0 24 24"
+                        >
+                          <path
+                            d="M7.493 18.75c-.425 0-.82-.236-.975-.632A7.48 7.48 0 016 15.375c0-1.75.599-3.358 1.602-4.634.151-.192.373-.309.6-.397.473-.183.89-.514 1.212-.924a9.042 9.042 0 012.861-2.4c.723-.384 1.35-.956 1.653-1.715a4.498 4.498 0 00.322-1.672V3a.75.75 0 01.75-.75 2.25 2.25 0 012.25 2.25c0 1.152-.26 2.243-.723 3.218-.266.558-.107 1.282.725 1.282h3.126c1.026 0 1.945.694 2.054 1.715.045.422.068.85.068 1.285a11.95 11.95 0 01-2.649 7.521c-.388.482-.987.729-1.605.729H14.23c-.483 0-.964-.078-1.423-.230l-3.114-1.04a4.501 4.501 0 00-1.423-.23h-.777zM2.331 10.977a11.969 11.969 0 00-.831 4.398 12 12 0 00.52 3.507c.26.85 1.084 1.368 1.973 1.368H4.9c.445 0 .72-.498.523-.898a8.963 8.963 0 01-.924-3.977c0-1.708.476-3.305 1.302-4.666.245-.403-.028-.959-.5-.959H4.25c-.832 0-1.612.453-1.918 1.227z"
+                          />
                         </svg>
                       </button>
                       <button
@@ -1625,8 +1695,15 @@ onUnmounted(() => {
                             : 'bg-white text-gray-400 hover:bg-red-50 hover:text-red-500'
                         "
                       >
-                        <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24" style="transform: rotate(180deg);">
-                          <path d="M7.493 18.75c-.425 0-.82-.236-.975-.632A7.48 7.48 0 016 15.375c0-1.75.599-3.358 1.602-4.634.151-.192.373-.309.6-.397.473-.183.89-.514 1.212-.924a9.042 9.042 0 012.861-2.4c.723-.384 1.35-.956 1.653-1.715a4.498 4.498 0 00.322-1.672V3a.75.75 0 01.75-.75 2.25 2.25 0 012.25 2.25c0 1.152-.26 2.243-.723 3.218-.266.558-.107 1.282.725 1.282h3.126c1.026 0 1.945.694 2.054 1.715.045.422.068.85.068 1.285a11.95 11.95 0 01-2.649 7.521c-.388.482-.987.729-1.605.729H14.23c-.483 0-.964-.078-1.423-.230l-3.114-1.04a4.501 4.501 0 00-1.423-.23h-.777zM2.331 10.977a11.969 11.969 0 00-.831 4.398 12 12 0 00.52 3.507c.26.85 1.084 1.368 1.973 1.368H4.9c.445 0 .72-.498.523-.898a8.963 8.963 0 01-.924-3.977c0-1.708.476-3.305 1.302-4.666.245-.403-.028-.959-.5-.959H4.25c-.832 0-1.612.453-1.918 1.227z"/>
+                        <svg
+                          class="w-5 h-5"
+                          fill="currentColor"
+                          viewBox="0 0 24 24"
+                          style="transform: rotate(180deg)"
+                        >
+                          <path
+                            d="M7.493 18.75c-.425 0-.82-.236-.975-.632A7.48 7.48 0 016 15.375c0-1.75.599-3.358 1.602-4.634.151-.192.373-.309.6-.397.473-.183.89-.514 1.212-.924a9.042 9.042 0 012.861-2.4c.723-.384 1.35-.956 1.653-1.715a4.498 4.498 0 00.322-1.672V3a.75.75 0 01.75-.75 2.25 2.25 0 012.25 2.25c0 1.152-.26 2.243-.723 3.218-.266.558-.107 1.282.725 1.282h3.126c1.026 0 1.945.694 2.054 1.715.045.422.068.85.068 1.285a11.95 11.95 0 01-2.649 7.521c-.388.482-.987.729-1.605.729H14.23c-.483 0-.964-.078-1.423-.230l-3.114-1.04a4.501 4.501 0 00-1.423-.23h-.777zM2.331 10.977a11.969 11.969 0 00-.831 4.398 12 12 0 00.52 3.507c.26.85 1.084 1.368 1.973 1.368H4.9c.445 0 .72-.498.523-.898a8.963 8.963 0 01-.924-3.977c0-1.708.476-3.305 1.302-4.666.245-.403-.028-.959-.5-.959H4.25c-.832 0-1.612.453-1.918 1.227z"
+                          />
                         </svg>
                       </button>
                     </div>
@@ -1652,81 +1729,59 @@ onUnmounted(() => {
                       </button>
                     </div>
                   </div>
-
-                  <!-- 反饋提示訊息 -->
-                  <div
-                    v-if="dogFeedback.showToast"
-                    class="absolute top-20 left-1/2 transform -translate-x-1/2 bg-orange-500 text-white px-4 py-2 rounded-full shadow-lg z-20 animate-bounce"
-                  >
-                    <div class="text-sm font-medium text-center">
-                      {{ dogFeedback.toastMessage }}
-                    </div>
-                  </div>
                 </div>
               </div>
 
               <!-- 建議問題卡片 -->
               <div class="w-full flex-shrink-0">
                 <div
-                  class="bg-gradient-to-br from-white via-purple-50 to-indigo-50 border border-purple-200 rounded-xl p-4 sm:p-8 h-[550px] sm:h-[600px] summary-card flex flex-col relative"
+                  class="bg-gradient-to-b from-purple-50/40 to-indigo-50/60 border border-purple-200 rounded-xl p-4 sm:p-8 h-[450px] sm:h-[500px] summary-card flex flex-col relative"
                 >
                   <div class="flex items-start mb-6">
-                    <div
-                      class="w-8 h-8 bg-purple-100 rounded-full flex items-center justify-center flex-shrink-0 mr-2"
-                    >
-                      <svg
-                        class="w-4 h-4 text-purple-500"
-                        fill="none"
-                        stroke="currentColor"
-                        viewBox="0 0 24 24"
-                      >
-                        <path
-                          stroke-linecap="round"
-                          stroke-linejoin="round"
-                          stroke-width="2"
-                          d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-                        ></path>
-                      </svg>
-                    </div>
                     <div class="flex-1">
                       <div class="flex items-center justify-between mb-4">
-                        <h3 class="text-xl font-bold text-slate-800">
-                          建議面試問題
-                        </h3>
-                        <button
-                          @click="copyAllQuestions"
-                          class="text-xs px-3 py-1 bg-[#00afb8] text-white rounded-full hover:bg-[#008a94] transition-colors duration-200 flex items-center space-x-1"
-                        >
-                          <svg
-                            class="w-3 h-3"
-                            fill="none"
-                            stroke="currentColor"
-                            viewBox="0 0 24 24"
+                        <div class="flex items-center gap-2">
+                          <h3 class="text-xl font-bold text-slate-800">
+                            建議面試問題
+                          </h3>
+                          <div
+                            class="w-8 h-8 mb-2 bg-purple-100 rounded-full flex items-center justify-center flex-shrink-0 mr-2"
                           >
-                            <path
-                              stroke-linecap="round"
-                              stroke-linejoin="round"
-                              stroke-width="2"
-                              d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3"
-                            ></path>
-                          </svg>
-                          <span>全部複製</span>
-                        </button>
+                            <svg
+                              class="w-4 h-4 text-purple-500"
+                              fill="none"
+                              stroke="currentColor"
+                              viewBox="0 0 24 24"
+                            >
+                              <path
+                                stroke-linecap="round"
+                                stroke-linejoin="round"
+                                stroke-width="2"
+                                d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                              ></path>
+                            </svg>
+                          </div>
+                        </div>
                       </div>
-                      <div
-                        class="space-y-3 text-base text-slate-600 flex-1 overflow-y-auto"
-                      >
+                      <div class="space-y-3 text-base text-slate-600 flex-1">
                         <div
-                          class="flex items-start justify-between group hover:bg-purple-25 rounded-lg p-2 -mx-2 transition-colors duration-200"
+                          class="flex items-start justify-between group hover:bg-purple-50 rounded-lg p-3 -mx-2 transition-colors duration-200 border border-transparent hover:border-purple-200"
                         >
                           <div class="flex items-start flex-1">
                             <span
-                              class="w-5 h-5 rounded-full bg-purple-100 text-purple-600 text-xs flex items-center justify-center flex-shrink-0 mt-0.5 mr-3 font-medium"
+                              class="w-6 h-6 rounded-full bg-purple-100 text-purple-600 text-sm flex items-center justify-center flex-shrink-0 mt-0.5 mr-3 font-medium"
                               >1</span
                             >
-                            <span
-                              >請分享您在前一份工作中遇到的最大挑戰，以及如何解決的？</span
-                            >
+                            <div class="flex-1">
+                              <span class="text-slate-700 font-medium"
+                                >請分享您在前一份工作中遇到的最大挑戰，以及如何解決的？</span
+                              >
+                              <div
+                                class="text-xs text-purple-500 mt-1 opacity-75 group-hover:opacity-100 transition-opacity"
+                              >
+                                ✍️ 點擊右側複製按鈕可快速複製問題
+                              </div>
+                            </div>
                           </div>
                           <button
                             @click="
@@ -1737,43 +1792,57 @@ onUnmounted(() => {
                             "
                             :class="
                               copiedQuestions.has(1)
-                                ? 'text-green-500'
-                                : 'text-slate-400 hover:text-slate-600'
+                                ? 'bg-green-100 text-green-600 border-green-300'
+                                : 'bg-purple-50 text-purple-500 hover:bg-purple-100 border-purple-200'
                             "
-                            class="ml-2 opacity-0 group-hover:opacity-100 transition-all duration-200 flex-shrink-0"
+                            class="ml-3 opacity-80 hover:opacity-100 transition-all duration-200 flex-shrink-0 px-2 py-1 rounded-md border text-xs font-medium"
+                            title="複製問題"
                           >
-                            <svg
-                              class="w-4 h-4"
-                              fill="none"
-                              stroke="currentColor"
-                              viewBox="0 0 24 24"
-                            >
-                              <path
-                                v-if="copiedQuestions.has(1)"
-                                stroke-linecap="round"
-                                stroke-linejoin="round"
-                                stroke-width="2"
-                                d="M5 13l4 4L19 7"
-                              ></path>
-                              <path
-                                v-else
-                                stroke-linecap="round"
-                                stroke-linejoin="round"
-                                stroke-width="2"
-                                d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3"
-                              ></path>
-                            </svg>
+                            <div class="flex items-center space-x-1">
+                              <svg
+                                class="w-3 h-3"
+                                fill="none"
+                                stroke="currentColor"
+                                viewBox="0 0 24 24"
+                              >
+                                <path
+                                  v-if="copiedQuestions.has(1)"
+                                  stroke-linecap="round"
+                                  stroke-linejoin="round"
+                                  stroke-width="2"
+                                  d="M5 13l4 4L19 7"
+                                ></path>
+                                <path
+                                  v-else
+                                  stroke-linecap="round"
+                                  stroke-linejoin="round"
+                                  stroke-width="2"
+                                  d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3"
+                                ></path>
+                              </svg>
+                              <span v-if="copiedQuestions.has(1)">已複製</span>
+                              <span v-else>複製</span>
+                            </div>
                           </button>
                         </div>
                         <div
-                          class="flex items-start justify-between group hover:bg-purple-25 rounded-lg p-2 -mx-2 transition-colors duration-200"
+                          class="flex items-start justify-between group hover:bg-purple-50 rounded-lg p-3 -mx-2 transition-colors duration-200 border border-transparent hover:border-purple-200"
                         >
                           <div class="flex items-start flex-1">
                             <span
-                              class="w-5 h-5 rounded-full bg-purple-100 text-purple-600 text-xs flex items-center justify-center flex-shrink-0 mt-0.5 mr-3 font-medium"
+                              class="w-6 h-6 rounded-full bg-purple-100 text-purple-600 text-sm flex items-center justify-center flex-shrink-0 mt-0.5 mr-3 font-medium"
                               >2</span
                             >
-                            <span>您對於這個職位有什麼特別的想法或期待？</span>
+                            <div class="flex-1">
+                              <span class="text-slate-700 font-medium"
+                                >您對於這個職位有什麼特別的想法或期待？</span
+                              >
+                              <div
+                                class="text-xs text-purple-500 mt-1 opacity-75 group-hover:opacity-100 transition-opacity"
+                              >
+                                ✍️ 點擊右側複製按鈕可快速複製問題
+                              </div>
+                            </div>
                           </div>
                           <button
                             @click="
@@ -1784,43 +1853,57 @@ onUnmounted(() => {
                             "
                             :class="
                               copiedQuestions.has(2)
-                                ? 'text-green-500'
-                                : 'text-slate-400 hover:text-slate-600'
+                                ? 'bg-green-100 text-green-600 border-green-300'
+                                : 'bg-purple-50 text-purple-500 hover:bg-purple-100 border-purple-200'
                             "
-                            class="ml-2 opacity-0 group-hover:opacity-100 transition-all duration-200 flex-shrink-0"
+                            class="ml-3 opacity-80 hover:opacity-100 transition-all duration-200 flex-shrink-0 px-2 py-1 rounded-md border text-xs font-medium"
+                            title="複製問題"
                           >
-                            <svg
-                              class="w-4 h-4"
-                              fill="none"
-                              stroke="currentColor"
-                              viewBox="0 0 24 24"
-                            >
-                              <path
-                                v-if="copiedQuestions.has(2)"
-                                stroke-linecap="round"
-                                stroke-linejoin="round"
-                                stroke-width="2"
-                                d="M5 13l4 4L19 7"
-                              ></path>
-                              <path
-                                v-else
-                                stroke-linecap="round"
-                                stroke-linejoin="round"
-                                stroke-width="2"
-                                d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3"
-                              ></path>
-                            </svg>
+                            <div class="flex items-center space-x-1">
+                              <svg
+                                class="w-3 h-3"
+                                fill="none"
+                                stroke="currentColor"
+                                viewBox="0 0 24 24"
+                              >
+                                <path
+                                  v-if="copiedQuestions.has(2)"
+                                  stroke-linecap="round"
+                                  stroke-linejoin="round"
+                                  stroke-width="2"
+                                  d="M5 13l4 4L19 7"
+                                ></path>
+                                <path
+                                  v-else
+                                  stroke-linecap="round"
+                                  stroke-linejoin="round"
+                                  stroke-width="2"
+                                  d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3"
+                                ></path>
+                              </svg>
+                              <span v-if="copiedQuestions.has(2)">已複製</span>
+                              <span v-else>複製</span>
+                            </div>
                           </button>
                         </div>
                         <div
-                          class="flex items-start justify-between group hover:bg-purple-25 rounded-lg p-2 -mx-2 transition-colors duration-200"
+                          class="flex items-start justify-between group hover:bg-purple-50 rounded-lg p-3 -mx-2 transition-colors duration-200 border border-transparent hover:border-purple-200"
                         >
                           <div class="flex items-start flex-1">
                             <span
-                              class="w-5 h-5 rounded-full bg-purple-100 text-purple-600 text-xs flex items-center justify-center flex-shrink-0 mt-0.5 mr-3 font-medium"
+                              class="w-6 h-6 rounded-full bg-purple-100 text-purple-600 text-sm flex items-center justify-center flex-shrink-0 mt-0.5 mr-3 font-medium"
                               >3</span
                             >
-                            <span>請描述一次您需要快速學習新技能的經驗。</span>
+                            <div class="flex-1">
+                              <span class="text-slate-700 font-medium"
+                                >請描述一次您需要快速學習新技能的經驗。</span
+                              >
+                              <div
+                                class="text-xs text-purple-500 mt-1 opacity-75 group-hover:opacity-100 transition-opacity"
+                              >
+                                ✍️ 點擊右側複製按鈕可快速複製問題
+                              </div>
+                            </div>
                           </div>
                           <button
                             @click="
@@ -1831,32 +1914,37 @@ onUnmounted(() => {
                             "
                             :class="
                               copiedQuestions.has(3)
-                                ? 'text-green-500'
-                                : 'text-slate-400 hover:text-slate-600'
+                                ? 'bg-green-100 text-green-600 border-green-300'
+                                : 'bg-purple-50 text-purple-500 hover:bg-purple-100 border-purple-200'
                             "
-                            class="ml-2 opacity-0 group-hover:opacity-100 transition-all duration-200 flex-shrink-0"
+                            class="ml-3 opacity-80 hover:opacity-100 transition-all duration-200 flex-shrink-0 px-2 py-1 rounded-md border text-xs font-medium"
+                            title="複製問題"
                           >
-                            <svg
-                              class="w-4 h-4"
-                              fill="none"
-                              stroke="currentColor"
-                              viewBox="0 0 24 24"
-                            >
-                              <path
-                                v-if="copiedQuestions.has(3)"
-                                stroke-linecap="round"
-                                stroke-linejoin="round"
-                                stroke-width="2"
-                                d="M5 13l4 4L19 7"
-                              ></path>
-                              <path
-                                v-else
-                                stroke-linecap="round"
-                                stroke-linejoin="round"
-                                stroke-width="2"
-                                d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3"
-                              ></path>
-                            </svg>
+                            <div class="flex items-center space-x-1">
+                              <svg
+                                class="w-3 h-3"
+                                fill="none"
+                                stroke="currentColor"
+                                viewBox="0 0 24 24"
+                              >
+                                <path
+                                  v-if="copiedQuestions.has(3)"
+                                  stroke-linecap="round"
+                                  stroke-linejoin="round"
+                                  stroke-width="2"
+                                  d="M5 13l4 4L19 7"
+                                ></path>
+                                <path
+                                  v-else
+                                  stroke-linecap="round"
+                                  stroke-linejoin="round"
+                                  stroke-width="2"
+                                  d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3"
+                                ></path>
+                              </svg>
+                              <span v-if="copiedQuestions.has(3)">已複製</span>
+                              <span v-else>複製</span>
+                            </div>
                           </button>
                         </div>
                       </div>
@@ -1875,13 +1963,36 @@ onUnmounted(() => {
                       返回總結
                     </button>
 
-                    <!-- 匯出問題按鈕 -->
-                    <button
-                      @click="copyAllQuestions"
-                      class="bg-gradient-to-r from-purple-500 to-indigo-500 hover:from-purple-600 hover:to-indigo-600 text-white px-2 py-1.5 sm:px-3 sm:py-2 rounded-lg text-xs sm:text-sm font-medium shadow-lg hover:shadow-xl transition-all duration-200 transform hover:scale-105 min-w-[80px] sm:min-w-[100px]"
-                    >
-                      匯出問題
-                    </button>
+                    <!-- 全部複製按鈕 -->
+                    <div class="relative">
+                      <button
+                        @click="copyAllQuestions"
+                        class="bg-gradient-to-r from-purple-500 to-indigo-500 hover:from-purple-600 hover:to-indigo-600 text-white px-2 py-1.5 sm:px-3 sm:py-2 rounded-lg text-xs sm:text-sm font-medium shadow-lg hover:shadow-xl transition-all duration-200 transform hover:scale-105 min-w-[80px] sm:min-w-[100px]"
+                      >
+                        全部複製
+                      </button>
+
+                      <!-- 複製成功提示 -->
+                      <div
+                        v-if="showCopyToast"
+                        class="fixed top-20 right-6 bg-green-500 text-white px-3 py-1.5 rounded-lg shadow-lg z-50 flex items-center space-x-2 animate-bounce whitespace-nowrap"
+                      >
+                        <svg
+                          class="w-4 h-4"
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                        >
+                          <path
+                            stroke-linecap="round"
+                            stroke-linejoin="round"
+                            stroke-width="2"
+                            d="M5 13l4 4L19 7"
+                          ></path>
+                        </svg>
+                        <span>已複製到剪貼板</span>
+                      </div>
+                    </div>
                   </div>
                 </div>
               </div>
@@ -1889,55 +2000,39 @@ onUnmounted(() => {
           </div>
         </div>
 
-        <!-- 複製成功提示 -->
-        <div
-          v-if="showCopyToast"
-          class="fixed top-20 right-6 bg-green-500 text-white px-4 py-2 rounded-lg shadow-lg z-50 flex items-center space-x-2 animate-bounce"
-        >
-          <svg
-            class="w-4 h-4"
-            fill="none"
-            stroke="currentColor"
-            viewBox="0 0 24 24"
-          >
-            <path
-              stroke-linecap="round"
-              stroke-linejoin="round"
-              stroke-width="2"
-              d="M5 13l4 4L19 7"
-            ></path>
-          </svg>
-          <span>已複製到剪貼板</span>
-        </div>
-
-        <!-- 分析僅供參考提示 -->
+        <!-- 內容導引提示 -->
         <div class="mb-6">
           <div
-            class="bg-gradient-to-r from-amber-50 to-yellow-50 border border-amber-200 p-4 rounded-xl shadow-sm"
+            class="bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200 p-2 rounded-2xl shadow-sm"
           >
-            <p
-              class="m-0 leading-6 text-amber-700 font-medium flex items-center text-sm"
-            >
-              <svg
-                class="w-4 h-4 mr-2 text-amber-600"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
+            <div class="text-center mb-4">
+              <h3
+                class="text-lg font-semibold text-slate-700 mb-2 flex items-center justify-center"
               >
-                <path
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                  stroke-width="2"
-                  d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z"
-                ></path>
-              </svg>
-              分析僅供參考，建議結合面試表現進行綜合評估。
-            </p>
+                <svg
+                  class="w-5 h-5 mr-2 text-blue-500"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-width="2"
+                    d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                  ></path>
+                </svg>
+                以上內容有幫助嗎？
+              </h3>
+              <p class="text-slate-600 text-sm">
+                需要我幫你再呈現更詳細的資料嗎，或許你想看：
+              </p>
+            </div>
           </div>
         </div>
 
         <!-- 功能選單區 -->
-        <div class="mb-6">
+        <div id="advanced-functions" class="mb-6">
           <div
             class="grid grid-cols-3 sm:grid-cols-5 gap-2 sm:gap-3 max-w-4xl mx-auto overflow-x-auto"
           >
@@ -5408,7 +5503,7 @@ main {
 }
 
 .skeleton-block {
-  height: 80px;
+  height: 60px;
   background: linear-gradient(90deg, #eee 25%, #f5f5f5 50%, #eee 75%);
   background-size: 200% 100%;
   border-radius: 8px;
@@ -5416,8 +5511,8 @@ main {
 }
 
 .skeleton-circle {
-  width: 48px;
-  height: 48px;
+  width: 36px;
+  height: 36px;
   background: linear-gradient(90deg, #eee 25%, #f5f5f5 50%, #eee 75%);
   background-size: 200% 100%;
   border-radius: 50%;
