@@ -220,7 +220,7 @@ const handleDogFeedback = (type) => {
 
 // 生成個性化分析文案
 const generateAnalysisText = () => {
-  const { recommendation, jobMatch, concerns } = cardSummary.value;
+  const { jobMatch, concerns } = cardSummary.value;
 
   let text = `這位求職者很符合你所開的【${
     jobMatch.position
@@ -1560,6 +1560,29 @@ onUnmounted(() => {
                   <!-- 柴犬角色 -->
                   <div class="absolute top-4 left-6 z-20">
                     <div class="relative">
+                      <!-- 反饋提示訊息 - 在柴犬旁邊的對話泡泡 -->
+                      <div
+                        v-if="dogFeedback.showToast"
+                        class="absolute -right-4 -top-2 transform translate-x-full z-30"
+                      >
+                        <!-- 對話泡泡 -->
+                        <div
+                          class="relative bg-orange-500 text-white px-3 py-2 rounded-xl shadow-lg animate-bounce"
+                        >
+                          <div class="text-xs font-medium whitespace-nowrap">
+                            {{ dogFeedback.toastMessage }}
+                          </div>
+                          <!-- 對話泡泡尾巴指向柴犬 -->
+                          <div
+                            class="absolute left-0 top-1/2 transform -translate-y-1/2 -translate-x-1"
+                          >
+                            <div
+                              class="w-0 h-0 border-t-4 border-b-4 border-r-8 border-transparent border-r-orange-500"
+                            ></div>
+                          </div>
+                        </div>
+                      </div>
+
                       <!-- 柴犬頭部 -->
                       <div
                         class="w-16 h-16 rounded-full bg-gradient-to-br from-orange-300 to-orange-400 border-4 border-white shadow-lg relative overflow-hidden transition-all duration-500"
@@ -1657,16 +1680,6 @@ onUnmounted(() => {
 
                     <!-- 讚/倒讚按鈕 -->
                     <div class="absolute bottom-4 right-4 flex space-x-2">
-                      <!-- 反饋提示訊息 -->
-                      <div
-                        v-if="dogFeedback.showToast"
-                        class="fixed top-20 left-1/2 transform -translate-x-1/2 bg-orange-500 text-white px-3 py-2 rounded-full shadow-lg z-50 animate-bounce whitespace-nowrap"
-                      >
-                        <div class="text-xs font-medium text-center">
-                          {{ dogFeedback.toastMessage }}
-                        </div>
-                      </div>
-
                       <button
                         @click="handleDogFeedback('like')"
                         class="w-10 h-10 rounded-full transition-all duration-200 transform hover:scale-110 shadow-md flex items-center justify-center"
@@ -1715,7 +1728,7 @@ onUnmounted(() => {
                       <!-- 建議問題按鈕 -->
                       <button
                         @click="showQuestionCard"
-                        class="bg-gradient-to-r from-blue-500 to-cyan-500 hover:from-blue-600 hover:to-cyan-600 text-white px-3 py-2 rounded-lg text-xs sm:text-sm font-medium shadow-lg hover:shadow-xl transition-all duration-200 transform hover:scale-105 min-w-[90px]"
+                        class="bg-gradient-to-r from-purple-500 to-indigo-500 hover:from-purple-600 hover:to-indigo-600 text-white px-3 py-2 rounded-lg text-xs sm:text-sm font-medium shadow-lg hover:shadow-xl transition-all duration-200 transform hover:scale-105 min-w-[90px]"
                       >
                         建議問題
                       </button>
@@ -1723,7 +1736,7 @@ onUnmounted(() => {
                       <!-- 邀約面試按鈕 -->
                       <button
                         @click="scheduleInterview"
-                        class="bg-gradient-to-r from-indigo-500 to-purple-500 hover:from-indigo-600 hover:to-purple-600 text-white px-3 py-2 rounded-lg text-xs sm:text-sm font-medium shadow-lg hover:shadow-xl transition-all duration-200 transform hover:scale-105 min-w-[90px]"
+                        class="bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600 text-white px-3 py-2 rounded-lg text-xs sm:text-sm font-medium shadow-lg hover:shadow-xl transition-all duration-200 transform hover:scale-105 min-w-[90px]"
                       >
                         邀約面試
                       </button>
@@ -1776,11 +1789,6 @@ onUnmounted(() => {
                               <span class="text-slate-700 font-medium"
                                 >請分享您在前一份工作中遇到的最大挑戰，以及如何解決的？</span
                               >
-                              <div
-                                class="text-xs text-purple-500 mt-1 opacity-75 group-hover:opacity-100 transition-opacity"
-                              >
-                                ✍️ 點擊右側複製按鈕可快速複製問題
-                              </div>
                             </div>
                           </div>
                           <button
@@ -1837,11 +1845,6 @@ onUnmounted(() => {
                               <span class="text-slate-700 font-medium"
                                 >您對於這個職位有什麼特別的想法或期待？</span
                               >
-                              <div
-                                class="text-xs text-purple-500 mt-1 opacity-75 group-hover:opacity-100 transition-opacity"
-                              >
-                                ✍️ 點擊右側複製按鈕可快速複製問題
-                              </div>
                             </div>
                           </div>
                           <button
@@ -1898,11 +1901,6 @@ onUnmounted(() => {
                               <span class="text-slate-700 font-medium"
                                 >請描述一次您需要快速學習新技能的經驗。</span
                               >
-                              <div
-                                class="text-xs text-purple-500 mt-1 opacity-75 group-hover:opacity-100 transition-opacity"
-                              >
-                                ✍️ 點擊右側複製按鈕可快速複製問題
-                              </div>
                             </div>
                           </div>
                           <button
@@ -1958,7 +1956,7 @@ onUnmounted(() => {
                     <!-- 返回總結按鈕 -->
                     <button
                       @click="backToSummary"
-                      class="bg-gradient-to-r from-slate-400 to-slate-500 hover:from-slate-500 hover:to-slate-600 text-white px-2 py-1.5 sm:px-3 sm:py-2 rounded-lg text-xs sm:text-sm font-medium shadow-lg hover:shadow-xl transition-all duration-200 transform hover:scale-105 min-w-[80px] sm:min-w-[100px]"
+                      class="bg-gradient-to-r from-orange-400 to-orange-500 hover:from-orange-500 hover:to-orange-600 text-white px-2 py-1.5 sm:px-3 sm:py-2 rounded-lg text-xs sm:text-sm font-medium shadow-lg hover:shadow-xl transition-all duration-200 transform hover:scale-105 min-w-[80px] sm:min-w-[100px]"
                     >
                       返回總結
                     </button>
@@ -1967,7 +1965,7 @@ onUnmounted(() => {
                     <div class="relative">
                       <button
                         @click="copyAllQuestions"
-                        class="bg-gradient-to-r from-purple-500 to-indigo-500 hover:from-purple-600 hover:to-indigo-600 text-white px-2 py-1.5 sm:px-3 sm:py-2 rounded-lg text-xs sm:text-sm font-medium shadow-lg hover:shadow-xl transition-all duration-200 transform hover:scale-105 min-w-[80px] sm:min-w-[100px]"
+                        class="bg-gradient-to-r from-blue-500 to-cyan-500 hover:from-blue-600 hover:to-cyan-600 text-white px-2 py-1.5 sm:px-3 sm:py-2 rounded-lg text-xs sm:text-sm font-medium shadow-lg hover:shadow-xl transition-all duration-200 transform hover:scale-105 min-w-[80px] sm:min-w-[100px]"
                       >
                         全部複製
                       </button>
