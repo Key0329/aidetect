@@ -52,7 +52,6 @@ const showCopyToast = ref(false);
 // 新增狀態管理變數
 const showQuestionPrompt = ref(true); // 新增控制問題提示區域顯示的變數
 const needQuestions = ref(false);
-const isQuestionsLoading = ref(false);
 const showDenyTip = ref(false);
 
 // 新增反饋狀態追蹤
@@ -76,30 +75,6 @@ const feedbacks = ref({
   item5: {
     liked: false,
     disliked: false,
-  },
-});
-
-// 事實查核狀態追蹤
-const factCheckFeedbacks = ref({
-  education: {
-    liked: false,
-    disliked: false,
-    verified: false,
-  },
-  experience: {
-    liked: false,
-    disliked: false,
-    verified: false,
-  },
-  skills: {
-    liked: false,
-    disliked: false,
-    verified: false,
-  },
-  achievements: {
-    liked: false,
-    disliked: false,
-    verified: false,
   },
 });
 
@@ -234,24 +209,6 @@ const switchFunction = (funcName) => {
   activeTab.value = functionTabMap[funcName];
 };
 
-// 處理事實查核反饋
-const handleFactCheckFeedback = (itemId, type) => {
-  if (type === "like" && factCheckFeedbacks.value[itemId].liked) {
-    factCheckFeedbacks.value[itemId].liked = false;
-  } else if (type === "dislike" && factCheckFeedbacks.value[itemId].disliked) {
-    factCheckFeedbacks.value[itemId].disliked = false;
-  } else if (type === "verify" && factCheckFeedbacks.value[itemId].verified) {
-    factCheckFeedbacks.value[itemId].verified = false;
-  } else {
-    if (type === "like" || type === "dislike") {
-      factCheckFeedbacks.value[itemId].liked = type === "like";
-      factCheckFeedbacks.value[itemId].disliked = type === "dislike";
-    } else if (type === "verify") {
-      factCheckFeedbacks.value[itemId].verified = true;
-    }
-  }
-};
-
 const openAIDetectDrawer = () => {
   showAIDetectDrawer.value = true;
   isLoading.value = true;
@@ -284,12 +241,6 @@ const copyToClipboard = (text) => {
       isCopied.value = false;
     }, 2000);
   });
-};
-
-// 事實查核項目標記為已驗證
-const markAsVerified = (itemId) => {
-  factCheckFeedbacks.value[itemId].verified =
-    !factCheckFeedbacks.value[itemId].verified;
 };
 
 // 開始事實查核流程
@@ -396,14 +347,6 @@ const getConfidenceColor = (confidence) => {
   return "#d32f2f"; // 紅色 - 可能不匹配
 };
 
-// 獲取置信度文字
-const getConfidenceText = (confidence) => {
-  if (confidence >= 0.9) return "非常確信";
-  if (confidence >= 0.7) return "較為確信";
-  if (confidence >= 0.5) return "不確定";
-  return "可能不匹配";
-};
-
 // 增強型定位功能：滾動到指定段落並高亮顯示
 const scrollToSection = (sectionId, targetText) => {
   // 清除之前的高亮效果
@@ -444,41 +387,6 @@ const resetQuestionSection = () => {
   showQuestionPrompt.value = true;
   isInterviewQuestionsExpanded.value = false;
   showDenyTip.value = false;
-};
-
-// 新增處理問題請求的函數
-const handleQuestionsRequest = (need) => {
-  if (need) {
-    needQuestions.value = true;
-    isQuestionsLoading.value = true;
-
-    // 確保UI更新，顯示loading動畫
-    setTimeout(() => {
-      // 模擬載入時間
-      setTimeout(() => {
-        isQuestionsLoading.value = false;
-        isInterviewQuestionsExpanded.value = true;
-        showQuestionPrompt.value = false; // 隱藏問題提示區域
-
-        // 直接切換到建議提問 tab
-        activeTab.value = "questions";
-      }, 2000);
-    }, 0);
-  } else {
-    needQuestions.value = false;
-    showDenyTip.value = true;
-
-    // 滾動到提示訊息位置
-    setTimeout(() => {
-      const questionSection = document.getElementById("question-section");
-      if (questionSection) {
-        questionSection.scrollIntoView({
-          behavior: "smooth",
-          block: "center",
-        });
-      }
-    }, 100);
-  }
 };
 
 // 問問求職者功能 - 跳轉到外部頁面
@@ -3028,96 +2936,6 @@ onUnmounted(() => {
             </div>
 
             <div class="border-solid border-b-2 border-#eee my-5"></div>
-
-            <!-- 卡片4：語言過於通用或制式 -->
-            <div
-              class="group bg-white rounded-xl shadow-lg border border-slate-200 hover:shadow-xl transition-all duration-300 overflow-hidden"
-            >
-              <!-- 卡片頭部 -->
-              <div
-                class="bg-gradient-to-r from-green-50 to-teal-50 border-b border-green-200 p-6"
-              >
-                <div class="flex justify-between items-center">
-                  <div class="flex items-center space-x-4">
-                    <div class="flex-shrink-0">
-                      <div
-                        class="w-10 h-10 bg-gradient-to-br from-green-400 to-teal-500 rounded-lg flex items-center justify-center shadow-sm"
-                      >
-                        <svg
-                          class="w-5 h-5 text-white"
-                          fill="none"
-                          stroke="currentColor"
-                          viewBox="0 0 24 24"
-                        >
-                          <path
-                            stroke-linecap="round"
-                            stroke-linejoin="round"
-                            stroke-width="2"
-                            d="M7 8h10M7 12h4m1 8l-4-4H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-3l-4 4z"
-                          ></path>
-                        </svg>
-                      </div>
-                    </div>
-                    <div>
-                      <h3 class="text-xl font-bold text-slate-900 mb-1">
-                        語言過於通用或制式
-                      </h3>
-                      <div class="flex items-center space-x-2">
-                        <span
-                          class="inline-flex items-center px-2 py-1 rounded-md text-xs font-medium bg-green-100 text-green-800"
-                          >低風險</span
-                        >
-                        <span class="text-sm text-slate-500">語言風格分析</span>
-                      </div>
-                    </div>
-                  </div>
-                  <button
-                    class="p-2 rounded-lg hover:bg-emerald-100 transition-all duration-200 group/btn"
-                    :class="{
-                      'bg-emerald-100 text-emerald-700 shadow-sm':
-                        feedbacks.item4.liked,
-                    }"
-                    @click="handleFeedback('item4', 'like')"
-                  >
-                    <svg
-                      class="w-5 h-5 text-emerald-600 group-hover/btn:scale-110 transition-transform"
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
-                    >
-                      <path
-                        stroke-linecap="round"
-                        stroke-linejoin="round"
-                        stroke-width="2"
-                        d="M14 10h4.764a2 2 0 011.789 2.894l-3.5 7A2 2 0 0115.263 21h-4.017c-.163 0-.326-.02-.485-.06L7 20m7-10V5a2 2 0 00-2-2h-.095c-.5 0-.905.405-.905.905 0 .714-.211 1.412-.608 2.006L7 11v9m7-10h-2M7 20H5a2 2 0 01-2-2v-6a2 2 0 012-2h2.5"
-                      ></path>
-                    </svg>
-                  </button>
-                  <button
-                    class="p-2 rounded-lg hover:bg-red-100 transition-all duration-200 group/btn"
-                    :class="{
-                      'bg-red-100 text-red-700 shadow-sm':
-                        feedbacks.item4.disliked,
-                    }"
-                    @click="handleFeedback('item4', 'dislike')"
-                  >
-                    <svg
-                      class="w-5 h-5 text-red-600 group-hover/btn:scale-110 transition-transform"
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
-                    >
-                      <path
-                        stroke-linecap="round"
-                        stroke-linejoin="round"
-                        stroke-width="2"
-                        d="M10 14H5.236a2 2 0 01-1.789-2.894l3.5-7A2 2 0 018.736 3h4.018c.163 0 .326.02.485.06L17 4m-7 10v2a2 2 0 002 2h.095c.5 0 .905-.405.905-.905 0-.714.211-1.412.608-2.006L17 13V4m-7 10h2m5-10h2a2 2 0 012 2v6a2 2 0 01-2 2h-2.5"
-                      ></path>
-                    </svg>
-                  </button>
-                </div>
-              </div>
-            </div>
 
             <!-- 卡片內容 -->
             <div class="p-6">
