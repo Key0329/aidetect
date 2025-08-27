@@ -37,9 +37,15 @@ const activeTab = ref("description"); // 可選值: 'description', 'ai', 'fact-c
 // const currentCard = ref(0); // 0: 總結卡片, 1: 建議問題卡片
 const cardSummary = ref({
   recommendation: "高度推薦", // 高度推薦 | 需關注問題
-  analysis:
-    "此候選人的履歷與職缺要求高度符合，具備相關工作經驗與技能背景，建議優先安排面試。",
-  concerns: [],
+  jobMatch: {
+    position: "前端工程師",
+    strengths: ["React 開發經驗", "UI/UX 設計能力"],
+    resumeHighlights: ["5年前端開發經驗", "曾主導大型電商專案開發"]
+  },
+  concerns: {
+    areas: ["後端技術經驗相對較少", "團隊管理經驗仍在累積"],
+    source: "學經歷分析"
+  }
 });
 
 // 新增功能選單狀態變數
@@ -90,6 +96,28 @@ const chatMessages = ref([]);
 const chatInput = ref("");
 const isChatLoading = ref(false);
 
+// 柴犬反饋系統狀態管理
+const dogFeedback = ref({
+  liked: false,
+  disliked: false,
+  showToast: false,
+  toastMessage: ""
+});
+
+// 柴犬反饋訊息
+const feedbackMessages = {
+  like: [
+    "謝謝你的支持！",
+    "感謝你的讚美！", 
+    "你的鼓勵讓我們更有動力！"
+  ],
+  dislike: [
+    "收到你的回饋，謝謝！",
+    "感謝意見，我們會改進！",
+    "你的反饋很重要，謝謝！"
+  ]
+};
+
 // // 追蹤已點擊過的項目
 // const clickedItems = ref({
 //   item1: false,
@@ -126,6 +154,39 @@ const scrollToCard = (index) => {
   }
 };
 
+// 滑鼠拖曳功能
+const isDragging = ref(false);
+const startX = ref(0);
+const scrollLeft = ref(0);
+
+const handleMouseDown = (e) => {
+  if (!cardContainer.value) return;
+  isDragging.value = true;
+  startX.value = e.pageX - cardContainer.value.offsetLeft;
+  scrollLeft.value = cardContainer.value.scrollLeft;
+  cardContainer.value.style.cursor = "grabbing";
+};
+
+const handleMouseMove = (e) => {
+  if (!isDragging.value || !cardContainer.value) return;
+  e.preventDefault();
+  const x = e.pageX - cardContainer.value.offsetLeft;
+  const walk = (x - startX.value) * 2; // 拖曳速度倍數
+  cardContainer.value.scrollLeft = scrollLeft.value - walk;
+};
+
+const handleMouseUp = () => {
+  if (!cardContainer.value) return;
+  isDragging.value = false;
+  cardContainer.value.style.cursor = "grab";
+};
+
+const handleMouseLeave = () => {
+  if (!cardContainer.value) return;
+  isDragging.value = false;
+  cardContainer.value.style.cursor = "grab";
+};
+
 const showQuestionCard = () => {
   scrollToCard(1);
 };
@@ -137,6 +198,40 @@ const backToSummary = () => {
 const scheduleInterview = () => {
   // 邀約面試功能 - 可以導向 HR 信箱或其他邀約流程
   alert("正在導向面試邀約流程...");
+};
+
+// 柴犬反饋處理函數
+const handleDogFeedback = (type) => {
+  if (type === 'like') {
+    dogFeedback.value.liked = !dogFeedback.value.liked;
+    dogFeedback.value.disliked = false;
+  } else {
+    dogFeedback.value.disliked = !dogFeedback.value.disliked;
+    dogFeedback.value.liked = false;
+  }
+  
+  // 顯示隨機回饋訊息
+  const messages = feedbackMessages[type];
+  dogFeedback.value.toastMessage = messages[Math.floor(Math.random() * messages.length)];
+  dogFeedback.value.showToast = true;
+  
+  // 3秒後隱藏提示
+  setTimeout(() => {
+    dogFeedback.value.showToast = false;
+  }, 3000);
+};
+
+// 生成個性化分析文案
+const generateAnalysisText = () => {
+  const { recommendation, jobMatch, concerns } = cardSummary.value;
+  
+  let text = `這位求職者很符合你所開的【${jobMatch.position}】職務需求，特別是你在找尋的【${jobMatch.strengths.join('、')}】特質，這位求職者在【${jobMatch.resumeHighlights.join('、')}】中也有提到。`;
+  
+  if (concerns.areas.length > 0) {
+    text += `\n\n但同時我們也發現【${concerns.areas.join('、')}】這部分有需要關注的地方，建議在面試時可以多加了解。`;
+  }
+  
+  return text;
 };
 
 // 複製功能
@@ -1389,80 +1484,145 @@ onUnmounted(() => {
             <!-- 卡片容器 - 改用橫向滑動 -->
             <div
               ref="cardContainer"
-              class="flex space-x-4 overflow-x-auto scrollbar-hide snap-x snap-mandatory rounded-xl"
+              class="flex space-x-4 overflow-x-auto rounded-xl cursor-grab select-none"
+              @mousedown="handleMouseDown"
+              @mousemove="handleMouseMove"
+              @mouseup="handleMouseUp"
+              @mouseleave="handleMouseLeave"
             >
               <!-- 總結卡片 -->
-              <div class="w-[100%] flex-shrink-0 snap-start">
+              <div class="w-[94%] flex-shrink-0">
                 <div
-                  class="bg-gradient-to-br from-white via-slate-50 to-blue-50 border border-slate-200 rounded-xl p-8 min-h-[200px] summary-card"
+                  class="relative h-[550px] sm:h-[600px] summary-card"
                 >
-                  <div class="flex items-start mb-6">
-                    <div
-                      class="w-10 h-10 bg-primary-100 rounded-full flex items-center justify-center flex-shrink-0 mr-3"
-                    >
-                      <svg
-                        class="w-5 h-5 text-primary-500"
-                        fill="none"
-                        stroke="currentColor"
-                        viewBox="0 0 24 24"
+                  <!-- 柴犬角色 -->
+                  <div class="absolute -top-2 left-6 z-10">
+                    <div class="relative">
+                      <!-- 柴犬頭部 -->
+                      <div 
+                        class="w-16 h-16 rounded-full bg-gradient-to-br from-orange-300 to-orange-400 border-4 border-white shadow-lg relative overflow-hidden transition-all duration-500"
+                        :class="cardSummary.recommendation === '高度推薦' ? 'animate-bounce' : ''"
                       >
-                        <path
-                          stroke-linecap="round"
-                          stroke-linejoin="round"
-                          stroke-width="2"
-                          d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
-                        ></path>
-                      </svg>
+                        <!-- 柴犬面部特徵 -->
+                        <div class="absolute inset-0 flex flex-col items-center justify-center">
+                          <!-- 眼睛 -->
+                          <div class="flex space-x-2 mb-1">
+                            <div 
+                              class="w-2 h-2 bg-black rounded-full transition-all duration-300"
+                              :class="cardSummary.recommendation === '高度推薦' ? 'transform scale-110' : ''"
+                            ></div>
+                            <div 
+                              class="w-2 h-2 bg-black rounded-full transition-all duration-300"
+                              :class="cardSummary.recommendation === '高度推薦' ? 'transform scale-110' : ''"
+                            ></div>
+                          </div>
+                          <!-- 鼻子 -->
+                          <div class="w-1.5 h-1 bg-black rounded-full mb-1"></div>
+                          <!-- 嘴巴 -->
+                          <div 
+                            class="w-3 h-1.5 border-b-2 border-black rounded-full transition-all duration-300"
+                            :class="cardSummary.recommendation === '高度推薦' ? 'transform rotate-12' : cardSummary.recommendation === '需關注問題' ? 'transform -rotate-12' : ''"
+                          ></div>
+                        </div>
+                        <!-- 耳朵 -->
+                        <div class="absolute -top-1 left-2 w-3 h-4 bg-orange-400 rounded-t-full transform -rotate-12"></div>
+                        <div class="absolute -top-1 right-2 w-3 h-4 bg-orange-400 rounded-t-full transform rotate-12"></div>
+                      </div>
                     </div>
-                    <div class="flex-1">
-                      <h3 class="text-xl font-bold text-slate-800 mb-2">
-                        一鍵分析履歷
+                  </div>
+
+                  <!-- 對話框 -->
+                  <div class="bg-gradient-to-br from-orange-50 via-white to-orange-50 border-2 border-orange-200 rounded-3xl p-6 h-full relative shadow-xl">
+                    <!-- 對話框尾巴 -->
+                    <div class="absolute -top-3 left-12 w-6 h-6 bg-white border-l-2 border-t-2 border-orange-200 transform rotate-45"></div>
+                    
+                    <!-- 標題區域 -->
+                    <div class="pt-8 mb-6">
+                      <h3 class="text-xl font-bold text-orange-800 mb-3 text-center">
+                        🐕 柴犬 AI 分析師
                       </h3>
-                      <div class="flex items-center mb-4">
+                      <div class="flex justify-center mb-4">
                         <span
                           :class="
                             cardSummary.recommendation === '高度推薦'
-                              ? 'bg-green-100 text-green-700 border-green-200'
-                              : 'bg-yellow-100 text-yellow-700 border-yellow-200'
+                              ? 'bg-green-100 text-green-700 border-green-300'
+                              : 'bg-yellow-100 text-yellow-700 border-yellow-300'
                           "
-                          class="px-3 py-1 rounded-full text-sm font-medium border"
+                          class="px-4 py-2 rounded-full text-sm font-bold border-2 shadow-sm"
                         >
                           {{ cardSummary.recommendation }}
                         </span>
                       </div>
-                      <p class="text-slate-600 text-base leading-relaxed mb-6">
-                        {{ cardSummary.analysis }}
-                      </p>
-                      <div class="flex space-x-3">
-                        <button
-                          @click="showQuestionCard"
-                          class="flex-1 bg-gradient-to-r from-[#00afb8] to-[#008a94] text-white px-4 py-3 rounded-lg text-base font-medium action-button"
-                        >
-                          建議問題
-                        </button>
-                        <button
-                          @click="scheduleInterview"
-                          class="flex-1 bg-gradient-to-r from-[#00afb8] to-[#00c4d1] text-white px-4 py-3 rounded-lg text-base font-medium action-button"
-                        >
-                          邀約面試
-                        </button>
+                    </div>
+
+                    <!-- 分析內容 -->
+                    <div class="bg-white/70 rounded-2xl p-4 mb-6 border border-orange-100 shadow-inner">
+                      <div class="text-slate-700 text-base leading-relaxed whitespace-pre-line">
+                        {{ generateAnalysisText() }}
                       </div>
+                    </div>
+
+                    <!-- 讚/倒讚按鈕 -->
+                    <div class="absolute bottom-4 right-4 flex space-x-2">
+                      <button
+                        @click="handleDogFeedback('like')"
+                        class="w-10 h-10 rounded-full transition-all duration-200 transform hover:scale-110 shadow-md"
+                        :class="dogFeedback.liked ? 'bg-green-500 text-white' : 'bg-white text-gray-400 hover:bg-green-50 hover:text-green-500'"
+                      >
+                        👍
+                      </button>
+                      <button
+                        @click="handleDogFeedback('dislike')"
+                        class="w-10 h-10 rounded-full transition-all duration-200 transform hover:scale-110 shadow-md"
+                        :class="dogFeedback.disliked ? 'bg-red-500 text-white' : 'bg-white text-gray-400 hover:bg-red-50 hover:text-red-500'"
+                      >
+                        👎
+                      </button>
+                    </div>
+
+                    <!-- 操作按鈕 -->
+                    <div class="absolute bottom-4 left-4 flex flex-col space-y-2">
+                      <!-- 建議問題按鈕 -->
+                      <button
+                        @click="showQuestionCard"
+                        class="bg-gradient-to-r from-blue-500 to-cyan-500 hover:from-blue-600 hover:to-cyan-600 text-white px-3 py-2 rounded-lg text-xs sm:text-sm font-medium shadow-lg hover:shadow-xl transition-all duration-200 transform hover:scale-105 min-w-[90px]"
+                      >
+                        建議問題
+                      </button>
+
+                      <!-- 邀約面試按鈕 -->
+                      <button
+                        @click="scheduleInterview"
+                        class="bg-gradient-to-r from-indigo-500 to-purple-500 hover:from-indigo-600 hover:to-purple-600 text-white px-3 py-2 rounded-lg text-xs sm:text-sm font-medium shadow-lg hover:shadow-xl transition-all duration-200 transform hover:scale-105 min-w-[90px]"
+                      >
+                        邀約面試
+                      </button>
+                    </div>
+                  </div>
+
+                  <!-- 反饋提示訊息 -->
+                  <div
+                    v-if="dogFeedback.showToast"
+                    class="absolute top-20 left-1/2 transform -translate-x-1/2 bg-orange-500 text-white px-4 py-2 rounded-full shadow-lg z-20 animate-bounce"
+                  >
+                    <div class="text-sm font-medium text-center">
+                      {{ dogFeedback.toastMessage }}
                     </div>
                   </div>
                 </div>
               </div>
 
               <!-- 建議問題卡片 -->
-              <div class="w-[100%] flex-shrink-0 snap-start">
+              <div class="w-[110%] flex-shrink-0">
                 <div
-                  class="bg-gradient-to-br from-white via-purple-50 to-indigo-50 border border-purple-200 rounded-xl p-8 min-h-[200px] summary-card"
+                  class="bg-gradient-to-br from-white via-purple-50 to-indigo-50 border border-purple-200 rounded-xl p-4 sm:p-8 h-[550px] sm:h-[600px] summary-card flex flex-col relative"
                 >
                   <div class="flex items-start mb-6">
                     <div
-                      class="w-10 h-10 bg-purple-100 rounded-full flex items-center justify-center flex-shrink-0 mr-3"
+                      class="w-8 h-8 bg-purple-100 rounded-full flex items-center justify-center flex-shrink-0 mr-2"
                     >
                       <svg
-                        class="w-5 h-5 text-purple-500"
+                        class="w-4 h-4 text-purple-500"
                         fill="none"
                         stroke="currentColor"
                         viewBox="0 0 24 24"
@@ -1500,7 +1660,9 @@ onUnmounted(() => {
                           <span>全部複製</span>
                         </button>
                       </div>
-                      <div class="space-y-3 text-base text-slate-600">
+                      <div
+                        class="space-y-3 text-base text-slate-600 flex-1 overflow-y-auto"
+                      >
                         <div
                           class="flex items-start justify-between group hover:bg-purple-25 rounded-lg p-2 -mx-2 transition-colors duration-200"
                         >
@@ -1645,13 +1807,28 @@ onUnmounted(() => {
                           </button>
                         </div>
                       </div>
-                      <button
-                        @click="backToSummary"
-                        class="mt-6 w-full bg-gradient-to-r from-slate-400 to-slate-500 text-white px-4 py-3 rounded-lg text-base font-medium action-button"
-                      >
-                        返回總結
-                      </button>
                     </div>
+                  </div>
+
+                  <!-- 建議問題卡片內的操作按鈕 -->
+                  <div
+                    class="absolute bottom-3 right-3 flex flex-col space-y-2"
+                  >
+                    <!-- 返回總結按鈕 -->
+                    <button
+                      @click="backToSummary"
+                      class="bg-gradient-to-r from-slate-400 to-slate-500 hover:from-slate-500 hover:to-slate-600 text-white px-2 py-1.5 sm:px-3 sm:py-2 rounded-lg text-xs sm:text-sm font-medium shadow-lg hover:shadow-xl transition-all duration-200 transform hover:scale-105 min-w-[80px] sm:min-w-[100px]"
+                    >
+                      返回總結
+                    </button>
+
+                    <!-- 匯出問題按鈕 -->
+                    <button
+                      @click="copyAllQuestions"
+                      class="bg-gradient-to-r from-purple-500 to-indigo-500 hover:from-purple-600 hover:to-indigo-600 text-white px-2 py-1.5 sm:px-3 sm:py-2 rounded-lg text-xs sm:text-sm font-medium shadow-lg hover:shadow-xl transition-all duration-200 transform hover:scale-105 min-w-[80px] sm:min-w-[100px]"
+                    >
+                      匯出問題
+                    </button>
                   </div>
                 </div>
               </div>
@@ -1680,153 +1857,7 @@ onUnmounted(() => {
           <span>已複製到剪貼板</span>
         </div>
 
-        <!-- 功能選單區 -->
-        <div class="mb-6">
-          <div class="grid grid-cols-2 gap-3">
-            <button
-              @click="switchFunction('job-match')"
-              :class="
-                activeFunction === 'job-match'
-                  ? 'bg-gradient-to-r from-blue-500 to-cyan-500 text-white shadow-md'
-                  : 'bg-white text-slate-600 border border-slate-200 hover:bg-slate-50'
-              "
-              class="p-4 rounded-lg text-left function-button"
-            >
-              <div class="flex items-center">
-                <svg
-                  class="w-5 h-5 mr-2"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                    stroke-width="2"
-                    d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"
-                  ></path>
-                </svg>
-                <div>
-                  <div class="font-medium text-sm">職缺符合度分析</div>
-                </div>
-              </div>
-            </button>
-            <button
-              @click="switchFunction('context-analysis')"
-              :class="
-                activeFunction === 'context-analysis'
-                  ? 'bg-gradient-to-r from-indigo-500 to-purple-500 text-white shadow-md'
-                  : 'bg-white text-slate-600 border border-slate-200 hover:bg-slate-50'
-              "
-              class="p-4 rounded-lg text-left function-button"
-            >
-              <div class="flex items-center">
-                <svg
-                  class="w-5 h-5 mr-2"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                    stroke-width="2"
-                    d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01"
-                  ></path>
-                </svg>
-                <div>
-                  <div class="font-medium text-sm">履歷上下文分析</div>
-                </div>
-              </div>
-            </button>
-            <button
-              @click="switchFunction('timeline')"
-              :class="
-                activeFunction === 'timeline'
-                  ? 'bg-gradient-to-r from-green-500 to-teal-500 text-white shadow-md'
-                  : 'bg-white text-slate-600 border border-slate-200 hover:bg-slate-50'
-              "
-              class="p-4 rounded-lg text-left function-button"
-            >
-              <div class="flex items-center">
-                <svg
-                  class="w-5 h-5 mr-2"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                    stroke-width="2"
-                    d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
-                  ></path>
-                </svg>
-                <div>
-                  <div class="font-medium text-sm">學經歷地圖</div>
-                </div>
-              </div>
-            </button>
-            <button
-              @click="switchFunction('fact-check')"
-              :class="
-                activeFunction === 'fact-check'
-                  ? 'bg-gradient-to-r from-orange-500 to-red-500 text-white shadow-md'
-                  : 'bg-white text-slate-600 border border-slate-200 hover:bg-slate-50'
-              "
-              class="p-4 rounded-lg text-left function-button"
-            >
-              <div class="flex items-center">
-                <svg
-                  class="w-5 h-5 mr-2"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                    stroke-width="2"
-                    d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
-                  ></path>
-                </svg>
-                <div>
-                  <div class="font-medium text-sm">候選人事實查核</div>
-                </div>
-              </div>
-            </button>
-            <button
-              @click="switchFunction('ai-chat')"
-              :class="
-                activeFunction === 'ai-chat'
-                  ? 'bg-gradient-to-r from-pink-500 to-rose-500 text-white shadow-md'
-                  : 'bg-white text-slate-600 border border-slate-200 hover:bg-slate-50'
-              "
-              class="p-4 rounded-lg text-left function-button"
-            >
-              <div class="flex items-center">
-                <svg
-                  class="w-5 h-5 mr-2"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                    stroke-width="2"
-                    d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"
-                  ></path>
-                </svg>
-                <div>
-                  <div class="font-medium text-sm">找人柴 AI 聊天室</div>
-                </div>
-              </div>
-            </button>
-          </div>
-        </div>
-
-        <!-- 內容展示區提示 -->
+        <!-- 分析僅供參考提示 -->
         <div class="mb-6">
           <div
             class="bg-gradient-to-r from-amber-50 to-yellow-50 border border-amber-200 p-4 rounded-xl shadow-sm"
@@ -1851,6 +1882,155 @@ onUnmounted(() => {
             </p>
           </div>
         </div>
+
+        <!-- 功能選單區 -->
+        <div class="mb-6">
+          <div
+            class="grid grid-cols-3 sm:grid-cols-5 gap-2 sm:gap-3 max-w-4xl mx-auto overflow-x-auto"
+          >
+            <button
+              @click="switchFunction('job-match')"
+              :class="
+                activeFunction === 'job-match'
+                  ? 'bg-gradient-to-r from-blue-500 to-cyan-500 text-white shadow-md'
+                  : 'bg-white text-slate-600 border border-slate-200 hover:bg-slate-50'
+              "
+              class="p-2 sm:p-3 rounded-xl aspect-square text-center function-button flex flex-col items-center justify-center"
+            >
+              <div class="flex flex-col items-center">
+                <svg
+                  class="w-5 h-5 sm:w-6 sm:h-6 mb-1 sm:mb-2"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-width="2"
+                    d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"
+                  ></path>
+                </svg>
+                <div class="font-medium text-xs sm:text-sm leading-tight">
+                  職缺符合度
+                </div>
+              </div>
+            </button>
+            <button
+              @click="switchFunction('context-analysis')"
+              :class="
+                activeFunction === 'context-analysis'
+                  ? 'bg-gradient-to-r from-indigo-500 to-purple-500 text-white shadow-md'
+                  : 'bg-white text-slate-600 border border-slate-200 hover:bg-slate-50'
+              "
+              class="p-2 sm:p-3 rounded-xl aspect-square text-center function-button flex flex-col items-center justify-center"
+            >
+              <div class="flex flex-col items-center">
+                <svg
+                  class="w-5 h-5 sm:w-6 sm:h-6 mb-1 sm:mb-2"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-width="2"
+                    d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01"
+                  ></path>
+                </svg>
+                <div class="font-medium text-xs sm:text-sm leading-tight">
+                  上下文分析
+                </div>
+              </div>
+            </button>
+            <button
+              @click="switchFunction('timeline')"
+              :class="
+                activeFunction === 'timeline'
+                  ? 'bg-gradient-to-r from-green-500 to-teal-500 text-white shadow-md'
+                  : 'bg-white text-slate-600 border border-slate-200 hover:bg-slate-50'
+              "
+              class="p-2 sm:p-3 rounded-xl aspect-square text-center function-button flex flex-col items-center justify-center"
+            >
+              <div class="flex flex-col items-center">
+                <svg
+                  class="w-5 h-5 sm:w-6 sm:h-6 mb-1 sm:mb-2"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-width="2"
+                    d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
+                  ></path>
+                </svg>
+                <div class="font-medium text-xs sm:text-sm leading-tight">
+                  學經歷地圖
+                </div>
+              </div>
+            </button>
+            <button
+              @click="switchFunction('fact-check')"
+              :class="
+                activeFunction === 'fact-check'
+                  ? 'bg-gradient-to-r from-orange-500 to-red-500 text-white shadow-md'
+                  : 'bg-white text-slate-600 border border-slate-200 hover:bg-slate-50'
+              "
+              class="p-2 sm:p-3 rounded-xl aspect-square text-center function-button flex flex-col items-center justify-center"
+            >
+              <div class="flex flex-col items-center">
+                <svg
+                  class="w-5 h-5 sm:w-6 sm:h-6 mb-1 sm:mb-2"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-width="2"
+                    d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
+                  ></path>
+                </svg>
+                <div class="font-medium text-xs sm:text-sm leading-tight">
+                  事實查核
+                </div>
+              </div>
+            </button>
+            <button
+              @click="switchFunction('ai-chat')"
+              :class="
+                activeFunction === 'ai-chat'
+                  ? 'bg-gradient-to-r from-pink-500 to-rose-500 text-white shadow-md'
+                  : 'bg-white text-slate-600 border border-slate-200 hover:bg-slate-50'
+              "
+              class="p-2 sm:p-3 rounded-xl aspect-square text-center function-button flex flex-col items-center justify-center"
+            >
+              <div class="flex flex-col items-center">
+                <svg
+                  class="w-5 h-5 sm:w-6 sm:h-6 mb-1 sm:mb-2"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-width="2"
+                    d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"
+                  ></path>
+                </svg>
+                <div class="font-medium text-xs sm:text-sm leading-tight">
+                  AI 聊天室
+                </div>
+              </div>
+            </button>
+          </div>
+        </div>
+
         <!-- 內容展示區 -->
         <div
           class="bg-white/90 backdrop-blur-sm p-4 md:p-6 rounded-xl mb-10 shadow-lg border border-slate-200/50"
@@ -2364,7 +2544,8 @@ onUnmounted(() => {
                         class="w-2 h-2 bg-yellow-500 rounded-full mt-2 flex-shrink-0"
                       ></div>
                       <p class="text-slate-700 leading-relaxed">
-                        僅有2項技能需要補強 (Kubernetes、GraphQL)，建議面試時了解學習意願。
+                        僅有2項技能需要補強
+                        (Kubernetes、GraphQL)，建議面試時了解學習意願。
                       </p>
                     </div>
                     <div class="flex items-start space-x-3">
