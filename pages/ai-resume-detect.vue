@@ -2030,9 +2030,12 @@ onUnmounted(() => {
         </div>
 
         <!-- 功能選單區 -->
-        <div id="advanced-functions" class="mb-6">
+        <div
+          id="advanced-functions"
+          class="sticky -top-6 z-40 bg-white/95 backdrop-blur-sm border-b border-slate-200/50 py-4 mb-6 shadow-sm"
+        >
           <div
-            class="grid grid-cols-3 sm:grid-cols-5 gap-2 sm:gap-3 max-w-4xl mx-auto overflow-x-auto"
+            class="grid grid-cols-3 sm:grid-cols-5 gap-2 sm:gap-3 max-w-4xl mx-auto overflow-x-auto px-4"
           >
             <button
               @click="switchFunction('job-match')"
