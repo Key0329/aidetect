@@ -33,8 +33,8 @@ const isCopied = ref(false);
 // 新增 tab 切換控制變數
 const activeTab = ref("description"); // 可選值: 'description', 'ai', 'fact-check', 'questions', 'chat'
 
-// 新增卡片總結區狀態變數
-const currentCard = ref(0); // 0: 總結卡片, 1: 建議問題卡片
+// 新增卡片總結區狀態變數（暫時保留，未來可能使用）
+// const currentCard = ref(0); // 0: 總結卡片, 1: 建議問題卡片
 const cardSummary = ref({
   recommendation: "高度推薦", // 高度推薦 | 需關注問題
   analysis:
@@ -43,7 +43,7 @@ const cardSummary = ref({
 });
 
 // 新增功能選單狀態變數
-const activeFunction = ref("timeline"); // 可選值: 'job-match', 'timeline', 'fact-check', 'ai-chat'
+const activeFunction = ref("timeline"); // 可選值: 'job-match', 'context-analysis', 'timeline', 'fact-check', 'ai-chat'
 
 // 複製功能狀態管理
 const copiedQuestions = ref(new Set());
@@ -189,7 +189,7 @@ const fallbackCopy = (text) => {
   document.body.removeChild(textArea);
 };
 
-const showCopySuccess = (message = "已複製到剪貼板") => {
+const showCopySuccess = () => {
   showCopyToast.value = true;
   setTimeout(() => {
     showCopyToast.value = false;
@@ -201,7 +201,8 @@ const switchFunction = (funcName) => {
   activeFunction.value = funcName;
   // 根據功能同步切換對應的 tab
   const functionTabMap = {
-    "job-match": "ai",
+    "job-match": "description", // 職缺符合度改為顯示基本描述頁面
+    "context-analysis": "ai", // 履歷上下文分析使用原本的 ai tab
     timeline: "description",
     "fact-check": "fact-check",
     "ai-chat": "chat",
@@ -1711,6 +1712,34 @@ onUnmounted(() => {
               </div>
             </button>
             <button
+              @click="switchFunction('context-analysis')"
+              :class="
+                activeFunction === 'context-analysis'
+                  ? 'bg-gradient-to-r from-indigo-500 to-purple-500 text-white shadow-md'
+                  : 'bg-white text-slate-600 border border-slate-200 hover:bg-slate-50'
+              "
+              class="p-4 rounded-lg text-left function-button"
+            >
+              <div class="flex items-center">
+                <svg
+                  class="w-5 h-5 mr-2"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-width="2"
+                    d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01"
+                  ></path>
+                </svg>
+                <div>
+                  <div class="font-medium text-sm">履歷上下文分析</div>
+                </div>
+              </div>
+            </button>
+            <button
               @click="switchFunction('timeline')"
               :class="
                 activeFunction === 'timeline'
@@ -1770,7 +1799,7 @@ onUnmounted(() => {
               @click="switchFunction('ai-chat')"
               :class="
                 activeFunction === 'ai-chat'
-                  ? 'bg-gradient-to-r from-purple-500 to-pink-500 text-white shadow-md'
+                  ? 'bg-gradient-to-r from-pink-500 to-rose-500 text-white shadow-md'
                   : 'bg-white text-slate-600 border border-slate-200 hover:bg-slate-50'
               "
               class="p-4 rounded-lg text-left function-button"
@@ -2111,10 +2140,308 @@ onUnmounted(() => {
                 </div>
               </div>
             </div>
+
+            <!-- 職缺符合度分析區域 - 只在職缺符合度功能時顯示 -->
+            <div v-show="activeFunction === 'job-match'" class="space-y-6 mt-8">
+              <div
+                class="bg-gradient-to-r from-blue-50 to-cyan-50 border border-blue-200 p-6 rounded-xl shadow-sm"
+              >
+                <h3
+                  class="text-xl font-bold text-slate-800 mb-6 flex items-center"
+                >
+                  <svg
+                    class="w-6 h-6 mr-3 text-blue-600"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      stroke-width="2"
+                      d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"
+                    ></path>
+                  </svg>
+                  職缺符合度分析
+                </h3>
+
+                <!-- 符合度總覽 -->
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+                  <div
+                    class="bg-white rounded-xl p-4 border border-green-200 shadow-sm"
+                  >
+                    <div class="flex items-center justify-between">
+                      <div>
+                        <h4 class="text-sm font-medium text-slate-600">
+                          符合項目
+                        </h4>
+                        <p class="text-2xl font-bold text-green-600 mt-1">
+                          8項
+                        </p>
+                      </div>
+                      <div
+                        class="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center"
+                      >
+                        <svg
+                          class="w-6 h-6 text-green-600"
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                        >
+                          <path
+                            stroke-linecap="round"
+                            stroke-linejoin="round"
+                            stroke-width="2"
+                            d="M5 13l4 4L19 7"
+                          ></path>
+                        </svg>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div
+                    class="bg-white rounded-xl p-4 border border-blue-200 shadow-sm"
+                  >
+                    <div class="flex items-center justify-between">
+                      <div>
+                        <h4 class="text-sm font-medium text-slate-600">
+                          經驗年限
+                        </h4>
+                        <p class="text-2xl font-bold text-blue-600 mt-1">
+                          5/3年
+                        </p>
+                      </div>
+                      <div
+                        class="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center"
+                      >
+                        <svg
+                          class="w-6 h-6 text-blue-600"
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                        >
+                          <path
+                            stroke-linecap="round"
+                            stroke-linejoin="round"
+                            stroke-width="2"
+                            d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
+                          ></path>
+                        </svg>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- 技能比對明細 -->
+                <div class="space-y-6">
+                  <!-- 符合技能 -->
+                  <div
+                    class="bg-white rounded-xl p-6 border border-slate-200 shadow-sm"
+                  >
+                    <h4
+                      class="text-lg font-semibold text-slate-800 mb-4 flex items-center"
+                    >
+                      <div class="w-4 h-4 bg-green-500 rounded-full mr-3"></div>
+                      符合職缺要求的技能 (共8項)
+                    </h4>
+                    <div class="grid grid-cols-2 md:grid-cols-4 gap-3">
+                      <div
+                        class="bg-green-50 border border-green-200 rounded-lg p-3 text-center"
+                      >
+                        <span class="text-green-800 font-medium"
+                          >JavaScript</span
+                        >
+                        <p class="text-xs text-green-600 mt-1">5年經驗</p>
+                      </div>
+                      <div
+                        class="bg-green-50 border border-green-200 rounded-lg p-3 text-center"
+                      >
+                        <span class="text-green-800 font-medium">React</span>
+                        <p class="text-xs text-green-600 mt-1">3年經驗</p>
+                      </div>
+                      <div
+                        class="bg-green-50 border border-green-200 rounded-lg p-3 text-center"
+                      >
+                        <span class="text-green-800 font-medium">Node.js</span>
+                        <p class="text-xs text-green-600 mt-1">4年經驗</p>
+                      </div>
+                      <div
+                        class="bg-green-50 border border-green-200 rounded-lg p-3 text-center"
+                      >
+                        <span class="text-green-800 font-medium">Python</span>
+                        <p class="text-xs text-green-600 mt-1">2年經驗</p>
+                      </div>
+                      <div
+                        class="bg-green-50 border border-green-200 rounded-lg p-3 text-center"
+                      >
+                        <span class="text-green-800 font-medium">MySQL</span>
+                        <p class="text-xs text-green-600 mt-1">3年經驗</p>
+                      </div>
+                      <div
+                        class="bg-green-50 border border-green-200 rounded-lg p-3 text-center"
+                      >
+                        <span class="text-green-800 font-medium">Git</span>
+                        <p class="text-xs text-green-600 mt-1">5年經驗</p>
+                      </div>
+                      <div
+                        class="bg-green-50 border border-green-200 rounded-lg p-3 text-center"
+                      >
+                        <span class="text-green-800 font-medium">Docker</span>
+                        <p class="text-xs text-green-600 mt-1">2年經驗</p>
+                      </div>
+                      <div
+                        class="bg-green-50 border border-green-200 rounded-lg p-3 text-center"
+                      >
+                        <span class="text-green-800 font-medium">AWS</span>
+                        <p class="text-xs text-green-600 mt-1">1年經驗</p>
+                      </div>
+                    </div>
+                  </div>
+
+                  <!-- 缺少技能 -->
+                  <div
+                    class="bg-white rounded-xl p-6 border border-slate-200 shadow-sm"
+                  >
+                    <h4
+                      class="text-lg font-semibold text-slate-800 mb-4 flex items-center"
+                    >
+                      <div class="w-4 h-4 bg-red-500 rounded-full mr-3"></div>
+                      職缺要求但候選人未具備的技能 (共2項)
+                    </h4>
+                    <div class="grid grid-cols-2 md:grid-cols-4 gap-3">
+                      <div
+                        class="bg-red-50 border border-red-200 rounded-lg p-3 text-center"
+                      >
+                        <span class="text-red-800 font-medium">Kubernetes</span>
+                        <p class="text-xs text-red-600 mt-1">職缺要求</p>
+                      </div>
+                      <div
+                        class="bg-red-50 border border-red-200 rounded-lg p-3 text-center"
+                      >
+                        <span class="text-red-800 font-medium">GraphQL</span>
+                        <p class="text-xs text-red-600 mt-1">職缺要求</p>
+                      </div>
+                    </div>
+                  </div>
+
+                  <!-- 加分技能 -->
+                  <div
+                    class="bg-white rounded-xl p-6 border border-slate-200 shadow-sm"
+                  >
+                    <h4
+                      class="text-lg font-semibold text-slate-800 mb-4 flex items-center"
+                    >
+                      <div class="w-4 h-4 bg-blue-500 rounded-full mr-3"></div>
+                      候選人額外具備的技能 (共3項)
+                    </h4>
+                    <div class="grid grid-cols-2 md:grid-cols-4 gap-3">
+                      <div
+                        class="bg-blue-50 border border-blue-200 rounded-lg p-3 text-center"
+                      >
+                        <span class="text-blue-800 font-medium">Django</span>
+                        <p class="text-xs text-blue-600 mt-1">額外技能</p>
+                      </div>
+                      <div
+                        class="bg-blue-50 border border-blue-200 rounded-lg p-3 text-center"
+                      >
+                        <span class="text-blue-800 font-medium">MongoDB</span>
+                        <p class="text-xs text-blue-600 mt-1">額外技能</p>
+                      </div>
+                      <div
+                        class="bg-blue-50 border border-blue-200 rounded-lg p-3 text-center"
+                      >
+                        <span class="text-blue-800 font-medium">Redis</span>
+                        <p class="text-xs text-blue-600 mt-1">額外技能</p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- 推薦建議 -->
+                <div
+                  class="bg-gradient-to-r from-slate-50 to-slate-100 border border-slate-200 rounded-xl p-6 mt-8"
+                >
+                  <h4
+                    class="text-lg font-semibold text-slate-800 mb-3 flex items-center"
+                  >
+                    <svg
+                      class="w-5 h-5 mr-2 text-slate-600"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                        stroke-width="2"
+                        d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"
+                      ></path>
+                    </svg>
+                    AI 分析建議
+                  </h4>
+                  <div class="space-y-3">
+                    <div class="flex items-start space-x-3">
+                      <div
+                        class="w-2 h-2 bg-green-500 rounded-full mt-2 flex-shrink-0"
+                      ></div>
+                      <p class="text-slate-700 leading-relaxed">
+                        候選人符合8項職缺要求，具備核心技能且經驗年限超過最低要求，表現優秀。
+                      </p>
+                    </div>
+                    <div class="flex items-start space-x-3">
+                      <div
+                        class="w-2 h-2 bg-yellow-500 rounded-full mt-2 flex-shrink-0"
+                      ></div>
+                      <p class="text-slate-700 leading-relaxed">
+                        僅有2項技能需要補強 (Kubernetes、GraphQL)，建議面試時了解學習意願。
+                      </p>
+                    </div>
+                    <div class="flex items-start space-x-3">
+                      <div
+                        class="w-2 h-2 bg-blue-500 rounded-full mt-2 flex-shrink-0"
+                      ></div>
+                      <p class="text-slate-700 leading-relaxed">
+                        候選人額外具備3項加分技能，在後端技術方面有優勢，適合全端開發職務。
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
           </div>
 
-          <!-- 分類卡片區域 -->
-          <div v-show="activeTab === 'ai'" class="tab-content space-y-8">
+          <!-- 履歷上下文分析區域 - 只在履歷上下文分析功能時顯示 -->
+          <div
+            v-show="activeTab === 'ai' && activeFunction === 'context-analysis'"
+            class="tab-content space-y-8"
+          >
+            <!-- 履歷上下文分析標題 -->
+            <div
+              class="bg-gradient-to-r from-indigo-50 to-purple-50 border border-indigo-200 p-6 rounded-xl shadow-sm"
+            >
+              <h3
+                class="text-xl font-bold text-slate-800 mb-3 flex items-center"
+              >
+                <svg
+                  class="w-6 h-6 mr-3 text-indigo-600"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-width="2"
+                    d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01"
+                  ></path>
+                </svg>
+                履歷上下文分析
+              </h3>
+              <p class="text-slate-600 leading-relaxed">
+                分析履歷內容的一致性、邏輯性和真實性，檢查是否有矛盾、誇大或不合理的敘述。
+              </p>
+            </div>
+
             <!-- 卡片1：經歷跳躍或邏輯不通 -->
             <div
               class="group bg-white rounded-xl shadow-lg border border-slate-200 hover:shadow-xl transition-all duration-300 overflow-hidden"
