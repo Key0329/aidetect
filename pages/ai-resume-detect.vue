@@ -507,7 +507,7 @@ const handleEscapeKey = (event) => {
 // 開始事實查核流程
 const startFactCheck = async () => {
   if (!resumeInput.value.trim()) {
-    factCheckError.value = "請輸入履歷內容";
+    factCheckError.value = "別忘了把履歷內容貼進來喔 😊";
     return;
   }
 
@@ -2054,7 +2054,7 @@ onUnmounted(() => {
           </div>
           
           <div class="skeleton-pulse text-center mt-6 text-slate-800 text-18px">
-            正在分析履歷內容...
+                              我正在仔細看履歷呢...請稍等一下 ☕
           </div>
         </div>
 
@@ -2252,7 +2252,7 @@ onUnmounted(() => {
                       </div>
                       <!-- 文案區域 -->
                       <p class="text-slate-600 mb-3">
-                        這是我的建議問題，需要我幫忙用訊息詢問求職者，或是幫您下載問題在面試中詢問嗎？
+                        我精心為您準備了一些問題～需要我幫您直接發訊息給候選人，還是想下載下來在面試時使用呢？ 😊
                       </p>
 
                       <!-- 統一問題內容區域 -->
@@ -2557,7 +2557,7 @@ onUnmounted(() => {
               <!-- Loading text -->
               <div class="text-center py-8 skeleton-progressive-5">
                 <div class="skeleton-pulse text-slate-600 text-xl">
-                  正在載入內容...
+                  正在準備內容，馬上就好 ✨
                 </div>
               </div>
             </div>
@@ -3392,7 +3392,7 @@ onUnmounted(() => {
                   v-model="resumeInput"
                   rows="12"
                   class="w-full px-4 py-3 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 text-base leading-relaxed resize-none transition-all duration-200"
-                  placeholder="請貼上候選人的履歷內容，包含姓名、教育背景、工作經歷、技能和成就等資訊..."
+                  placeholder="把候選人的履歷貼在這裡吧～我會仔細幫您分析，包含教育背景、工作經歷、技能等等 📝"
                 ></textarea>
 
                 <!-- 錯誤訊息 -->
@@ -3460,7 +3460,7 @@ onUnmounted(() => {
                         d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
                       ></path>
                     </svg>
-                    {{ isFactChecking ? "處理中..." : "開始事實查核" }}
+                    {{ isFactChecking ? "我在努力分析中..." : "開始AI智慧分析" }}
                   </button>
                   <button
                     v-if="factCheckResult"
@@ -3720,10 +3720,10 @@ onUnmounted(() => {
                     />
                     <div class="ml-4">
                       <p class="text-slate-700 font-medium">
-                        正在處理中，請稍候...
+                        我正在用心分析中...
                       </p>
                       <p class="text-slate-500 text-sm">
-                        我們正在分析您的履歷內容
+                        馬上就能為您提供詳細的分析報告 💪
                       </p>
                     </div>
                   </div>
@@ -4503,18 +4503,21 @@ onUnmounted(() => {
                           />
                         </svg>
                       </div>
-                      <div class="flex items-center space-x-1">
-                        <div
-                          class="w-2 h-2 bg-blue-400 rounded-full animate-bounce"
-                        ></div>
-                        <div
-                          class="w-2 h-2 bg-blue-400 rounded-full animate-bounce"
-                          style="animation-delay: 0.1s"
-                        ></div>
-                        <div
-                          class="w-2 h-2 bg-blue-400 rounded-full animate-bounce"
-                          style="animation-delay: 0.2s"
-                        ></div>
+                      <div class="flex flex-col">
+                        <div class="flex items-center space-x-1 mb-1">
+                          <div
+                            class="w-2 h-2 bg-blue-400 rounded-full animate-bounce"
+                          ></div>
+                          <div
+                            class="w-2 h-2 bg-blue-400 rounded-full animate-bounce"
+                            style="animation-delay: 0.1s"
+                          ></div>
+                          <div
+                            class="w-2 h-2 bg-blue-400 rounded-full animate-bounce"
+                            style="animation-delay: 0.2s"
+                          ></div>
+                        </div>
+                        <span class="text-xs text-gray-500">正在用心思考回覆中...</span>
                       </div>
                     </div>
                   </div>
@@ -4530,7 +4533,7 @@ onUnmounted(() => {
                 <textarea
                   v-model="chatInput"
                   @keydown="handleKeydown"
-                  placeholder="輸入您的問題..."
+                  placeholder="有什麼想聊的嗎？我在這裡陪您 😊"
                   rows="2"
                   class="w-full p-3 pr-12 border border-gray-300 rounded-xl resize-none focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm bg-white shadow-sm transition-all duration-200"
                 ></textarea>
@@ -4585,7 +4588,7 @@ onUnmounted(() => {
                 v-if="chatMessages.length > 0"
                 class="text-xs text-gray-500 hover:text-gray-700 transition-colors px-2 py-1 rounded-md hover:bg-gray-200"
               >
-                清除對話
+                重新開始聊聊 🔄
               </button>
             </div>
           </div>
