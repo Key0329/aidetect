@@ -33,6 +33,7 @@ const isInterviewQuestionsExpanded = ref(false);
 const highlightedElement = ref(null);
 const isCopied = ref(false);
 const showImageModal = ref(false);
+const showInviteModal = ref(false);
 
 // 新增 tab 切換控制變數
 const activeTab = ref("description"); // 可選值: 'description', 'ai', 'fact-check', 'questions', 'chat'
@@ -150,8 +151,8 @@ const backToSummary = () => {
 };
 
 const scheduleInterview = () => {
-  // 邀約面試功能 - 可以導向 HR 信箱或其他邀約流程
-  alert("正在導向面試邀約流程...");
+  // 打開邀約面試彈窗
+  openInviteModal();
 };
 
 // 柴犬反饋處理函數
@@ -375,10 +376,32 @@ const closeImageModal = () => {
   document.removeEventListener('keydown', handleEscapeKey);
 };
 
+// 打開邀約面試彈窗
+const openInviteModal = () => {
+  showInviteModal.value = true;
+  // 防止背景滾動
+  document.body.style.overflow = 'hidden';
+  // 添加鍵盤事件監聽器
+  document.addEventListener('keydown', handleEscapeKey);
+};
+
+// 關閉邀約面試彈窗
+const closeInviteModal = () => {
+  showInviteModal.value = false;
+  // 恢復背景滾動
+  document.body.style.overflow = 'auto';
+  // 移除鍵盤事件監聽器
+  document.removeEventListener('keydown', handleEscapeKey);
+};
+
 // 處理 ESC 鍵關閉模態框
 const handleEscapeKey = (event) => {
   if (event.key === 'Escape') {
-    closeImageModal();
+    if (showInviteModal.value) {
+      closeInviteModal();
+    } else if (showImageModal.value) {
+      closeImageModal();
+    }
   }
 };
 
@@ -4333,6 +4356,24 @@ onUnmounted(() => {
         </button>
       </div>
     </div>
+
+    <!-- 邀約面試彈窗 -->
+    <div v-if="showInviteModal" class="invite-modal-overlay" @click="closeInviteModal">
+      <div class="invite-modal-content" @click.stop>
+        <img
+          src="@/assets/images/ai/invite.png"
+          alt="邀約面試"
+          class="invite-modal-image"
+        >
+        <button
+          class="invite-modal-close"
+          title="關閉"
+          @click="closeInviteModal"
+        >
+          ×
+        </button>
+      </div>
+    </div>
   </div>
 </template>
 
@@ -4478,6 +4519,59 @@ main {
 }
 
 .image-modal-close:hover {
+  background-color: rgba(0, 0, 0, 0.8);
+}
+
+/* 邀約面試彈窗樣式 */
+.invite-modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.8);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 9999;
+  backdrop-filter: blur(4px);
+}
+
+.invite-modal-content {
+  position: relative;
+  max-width: 95vw;
+  max-height: 95vh;
+  border-radius: 8px;
+  overflow: hidden;
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+}
+
+.invite-modal-image {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
+.invite-modal-close {
+  position: absolute;
+  top: 16px;
+  right: 16px;
+  background-color: rgba(0, 0, 0, 0.6);
+  color: white;
+  border: none;
+  border-radius: 50%;
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  font-size: 20px;
+  font-weight: bold;
+  transition: background-color 0.2s ease;
+}
+
+.invite-modal-close:hover {
   background-color: rgba(0, 0, 0, 0.8);
 }
 

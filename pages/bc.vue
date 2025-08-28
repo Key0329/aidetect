@@ -3,14 +3,10 @@
 <template>
   <divå>
     <div
-      class="BC flex flex-col items-center justify-center min-h-screen h-full w-full"
+      class="BC flex flex-col items-start justify-end min-h-screen h-full w-full"
     >
-      <!-- <img
-        src="@/assets/images/ai/bc-communicator.png"
-        alt=""
-      > -->
+      <NuxtLink to="/ai-resume-detect" class="text-[48px]"> 返回 </NuxtLink>
     </div>
-    <NuxtLink to="/ai-resume-detect"> 返回 </NuxtLink>
   </divå>
 </template>
 
