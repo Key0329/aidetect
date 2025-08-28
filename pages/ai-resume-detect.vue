@@ -1559,7 +1559,7 @@ onUnmounted(() => {
         class="drawer-header bg-white/50 backdrop-blur border-b border-slate-200 px-6 py-2 flex justify-between items-center ml-1"
       >
         <h2
-          class="text-2xl font-bold m-0 text-slate-800 truncate flex items-center"
+          class="text-3xl font-bold m-0 text-slate-800 truncate flex items-center"
         >
           <svg
             class="w-6 h-6 mr-2 text-primary-400"
@@ -1876,7 +1876,7 @@ onUnmounted(() => {
                         <div
                           class="relative bg-gradient-to-r from-emerald-500 to-cyan-500 text-white px-3 py-2 rounded-xl shadow-lg"
                         >
-                          <div class="text-xs font-medium whitespace-nowrap">
+                          <div class="text-sm font-medium whitespace-nowrap">
                             {{ dogFeedback.toastMessage }}
                           </div>
                           <!-- 對話泡泡尾巴指向柴犬 -->
@@ -1910,7 +1910,7 @@ onUnmounted(() => {
                       class="bg-white/70 rounded-2xl p-4 mb-6 border border-cyan-100 shadow-inner"
                     >
                       <div
-                        class="text-slate-700 text-base leading-relaxed whitespace-pre-line"
+                        class="text-slate-700 text-lg leading-relaxed whitespace-pre-line"
                       >
                         {{ generateAnalysisText() }}
                       </div>
@@ -1966,7 +1966,7 @@ onUnmounted(() => {
                       <!-- 建議問題按鈕 -->
                       <button
                         @click="showQuestionCard"
-                        class="bg-gradient-to-r from-cyan-500 to-teal-500 hover:from-cyan-600 hover:to-teal-600 text-white px-3 py-2 rounded-lg text-xs sm:text-sm font-medium shadow-lg hover:shadow-xl transition-all duration-200 transform hover:scale-105 min-w-[90px]"
+                        class="bg-gradient-to-r from-cyan-500 to-teal-500 hover:from-cyan-600 hover:to-teal-600 text-white px-3 py-2 rounded-lg text-sm sm:text-base font-medium shadow-lg hover:shadow-xl transition-all duration-200 transform hover:scale-105 min-w-[90px]"
                       >
                         建議問題
                       </button>
@@ -1974,7 +1974,7 @@ onUnmounted(() => {
                       <!-- 邀約面試按鈕 -->
                       <button
                         @click="scheduleInterview"
-                        class="bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600 text-white px-3 py-2 rounded-lg text-xs sm:text-sm font-medium shadow-lg hover:shadow-xl transition-all duration-200 transform hover:scale-105 min-w-[90px]"
+                        class="bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600 text-white px-3 py-2 rounded-lg text-sm sm:text-base font-medium shadow-lg hover:shadow-xl transition-all duration-200 transform hover:scale-105 min-w-[90px]"
                       >
                         邀約面試
                       </button>
@@ -1992,7 +1992,7 @@ onUnmounted(() => {
                     <div class="flex-1">
                       <div class="flex items-center justify-between mb-4">
                         <div class="flex items-center gap-2">
-                          <h3 class="text-xl font-bold text-slate-800 my-0">
+                          <h3 class="text-2xl font-bold text-slate-800 my-0">
                             建議問題範本
                           </h3>
                           <div
@@ -2016,7 +2016,7 @@ onUnmounted(() => {
                         <!-- 返回總結按鈕 -->
                         <button
                           @click="backToSummary"
-                          class="bg-gradient-to-r from-slate-400 to-slate-500 hover:from-slate-500 hover:to-slate-600 text-white px-3 py-1.5 rounded-lg text-sm font-medium shadow-md hover:shadow-lg transition-all duration-200"
+                          class="bg-gradient-to-r from-slate-400 to-slate-500 hover:from-slate-500 hover:to-slate-600 text-white px-3 py-1.5 rounded-lg text-base font-medium shadow-md hover:shadow-lg transition-all duration-200"
                         >
                           返回總結
                         </button>
@@ -2027,7 +2027,7 @@ onUnmounted(() => {
                       </p>
 
                       <!-- 統一問題內容區域 -->
-                      <div class="flex-1 text-base text-slate-600">
+                      <div class="flex-1 text-lg text-slate-600">
                         <div
                           class="bg-white border border-gray-200 rounded-lg p-4 shadow-sm relative cursor-pointer hover:shadow-md transition-shadow duration-200"
                           @click="copyAllQuestions"
@@ -2065,7 +2065,7 @@ onUnmounted(() => {
                     <!-- 問問全職者按鈕 -->
                     <button
                       @click="askFullTimer"
-                      class="bg-gradient-to-r from-cyan-500 to-teal-500 hover:from-cyan-600 hover:to-teal-600 text-white px-4 py-2 rounded-lg text-sm font-medium shadow-md hover:shadow-lg transition-all duration-200 flex items-center gap-2"
+                      class="bg-gradient-to-r from-cyan-500 to-teal-500 hover:from-cyan-600 hover:to-teal-600 text-white px-4 py-2 rounded-lg text-base font-medium shadow-md hover:shadow-lg transition-all duration-200 flex items-center gap-2"
                     >
                       <svg
                         class="w-4 h-4"
@@ -2131,11 +2131,11 @@ onUnmounted(() => {
                     d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
                   ></path>
                 </svg>
-                <span class="text-sm font-medium text-slate-700"
+                <span class="text-base font-medium text-slate-700"
                   >以上內容有幫助嗎？</span
                 >
               </div>
-              <span class="text-sm text-slate-500 mt-1 text-center"
+              <span class="text-base text-slate-500 mt-1 text-center"
                 >需要我幫你再呈現更詳細的資料嗎，或許你想看：</span
               >
             </div>
@@ -2173,7 +2173,7 @@ onUnmounted(() => {
                     d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"
                   ></path>
                 </svg>
-                <div class="font-medium text-xs sm:text-sm leading-tight">
+                <div class="font-medium text-sm sm:text-base leading-tight">
                   履歷符合度
                 </div>
               </div>
@@ -2201,7 +2201,7 @@ onUnmounted(() => {
                     d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01"
                   ></path>
                 </svg>
-                <div class="font-medium text-xs sm:text-sm leading-tight">
+                <div class="font-medium text-sm sm:text-base leading-tight">
                   上下文分析
                 </div>
               </div>
@@ -2229,7 +2229,7 @@ onUnmounted(() => {
                     d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
                   ></path>
                 </svg>
-                <div class="font-medium text-xs sm:text-sm leading-tight">
+                <div class="font-medium text-sm sm:text-base leading-tight">
                   學經歷地圖
                 </div>
               </div>
@@ -2257,7 +2257,7 @@ onUnmounted(() => {
                     d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
                   ></path>
                 </svg>
-                <div class="font-medium text-xs sm:text-sm leading-tight">
+                <div class="font-medium text-sm sm:text-base leading-tight">
                   公開平台資訊
                 </div>
               </div>
@@ -2285,7 +2285,7 @@ onUnmounted(() => {
                     d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"
                   ></path>
                 </svg>
-                <div class="font-medium text-xs sm:text-sm leading-tight">
+                <div class="font-medium text-sm sm:text-base leading-tight">
                   AI 聊天室
                 </div>
               </div>
@@ -2327,7 +2327,7 @@ onUnmounted(() => {
               
               <!-- Loading text -->
               <div class="text-center py-8 skeleton-progressive-5">
-                <div class="skeleton-pulse text-slate-600 text-lg">
+                <div class="skeleton-pulse text-slate-600 text-xl">
                   正在載入內容...
                 </div>
               </div>
@@ -2371,9 +2371,9 @@ onUnmounted(() => {
                       ></path>
                     </svg>
                   </div>
-                  <h3 class="text-xl font-bold text-gray-800 mb-0">符合分析</h3>
+                  <h3 class="text-2xl font-bold text-gray-800 mb-0">符合分析</h3>
                   <span
-                    class="ml-4 inline-flex items-center bg-cyan-100 text-cyan-800 px-3 py-1 rounded-full text-sm font-semibold"
+                    class="ml-4 inline-flex items-center bg-cyan-100 text-cyan-800 px-3 py-1 rounded-full text-base font-semibold"
                   >
                     20項條件符合
                   </span>
@@ -2387,39 +2387,39 @@ onUnmounted(() => {
               <div class="space-y-6">
                 <!-- 學歷分析 -->
                 <div>
-                  <h3 class="text-lg font-bold text-gray-800 mb-3">
+                  <h3 class="text-xl font-bold text-gray-800 mb-3">
                     學歷 <span class="text-green-600">符合</span>
                   </h3>
                   <div class="space-y-3">
                     <div>
-                      <h4 class="text-sm font-semibold text-gray-700 mb-2">
+                      <h4 class="text-base font-semibold text-gray-700 mb-2">
                         符合項目
                       </h4>
                       <div class="flex flex-wrap gap-2">
                         <span
-                          class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-green-100 text-green-800"
+                          class="inline-flex items-center px-3 py-1 rounded-full text-base font-medium bg-green-100 text-green-800"
                         >
                           大學
                         </span>
                       </div>
                     </div>
                     <div>
-                      <h4 class="text-sm font-semibold text-gray-700 mb-2">
+                      <h4 class="text-base font-semibold text-gray-700 mb-2">
                         不符合
                       </h4>
                       <div class="flex flex-wrap gap-2">
                         <span
-                          class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-slate-100 text-slate-600"
+                          class="inline-flex items-center px-3 py-1 rounded-full text-base font-medium bg-slate-100 text-slate-600"
                         >
                           資訊工程科系
                         </span>
                         <span
-                          class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-slate-100 text-slate-600"
+                          class="inline-flex items-center px-3 py-1 rounded-full text-base font-medium bg-slate-100 text-slate-600"
                         >
                           碩士
                         </span>
                         <span
-                          class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-slate-100 text-slate-600"
+                          class="inline-flex items-center px-3 py-1 rounded-full text-base font-medium bg-slate-100 text-slate-600"
                         >
                           AWS
                         </span>
@@ -2430,7 +2430,7 @@ onUnmounted(() => {
 
                 <!-- 經歷分析 -->
                 <div>
-                  <h3 class="text-lg font-bold text-gray-800 mb-3">
+                  <h3 class="text-xl font-bold text-gray-800 mb-3">
                     經歷 <span class="text-green-600">符合</span>
                   </h3>
                   <div>
@@ -2449,84 +2449,84 @@ onUnmounted(() => {
 
                 <!-- 技能分析 -->
                 <div>
-                  <h3 class="text-lg font-bold text-gray-800 mb-3">
+                  <h3 class="text-xl font-bold text-gray-800 mb-3">
                     技能 <span class="text-green-600">符合</span>
                   </h3>
                   <div class="space-y-3">
                     <div>
-                      <h4 class="text-sm font-semibold text-gray-700 mb-2">
+                      <h4 class="text-base font-semibold text-gray-700 mb-2">
                         符合項目
                       </h4>
                       <div class="flex flex-wrap gap-2">
                         <span
-                          class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-green-100 text-green-800"
+                          class="inline-flex items-center px-3 py-1 rounded-full text-base font-medium bg-green-100 text-green-800"
                         >
                           Vue
                         </span>
                         <span
-                          class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-green-100 text-green-800"
+                          class="inline-flex items-center px-3 py-1 rounded-full text-base font-medium bg-green-100 text-green-800"
                         >
                           JavaScript
                         </span>
                         <span
-                          class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-green-100 text-green-800"
+                          class="inline-flex items-center px-3 py-1 rounded-full text-base font-medium bg-green-100 text-green-800"
                         >
                           HTML
                         </span>
                         <span
-                          class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-green-100 text-green-800"
+                          class="inline-flex items-center px-3 py-1 rounded-full text-base font-medium bg-green-100 text-green-800"
                         >
                           CSS
                         </span>
                         <span
-                          class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-green-100 text-green-800"
+                          class="inline-flex items-center px-3 py-1 rounded-full text-base font-medium bg-green-100 text-green-800"
                         >
                           網站開發經驗
                         </span>
                         <span
-                          class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-green-100 text-green-800"
+                          class="inline-flex items-center px-3 py-1 rounded-full text-base font-medium bg-green-100 text-green-800"
                         >
                           API 串接
                         </span>
                         <span
-                          class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-green-100 text-green-800"
+                          class="inline-flex items-center px-3 py-1 rounded-full text-base font-medium bg-green-100 text-green-800"
                         >
                           Github
                         </span>
                         <span
-                          class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-green-100 text-green-800"
+                          class="inline-flex items-center px-3 py-1 rounded-full text-base font-medium bg-green-100 text-green-800"
                         >
                           JWT
                         </span>
                         <span
-                          class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-green-100 text-green-800"
+                          class="inline-flex items-center px-3 py-1 rounded-full text-base font-medium bg-green-100 text-green-800"
                         >
                           Docker
                         </span>
                         <span
-                          class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-green-100 text-green-800"
+                          class="inline-flex items-center px-3 py-1 rounded-full text-base font-medium bg-green-100 text-green-800"
                         >
                           Vitest
                         </span>
                       </div>
                     </div>
                     <div>
-                      <h4 class="text-sm font-semibold text-gray-700 mb-2">
+                      <h4 class="text-base font-semibold text-gray-700 mb-2">
                         不符合
                       </h4>
                       <div class="flex flex-wrap gap-2">
                         <span
-                          class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-slate-100 text-slate-600"
+                          class="inline-flex items-center px-3 py-1 rounded-full text-base font-medium bg-slate-100 text-slate-600"
                         >
                           Node
                         </span>
                         <span
-                          class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-slate-100 text-slate-600"
+                          class="inline-flex items-center px-3 py-1 rounded-full text-base font-medium bg-slate-100 text-slate-600"
                         >
                           MySQL
                         </span>
                         <span
-                          class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-slate-100 text-slate-600"
+                          class="inline-flex items-center px-3 py-1 rounded-full text-base font-medium bg-slate-100 text-slate-600"
                         >
                           AWS
                         </span>
@@ -2537,49 +2537,49 @@ onUnmounted(() => {
 
                 <!-- 期望條件分析 -->
                 <div>
-                  <h3 class="text-lg font-bold text-gray-800 mb-3">
+                  <h3 class="text-xl font-bold text-gray-800 mb-3">
                     期望 <span class="text-green-600">非常符合</span>
                   </h3>
                   <div class="space-y-3">
                     <div>
-                      <h4 class="text-sm font-semibold text-gray-700 mb-2">
+                      <h4 class="text-base font-semibold text-gray-700 mb-2">
                         符合項目
                       </h4>
                       <div class="flex flex-wrap gap-2">
                         <span
-                          class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-green-100 text-green-800"
+                          class="inline-flex items-center px-3 py-1 rounded-full text-base font-medium bg-green-100 text-green-800"
                         >
                           全職
                         </span>
                         <span
-                          class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-green-100 text-green-800"
+                          class="inline-flex items-center px-3 py-1 rounded-full text-base font-medium bg-green-100 text-green-800"
                         >
                           軟體工程師
                         </span>
                         <span
-                          class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-green-100 text-green-800"
+                          class="inline-flex items-center px-3 py-1 rounded-full text-base font-medium bg-green-100 text-green-800"
                         >
                           週休二日
                         </span>
                         <span
-                          class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-green-100 text-green-800"
+                          class="inline-flex items-center px-3 py-1 rounded-full text-base font-medium bg-green-100 text-green-800"
                         >
                           新北市
                         </span>
                         <span
-                          class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-green-100 text-green-800"
+                          class="inline-flex items-center px-3 py-1 rounded-full text-base font-medium bg-green-100 text-green-800"
                         >
                           日班
                         </span>
                       </div>
                     </div>
                     <div>
-                      <h4 class="text-sm font-semibold text-gray-700 mb-2">
+                      <h4 class="text-base font-semibold text-gray-700 mb-2">
                         不符合
                       </h4>
                       <div class="flex flex-wrap gap-2">
                         <span
-                          class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-slate-100 text-slate-600"
+                          class="inline-flex items-center px-3 py-1 rounded-full text-base font-medium bg-slate-100 text-slate-600"
                         >
                           全端工程師
                         </span>
@@ -2611,7 +2611,7 @@ onUnmounted(() => {
                       ></path>
                     </svg>
                   </div>
-                  <h3 class="text-xl font-bold text-gray-800 mb-0">
+                  <h3 class="text-2xl font-bold text-gray-800 mb-0">
                     面試聚焦建議
                   </h3>
                 </div>
@@ -2640,7 +2640,7 @@ onUnmounted(() => {
               class="bg-gradient-to-r from-indigo-50 to-purple-50 border border-indigo-200 p-4 rounded-xl shadow-sm"
             >
               <h3
-                class="text-xl font-bold text-slate-800 mb-3 flex items-center"
+                class="text-2xl font-bold text-slate-800 mb-3 flex items-center"
               >
                 <svg
                   class="w-6 h-6 mr-3 text-indigo-600"
@@ -2692,15 +2692,15 @@ onUnmounted(() => {
                       </div>
                     </div>
                     <div>
-                      <h3 class="text-xl font-bold text-slate-900 mb-1">
+                      <h3 class="text-2xl font-bold text-slate-900 mb-1">
                         經歷跳躍或邏輯不通
                       </h3>
                       <div class="flex items-center space-x-2">
                         <span
-                          class="inline-flex items-center px-2 py-1 rounded-md text-xs font-medium bg-orange-100 text-orange-800"
+                          class="inline-flex items-center px-2 py-1 rounded-md text-sm font-medium bg-orange-100 text-orange-800"
                           >高風險</span
                         >
-                        <span class="text-sm text-slate-500"
+                        <span class="text-base text-slate-500"
                           >邏輯一致性分析</span
                         >
                       </div>
@@ -2767,7 +2767,7 @@ onUnmounted(() => {
                 <!-- 履歷內文區塊 -->
                 <div class="mb-6">
                   <h4
-                    class="text-sm font-semibold text-slate-900 mb-3 flex items-center"
+                    class="text-base font-semibold text-slate-900 mb-3 flex items-center"
                   >
                     <svg
                       class="w-4 h-4 mr-2 text-slate-500"
@@ -2859,15 +2859,15 @@ onUnmounted(() => {
                       </div>
                     </div>
                     <div>
-                      <h3 class="text-xl font-bold text-slate-900 mb-1">
+                      <h3 class="text-2xl font-bold text-slate-900 mb-1">
                         堆砌熱門關鍵字但缺乏上下文
                       </h3>
                       <div class="flex items-center space-x-2">
                         <span
-                          class="inline-flex items-center px-2 py-1 rounded-md text-xs font-medium bg-yellow-100 text-yellow-800"
+                          class="inline-flex items-center px-2 py-1 rounded-md text-sm font-medium bg-yellow-100 text-yellow-800"
                           >中風險</span
                         >
-                        <span class="text-sm text-slate-500">技術深度分析</span>
+                        <span class="text-base text-slate-500">技術深度分析</span>
                       </div>
                     </div>
                   </div>
@@ -2932,7 +2932,7 @@ onUnmounted(() => {
                 <!-- 履歷內文區塊 -->
                 <div class="mb-6">
                   <h4
-                    class="text-sm font-semibold text-slate-900 mb-3 flex items-center"
+                    class="text-base font-semibold text-slate-900 mb-3 flex items-center"
                   >
                     <svg
                       class="w-4 h-4 mr-2 text-slate-500"
@@ -3110,15 +3110,15 @@ onUnmounted(() => {
                       </div>
                     </div>
                     <div>
-                      <h3 class="text-xl font-bold text-slate-900 mb-1">
+                      <h3 class="text-2xl font-bold text-slate-900 mb-1">
                         敘述抽象、缺乏細節
                       </h3>
                       <div class="flex items-center space-x-2">
                         <span
-                          class="inline-flex items-center px-2 py-1 rounded-md text-xs font-medium bg-blue-100 text-blue-800"
+                          class="inline-flex items-center px-2 py-1 rounded-md text-sm font-medium bg-blue-100 text-blue-800"
                           >中風險</span
                         >
-                        <span class="text-sm text-slate-500">內容品質分析</span>
+                        <span class="text-base text-slate-500">內容品質分析</span>
                       </div>
                     </div>
                   </div>
@@ -3183,7 +3183,7 @@ onUnmounted(() => {
                 <!-- 履歷內文區塊 -->
                 <div class="mb-6">
                   <h4
-                    class="text-sm font-semibold text-slate-900 mb-3 flex items-center"
+                    class="text-base font-semibold text-slate-900 mb-3 flex items-center"
                   >
                     <svg
                       class="w-4 h-4 mr-2 text-slate-500"
@@ -3319,7 +3319,7 @@ onUnmounted(() => {
                   </div>
                 </div>
                 <div class="flex-1">
-                  <h3 class="text-xl font-bold text-emerald-900 mb-2">
+                  <h3 class="text-2xl font-bold text-emerald-900 mb-2">
                     智能履歷事實查核
                   </h3>
                   <p class="text-slate-700 leading-relaxed mb-0">
@@ -3351,7 +3351,7 @@ onUnmounted(() => {
                       d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
                     ></path>
                   </svg>
-                  <h4 class="text-lg font-semibold text-slate-900">履歷內容</h4>
+                  <h4 class="text-xl font-semibold text-slate-900">履歷內容</h4>
                 </div>
               </div>
 
@@ -3359,7 +3359,7 @@ onUnmounted(() => {
                 <textarea
                   v-model="resumeInput"
                   rows="12"
-                  class="w-full px-4 py-3 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 text-sm leading-relaxed resize-none transition-all duration-200"
+                  class="w-full px-4 py-3 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 text-base leading-relaxed resize-none transition-all duration-200"
                   placeholder="請貼上候選人的履歷內容，包含姓名、教育背景、工作經歷、技能和成就等資訊..."
                 ></textarea>
 
@@ -3382,7 +3382,7 @@ onUnmounted(() => {
                         d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
                       ></path>
                     </svg>
-                    <p class="text-red-700 text-sm font-medium">
+                    <p class="text-red-700 text-base font-medium">
                       {{ factCheckError }}
                     </p>
                   </div>
@@ -3487,7 +3487,7 @@ onUnmounted(() => {
                       />
                     </svg>
                   </div>
-                  <h3 class="text-xl font-bold text-slate-900">事實查核進度</h3>
+                  <h3 class="text-2xl font-bold text-slate-900">事實查核進度</h3>
                 </div>
               </div>
 
@@ -3497,7 +3497,7 @@ onUnmounted(() => {
                   <!-- 步驟 1 -->
                   <div class="flex flex-col items-center">
                     <div
-                      class="w-10 h-10 rounded-full flex items-center justify-center text-white text-sm font-bold shadow-md transition-all duration-300"
+                      class="w-10 h-10 rounded-full flex items-center justify-center text-white text-base font-bold shadow-md transition-all duration-300"
                       :class="
                         factCheckProgress >= 1
                           ? 'bg-gradient-to-br from-emerald-400 to-teal-500'
@@ -3521,7 +3521,7 @@ onUnmounted(() => {
                       <span v-else>1</span>
                     </div>
                     <span
-                      class="mt-2 text-sm font-medium text-center"
+                      class="mt-2 text-base font-medium text-center"
                       :class="
                         factCheckProgress >= 1
                           ? 'text-emerald-600'
@@ -3545,7 +3545,7 @@ onUnmounted(() => {
                   <!-- 步驟 2 -->
                   <div class="flex flex-col items-center">
                     <div
-                      class="w-10 h-10 rounded-full flex items-center justify-center text-white text-sm font-bold shadow-md transition-all duration-300"
+                      class="w-10 h-10 rounded-full flex items-center justify-center text-white text-base font-bold shadow-md transition-all duration-300"
                       :class="
                         factCheckProgress >= 2
                           ? 'bg-gradient-to-br from-emerald-400 to-teal-500'
@@ -3569,7 +3569,7 @@ onUnmounted(() => {
                       <span v-else>2</span>
                     </div>
                     <span
-                      class="mt-2 text-sm font-medium text-center"
+                      class="mt-2 text-base font-medium text-center"
                       :class="
                         factCheckProgress >= 2
                           ? 'text-emerald-600'
@@ -3593,7 +3593,7 @@ onUnmounted(() => {
                   <!-- 步驟 3 -->
                   <div class="flex flex-col items-center">
                     <div
-                      class="w-10 h-10 rounded-full flex items-center justify-center text-white text-sm font-bold shadow-md transition-all duration-300"
+                      class="w-10 h-10 rounded-full flex items-center justify-center text-white text-base font-bold shadow-md transition-all duration-300"
                       :class="
                         factCheckProgress >= 3
                           ? 'bg-gradient-to-br from-emerald-400 to-teal-500'
@@ -3617,7 +3617,7 @@ onUnmounted(() => {
                       <span v-else>3</span>
                     </div>
                     <span
-                      class="mt-2 text-sm font-medium text-center"
+                      class="mt-2 text-base font-medium text-center"
                       :class="
                         factCheckProgress >= 3
                           ? 'text-emerald-600'
@@ -3641,7 +3641,7 @@ onUnmounted(() => {
                   <!-- 步驟 4 -->
                   <div class="flex flex-col items-center">
                     <div
-                      class="w-10 h-10 rounded-full flex items-center justify-center text-white text-sm font-bold shadow-md transition-all duration-300"
+                      class="w-10 h-10 rounded-full flex items-center justify-center text-white text-base font-bold shadow-md transition-all duration-300"
                       :class="
                         factCheckProgress >= 4
                           ? 'bg-gradient-to-br from-emerald-400 to-teal-500'
@@ -3665,7 +3665,7 @@ onUnmounted(() => {
                       <span v-else>4</span>
                     </div>
                     <span
-                      class="mt-2 text-sm font-medium text-center"
+                      class="mt-2 text-base font-medium text-center"
                       :class="
                         factCheckProgress >= 4
                           ? 'text-emerald-600'
