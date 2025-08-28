@@ -1,9 +1,11 @@
 <script setup>
 import { ref, computed, onMounted, onUnmounted } from "vue";
+import { useRouter } from "vue-router";
 
 const showAIDetectDrawer = ref(false);
 const sidebarWidth = ref(400); // 側邊欄寬度，將在 onMounted 中設定為螢幕三分之一
 const isResizing = ref(false);
+const router = useRouter();
 
 // 響應式側邊欄寬度計算
 const getResponsiveSidebarWidth = () => {
@@ -214,8 +216,6 @@ const getQuestionTemplate = () => {
 
 2. 您列出精通多種技術如Python、JavaScript和Java等，能否分享一個您最熟悉的技術棧，以及一個您使用這些技術解決的最具挑戰性問題？
 
-3. 關於數位轉型平台專案，您提到降低了40%的運營成本，這個數據是如何計算的？過程中遇到了哪些主要困難，您是如何解決的？
-
 感謝您的配合！您的回覆將幫助我們更好地準備面試內容。期待您的回音，也期待不久後與您見面交流。`;
 };
 
@@ -258,6 +258,7 @@ const askFullTimer = () => {
   console.log("問問全職者功能");
   // 可以切換到聊天功能
   activeTab.value = "chat";
+  router.push("/bc");
 };
 
 // 下載問題範本功能
@@ -265,17 +266,17 @@ const downloadQuestionTemplate = () => {
   const templateText = getQuestionTemplate();
   const blob = new Blob([templateText], { type: "text/plain;charset=utf-8" });
   const url = URL.createObjectURL(blob);
-  
+
   const link = document.createElement("a");
   link.href = url;
   link.download = "面試問題範本.txt";
   document.body.appendChild(link);
   link.click();
   document.body.removeChild(link);
-  
+
   // 清理 URL 物件
   URL.revokeObjectURL(url);
-  
+
   // 顯示下載成功提示
   console.log("問題範本已下載");
 };
@@ -681,14 +682,53 @@ const handleKeydown = (event) => {
   }
 };
 
+// 滾動條顯示邏輯
+const setupScrollbarVisibility = () => {
+  const scrollableElements = document.querySelectorAll(".scrollbar-auto");
+
+  scrollableElements.forEach((element) => {
+    let scrollTimeout;
+
+    const handleScroll = () => {
+      element.classList.add("scrolling");
+
+      clearTimeout(scrollTimeout);
+      scrollTimeout = setTimeout(() => {
+        element.classList.remove("scrolling");
+      }, 1000); // 1秒後隱藏滾動條
+    };
+
+    element.addEventListener("scroll", handleScroll);
+
+    // 清理函數
+    element._cleanupScrollListener = () => {
+      element.removeEventListener("scroll", handleScroll);
+      clearTimeout(scrollTimeout);
+    };
+  });
+};
+
 // 生命週期 hooks
 onMounted(() => {
   initSidebarWidth();
   window.addEventListener("resize", handleWindowResize);
+
+  // 初始化滾動條可見性
+  setTimeout(() => {
+    setupScrollbarVisibility();
+  }, 100);
 });
 
 onUnmounted(() => {
   window.removeEventListener("resize", handleWindowResize);
+
+  // 清理滾動事件監聽器
+  const scrollableElements = document.querySelectorAll(".scrollbar-auto");
+  scrollableElements.forEach((element) => {
+    if (element._cleanupScrollListener) {
+      element._cleanupScrollListener();
+    }
+  });
 });
 </script>
 
@@ -1434,7 +1474,9 @@ onUnmounted(() => {
           &times;
         </button>
       </div>
-      <div class="drawer-body p-6 overflow-y-auto h-[calc(100%-88px)] ml-1">
+      <div
+        class="drawer-body p-6 overflow-y-auto h-[calc(100%-88px)] ml-1 scrollbar-auto"
+      >
         <!-- Skeleton loading -->
         <div v-if="isLoading" class="skeleton-container">
           <div class="flex items-center mb-8">
@@ -1521,7 +1563,7 @@ onUnmounted(() => {
           <!-- 卡片總結區 -->
           <div class="mb-6">
             <!-- 卡片容器 -->
-            <div class="rounded-xl h-[500px] overflow-y-auto">
+            <div class="rounded-xl h-[470px] overflow-y-auto scrollbar-auto">
               <!-- 總結卡片 -->
               <div v-show="currentCard === 0" class="w-full h-full">
                 <div class="relative h-full summary-card rounded-xl">
@@ -1531,11 +1573,11 @@ onUnmounted(() => {
                       <!-- 反饋提示訊息 - 在高度推薦下方 -->
                       <div
                         v-if="dogFeedback.showToast"
-                        class="absolute -right-4 top-12 transform translate-x-full z-30"
+                        class="absolute -right-4 top-3 transform translate-x-full z-30"
                       >
                         <!-- 對話泡泡 -->
                         <div
-                          class="relative bg-orange-500 text-white px-3 py-2 rounded-xl shadow-lg animate-bounce"
+                          class="relative bg-orange-500 text-white px-3 py-2 rounded-xl shadow-lg"
                         >
                           <div class="text-xs font-medium whitespace-nowrap">
                             {{ dogFeedback.toastMessage }}
@@ -1683,8 +1725,10 @@ onUnmounted(() => {
                         </button>
                       </div>
                       <!-- 文案區域 -->
-                      <p class="text-slate-600 mb-3">這是我的建議問題，請參考使用：</p>
-                      
+                      <p class="text-slate-600 mb-3">
+                        這是我的建議問題，需要我幫忙用訊息詢問求職者，或是幫您下載問題在面試中詢問嗎？
+                      </p>
+
                       <!-- 統一問題內容區域 -->
                       <div class="flex-1 text-base text-slate-600">
                         <div
@@ -1692,7 +1736,9 @@ onUnmounted(() => {
                           @click="copyAllQuestions"
                         >
                           <!-- 複製圖標 - 右上角 -->
-                          <div class="absolute top-3 right-3 text-gray-400 hover:text-gray-600 transition-colors duration-200">
+                          <div
+                            class="absolute top-3 right-3 text-gray-400 hover:text-gray-600 transition-colors duration-200"
+                          >
                             <svg
                               class="w-5 h-5"
                               fill="none"
@@ -1972,7 +2018,7 @@ onUnmounted(() => {
 
         <!-- 內容展示區 -->
         <div
-          class="bg-white/90 backdrop-blur-sm p-4 md:p-6 rounded-xl mb-10 shadow-lg border border-slate-200/50"
+          class="bg-white/90 backdrop-blur-sm p-4 md:p-6 rounded-xl shadow-lg border border-slate-200/50"
         >
           <div v-show="activeTab === 'description'" class="tab-content">
             <!-- 學經歷時間軸視覺化 - 只在非職缺符合度功能時顯示 -->
@@ -2301,7 +2347,7 @@ onUnmounted(() => {
                 <!-- 學歷分析 -->
                 <div>
                   <h3 class="text-lg font-bold text-gray-800 mb-3">
-                    學歷 符合
+                    學歷 <span class="text-green-600">符合</span>
                   </h3>
                   <div class="space-y-3">
                     <div>
@@ -2344,7 +2390,7 @@ onUnmounted(() => {
                 <!-- 經歷分析 -->
                 <div>
                   <h3 class="text-lg font-bold text-gray-800 mb-3">
-                    經歷 符合
+                    經歷 <span class="text-green-600">符合</span>
                   </h3>
                   <div>
                     <h4 class="text-sm font-semibold text-gray-700 mb-2">
@@ -2363,7 +2409,7 @@ onUnmounted(() => {
                 <!-- 技能分析 -->
                 <div>
                   <h3 class="text-lg font-bold text-gray-800 mb-3">
-                    技能 符合
+                    技能 <span class="text-green-600">符合</span>
                   </h3>
                   <div class="space-y-3">
                     <div>
@@ -2451,7 +2497,7 @@ onUnmounted(() => {
                 <!-- 期望條件分析 -->
                 <div>
                   <h3 class="text-lg font-bold text-gray-800 mb-3">
-                    期望 非常符合
+                    期望 <span class="text-green-600">非常符合</span>
                   </h3>
                   <div class="space-y-3">
                     <div>
@@ -4451,7 +4497,7 @@ onUnmounted(() => {
               <div
                 class="flex flex-col sm:flex-row gap-4 justify-center items-center"
               >
-                <router-link
+                <nuxt-link
                   to="/bc"
                   class="w-full sm:w-auto inline-flex items-center justify-center px-6 py-3 text-base font-medium text-white bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 rounded-xl shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 transition-all duration-200"
                 >
@@ -4472,7 +4518,7 @@ onUnmounted(() => {
                     ></path>
                   </svg>
                   問問求職者
-                </router-link>
+                </nuxt-link>
                 <button
                   class="w-full sm:w-auto inline-flex items-center justify-center px-6 py-3 text-base font-medium text-purple-600 bg-white hover:bg-purple-50 border-2 border-purple-200 hover:border-purple-300 rounded-xl shadow-md hover:shadow-lg transform hover:-translate-y-0.5 transition-all duration-200"
                   @click="downloadQuestions"
@@ -4538,7 +4584,7 @@ onUnmounted(() => {
           class="bg-white rounded-xl shadow-lg border border-gray-100 overflow-hidden"
         >
           <div
-            class="h-96 overflow-y-auto bg-gradient-to-b from-gray-50 to-white"
+            class="h-96 overflow-y-auto bg-gradient-to-b from-gray-50 to-white scrollbar-auto"
             id="chat-messages"
           >
             <!-- 現代化歡迎訊息 -->
@@ -5100,13 +5146,45 @@ main {
   }
 }
 
-/* 隱藏滾動條 */
-.scrollbar-hide {
-  scrollbar-width: none;
-  -ms-overflow-style: none;
+/* 半透明滾動條 - 只在滾動時顯示 */
+.scrollbar-auto {
+  scrollbar-width: thin;
+  scrollbar-color: transparent transparent;
+  transition: scrollbar-color 0.3s ease;
 
   &::-webkit-scrollbar {
-    display: none;
+    width: 6px;
+  }
+
+  &::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  &::-webkit-scrollbar-thumb {
+    background: transparent;
+    border-radius: 3px;
+    transition: background 0.3s ease;
+  }
+
+  &:hover {
+    scrollbar-color: rgba(148, 163, 184, 0.5) transparent;
+
+    &::-webkit-scrollbar-thumb {
+      background: rgba(148, 163, 184, 0.5);
+    }
+
+    &::-webkit-scrollbar-thumb:hover {
+      background: rgba(148, 163, 184, 0.7);
+    }
+  }
+
+  /* 滾動時顯示滾動條 */
+  &.scrolling {
+    scrollbar-color: rgba(148, 163, 184, 0.6) transparent;
+
+    &::-webkit-scrollbar-thumb {
+      background: rgba(148, 163, 184, 0.6);
+    }
   }
 }
 
