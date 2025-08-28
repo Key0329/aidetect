@@ -469,24 +469,47 @@ const scrollToSection = (sectionId, targetText) => {
 
   const section = document.getElementById(sectionId);
   if (section) {
-    // 如果有提供目標文字，直接尋找並高亮包含該文字的元素
-    if (targetText) {
-      // 尋找包含特定文本的段落元素
-      const paragraphs = section.querySelectorAll("p");
-      for (const p of paragraphs) {
-        if (p.textContent.includes(targetText)) {
-          // 添加高亮效果
-          p.classList.add("highlight-content");
-          highlightedElement.value = p;
-
-          // 直接滾動到高亮元素，不先滾動到段落頂部
-          p.scrollIntoView({
-            behavior: "smooth",
-            block: "center",
-          });
-          return; // 找到目標後直接返回
+    let targetElement = null;
+    
+    // 優先檢查錨點元素本身是否包含目標文字且可以高亮
+    if (targetText && section.textContent.includes(targetText)) {
+      // 如果錨點元素本身是 p 標籤，直接高亮
+      if (section.tagName.toLowerCase() === 'p') {
+        targetElement = section;
+      } else {
+        // 如果錨點元素不是 p 標籤，在其內部尋找包含目標文字的 p 元素
+        const paragraphs = section.querySelectorAll("p");
+        for (const p of paragraphs) {
+          if (p.textContent.includes(targetText)) {
+            targetElement = p;
+            break;
+          }
         }
       }
+    }
+    
+    // 如果沒有找到直接匹配的元素，在整個區域內搜尋
+    if (!targetElement && targetText) {
+      const allParagraphs = section.querySelectorAll("p");
+      for (const p of allParagraphs) {
+        if (p.textContent.includes(targetText)) {
+          targetElement = p;
+          break;
+        }
+      }
+    }
+    
+    // 如果找到目標元素，進行高亮和滾動
+    if (targetElement) {
+      targetElement.classList.add("highlight-content");
+      highlightedElement.value = targetElement;
+      
+      // 滾動到高亮元素並居中顯示
+      targetElement.scrollIntoView({
+        behavior: "smooth",
+        block: "center",
+      });
+      return;
     }
 
     // 如果沒有找到匹配文本或沒有提供目標文字，則滾動到段落頂部
@@ -1424,13 +1447,15 @@ onUnmounted(() => {
                    前端工程師！
                  </div>
                     【團隊合作與整合溝通：櫃台主管／工務主任】<br><br>
-                    <div id="abstract-description" class="ms-5 mb-5">
-                      我的溝通風格是先綜觀全局，逐步分析找出問題核心後便可高效率解決雙邊或多邊溝通的痛點。<br>
-                      透過全方位的策略規劃，我致力於促進跨部門的協同合作，並主動發掘潛在的成長契機，以達到全面性的卓越。<br>
-                      在青旅工作期間，退房後到入住前是最忙碌的時段，各部門都想盡快完成自己的工作，在沒有管理的情況下容易發
-                      生衝突。第一步我會先向各部門瞭解狀況，瞭解每日每週入住情形與確認各部門人力後，依照輕重緩急預先排定打掃流
-                      程，建置且確保高效完善的作業流程。也因為長期且有效的溝通模式累積了良好的合作信譽，曾連續三年在公司年終內
-                      部投票中獲得第 1 名。
+                    <div class="ms-5 mb-5">
+                      <p id="abstract-description" class="mb-0">
+                        我的溝通風格是先綜觀全局，逐步分析找出問題核心後便可高效率解決雙邊或多邊溝通的痛點。<br>
+                        透過全方位的策略規劃，我致力於促進跨部門的協同合作，並主動發掘潛在的成長契機，以達到全面性的卓越。<br>
+                        在青旅工作期間，退房後到入住前是最忙碌的時段，各部門都想盡快完成自己的工作，在沒有管理的情況下容易發
+                        生衝突。第一步我會先向各部門瞭解狀況，瞭解每日每週入住情形與確認各部門人力後，依照輕重緩急預先排定打掃流
+                        程，建置且確保高效完善的作業流程。也因為長期且有效的溝通模式累積了良好的合作信譽，曾連續三年在公司年終內
+                        部投票中獲得第 1 名。
+                      </p>
                     </div>
                     【變化與挑戰：個人教練／均均衡創辦人】<br><br>
                     <div class="ms-5 mb-5">
@@ -4761,9 +4786,26 @@ main {
 
 /* 內容高亮樣式 */
 .highlight-content {
-  background-color: rgb(255 235 59 / 50%);
-  border-radius: 2px;
-  box-shadow: 0 0 8px rgb(255 235 59 / 50%);
+  background-color: rgb(255 235 59 / 70%);
+  border-radius: 4px;
+  box-shadow: 0 0 12px rgb(255 235 59 / 60%);
+  border: 2px solid rgb(255 235 59 / 80%);
+  padding: 8px;
+  margin: 4px 0;
+  animation: highlight-pulse 2s ease-in-out infinite alternate;
+  transition: all 0.3s ease-in-out;
+}
+
+/* 高亮脈動動畫 */
+@keyframes highlight-pulse {
+  0% {
+    background-color: rgb(255 235 59 / 70%);
+    box-shadow: 0 0 12px rgb(255 235 59 / 60%);
+  }
+  100% {
+    background-color: rgb(255 235 59 / 85%);
+    box-shadow: 0 0 16px rgb(255 235 59 / 80%);
+  }
 }
 
 /* Skeleton Loading 樣式 */
