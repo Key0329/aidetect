@@ -14,7 +14,7 @@ const getResponsiveSidebarWidth = () => {
   const width = window.innerWidth;
   if (width < 640) return Math.min(width * 0.95, 420); // 手機：95% 或最大 420px
   if (width < 1024) return Math.min(width * 0.6, 580); // 平板：60% 或最大 580px
-  return Math.min(width * 0.4, 720); // 桌面：40% 或最大 720px
+  return Math.min(width * 0.45, 800); // 桌面：40% 或最大 720px
 };
 
 // 初始化和響應式視窗大小處理
@@ -95,6 +95,104 @@ const isFactChecking = ref(false);
 const factCheckProgress = ref(0); // 0: 未開始, 1: 解析中, 2: 搜尋中, 3: 分析中, 4: 完成
 const factCheckResult = ref(null);
 const factCheckError = ref("");
+
+// 公開平台資訊狀態管理
+const isPublicInfoLoading = ref(false);
+const showPublicDetailSidebar = ref(false);
+const selectedPublicCandidate = ref(null);
+
+// 查詢設定
+const publicSearchConfig = ref({
+  candidateName: "鄭翔駿",
+  lastChecked: "2024-01-15 14:30",
+  sourceFilter: "all", // all, official, news, academic, social
+  timeRange: "all", // 1year, 3years, all
+  maskSurname: false
+});
+
+// 候選人群組數據
+const publicCandidateGroups = ref([
+  {
+    rank: 1,
+    confidence: "high",
+    alignmentTags: ["姓名全名一致", "私人教練", "休閒運動管理", "台北大學", "健身專業", "接案經驗"],
+    coreLinks: [
+      {
+        favicon: "https://www.pro360.com.tw/favicon.ico",
+        domain: "pro360.com.tw",
+        title: "Key Cheng / 鄭翔駿 - 私人健身教練",
+        reason: "專業服務平台｜NSCA-CPT認證｜3年教學經驗",
+        url: "https://www.pro360.com.tw/service/226956"
+      },
+      {
+        favicon: "https://www.ntpu.edu.tw/favicon.ico", 
+        domain: "lsm.ntpu.edu.tw",
+        title: "國立臺北大學休閒運動管理學系 - 鄭翔駿",
+        reason: "學術機構｜休閒運動管理學系｜學歷相符",
+        url: "https://lsm.ntpu.edu.tw/uploads/file/f1_msbpntqbgc.pdf#page=22"
+      },
+      {
+        favicon: "https://www.cake.me/favicon.ico",
+        domain: "cake.me",
+        title: "鄭翔駿 - CakeResume 履歷",
+        reason: "履歷平台｜個人檔案｜職涯展示",
+        url: "https://www.cake.me/me/springfield0329?locale=fr"
+      }
+    ],
+    disambiguationNotes: null,
+    allLinks: [
+      {
+        favicon: "https://instagram.com/favicon.ico",
+        domain: "instagram.com",
+        title: "鄭翔駿 (@springfield0329) • Instagram",
+        reason: "社群媒體｜190+追蹤者｜個人展示",
+        url: "https://instagram.com/springfield0329"
+      }
+    ],
+    comparisonData: {
+      resume: {
+        company: "自由接案",
+        position: "私人健身教練",
+        duration: "2021-現在",
+        location: "新北市新莊區"
+      },
+      external: {
+        company: "PRO360達人網",
+        position: "私人健身教練", 
+        duration: "3年教學經驗",
+        location: "新北市新莊區"
+      }
+    }
+  },
+  {
+    rank: 2,
+    confidence: "medium",
+    alignmentTags: ["姓名全名一致", "學校關鍵詞命中", "年份±4", "無相似經歷"],
+    coreLinks: [
+      {
+        favicon: "https://www.ntpu.edu.tw/favicon.ico",
+        domain: "lsm.ntpu.edu.tw",
+        title: "偽‧綜藝節目收視率調查	蔡維峻、鄭翔駿、張雁翔",
+        reason: "學術機構｜科系一致",
+        url: "https://web.ntpu.edu.tw/~ccw/database/93works.htm"
+      }
+    ],
+    disambiguationNotes: "學歷時間略有差異，需進一步確認",
+    allLinks: [],
+    comparisonData: {
+      resume: {
+        school: "○○大學資訊工程系",
+        graduationYear: "2018",
+        location: "台北"
+      },
+      external: {
+        school: "○○大學資工系",
+        graduationYear: "2017-2018",
+        location: "台北市"
+      }
+    }
+  }
+]);
 
 // AI 聊天室狀態管理
 const chatMessages = ref([]);
@@ -217,9 +315,9 @@ const getQuestionTemplate = () => {
 
 我們對您的履歷很有興趣，希望您能先協助回覆以下幾個問題，幫助我們更了解您的專業背景：
 
-1. 您在履歷中提到在ABC科技時提升系統可擴展性30%，能否簡要說明當時的系統架構以及您採取了哪些具體措施來實現這個改善？
+1. 您在PRO360平台上擁有3年教學經驗並服務過70位以上客戶，能否分享一個您印象最深刻的學員案例，以及您是如何協助他們達成目標的？
 
-2. 您列出精通多種技術如Python、JavaScript和Java等，能否分享一個您最熟悉的技術棧，以及一個您使用這些技術解決的最具挑戰性問題？
+2. 您擁有NSCA-CPT認證並專精於增肌減脂、體態雕塑等領域，對於沒有運動基礎的初學者，您通常會如何設計訓練計畫並確保訓練的安全性？
 
 感謝您的配合！您的回覆將幫助我們更好地準備面試內容。期待您的回音，也期待不久後與您見面交流。`;
 };
@@ -301,6 +399,7 @@ const switchFunction = async (funcName) => {
     "context-analysis": "ai", // 履歷上下文分析使用原本的 ai tab
     timeline: "description",
     "fact-check": "fact-check",
+    "public-info": "public-info", // 公開平台資訊
     "ai-chat": "chat",
   };
   activeTab.value = functionTabMap[funcName];
@@ -444,6 +543,52 @@ const resetFactCheck = () => {
   factCheckResult.value = null;
   factCheckError.value = "";
   isFactChecking.value = false;
+};
+
+// 公開平台資訊相關功能
+// 計算顯示的候選人姓名
+const publicDisplayName = computed(() => {
+  if (publicSearchConfig.value.maskSurname) {
+    return publicSearchConfig.value.candidateName.replace(/^./, "○");
+  }
+  return publicSearchConfig.value.candidateName;
+});
+
+// 重新查核
+const recheckPublicCandidate = () => {
+  isPublicInfoLoading.value = true;
+  // 模擬API調用
+  setTimeout(() => {
+    publicSearchConfig.value.lastChecked = new Date().toLocaleString('zh-TW');
+    isPublicInfoLoading.value = false;
+  }, 2000);
+};
+
+// 開啟詳情側欄
+const openPublicDetailSidebar = (candidate) => {
+  selectedPublicCandidate.value = candidate;
+  showPublicDetailSidebar.value = true;
+};
+
+// 關閉詳情側欄  
+const closePublicDetailSidebar = () => {
+  showPublicDetailSidebar.value = false;
+  selectedPublicCandidate.value = null;
+};
+
+// 複製連結
+const copyPublicLink = async (url) => {
+  try {
+    await navigator.clipboard.writeText(url);
+    // 這裡可以加入複製成功的提示
+  } catch (err) {
+    console.error('複製失敗:', err);
+  }
+};
+
+// 開新分頁
+const openPublicInNewTab = (url) => {
+  window.open(url, '_blank');
 };
 
 // 拖曳調整側邊欄寬度功能
@@ -2315,9 +2460,9 @@ onUnmounted(() => {
               </div>
             </button>
             <button
-              @click="switchFunction('fact-check')"
+              @click="switchFunction('public-info')"
               :class="
-                activeFunction === 'fact-check'
+                activeFunction === 'public-info'
                   ? 'bg-gradient-to-r from-orange-500 to-red-500 text-white shadow-md'
                   : 'bg-white text-slate-600 border border-slate-200 hover:bg-slate-50'
               "
@@ -3619,26 +3764,7 @@ onUnmounted(() => {
                       事實查核報告
                     </h3>
                   </div>
-                  <!-- 總體匹配度圓餅 -->
-                  <div class="flex items-center space-x-3">
-                    <span class="text-sm font-medium text-slate-600"
-                      >總體匹配度</span
-                    >
-                    <div
-                      class="w-16 h-16 rounded-full flex items-center justify-center text-white text-sm font-bold shadow-lg"
-                      :style="{
-                        backgroundColor: getConfidenceColor(
-                          factCheckResult.fact_check_results.overall_score
-                        ),
-                      }"
-                    >
-                      {{
-                        Math.round(
-                          factCheckResult.fact_check_results.overall_score * 100
-                        )
-                      }}%
-                    </div>
-                  </div>
+  
                 </div>
               </div>
 
@@ -4041,6 +4167,138 @@ onUnmounted(() => {
           </div>
         </div>
 
+        <!-- 公開平台資訊內容區域 -->
+        <div v-show="activeTab === 'public-info' && !isTabSwitching" class="tab-content space-y-8">
+          <!-- 簡介卡片 -->
+          <div class="bg-gradient-to-r from-orange-50 to-red-50 border border-orange-200 rounded-xl p-6 shadow-sm">
+            <div class="flex items-start space-x-4">
+              <div class="flex-shrink-0">
+                <div class="w-12 h-12 bg-gradient-to-br from-orange-400 to-red-500 rounded-lg flex items-center justify-center shadow-sm">
+                  <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                  </svg>
+                </div>
+              </div>
+              <div class="flex-1">
+                <h3 class="text-2xl font-bold text-orange-900 my-2">公開平台資訊查詢</h3>
+                <p class="text-slate-700 leading-relaxed mb-4">
+                  快速驗證候選人公開資訊，協助您在10-30秒內做出初步判斷。
+                  我們會搜尋各大平台的公開資料，並依照相符程度進行分組排序。
+                </p>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
+                  <div class="flex items-center space-x-2">
+                    <span class="w-2 h-2 bg-orange-400 rounded-full"></span>
+                    <span class="text-slate-600">候選人：{{ publicDisplayName }}</span>
+                  </div>
+                  <div class="flex items-center space-x-2">
+                    <span class="w-2 h-2 bg-orange-400 rounded-full"></span>
+                    <span class="text-slate-600">上次查核：{{ publicSearchConfig.lastChecked }}</span>
+                  </div>
+                </div>
+                <div class="mt-4 flex space-x-3 justify-end">
+                  <button 
+                    @click="recheckPublicCandidate"
+                    :disabled="isPublicInfoLoading"
+                    class="inline-flex items-center px-4 py-2 bg-orange-500 text-white rounded-lg hover:bg-orange-600 transition-all duration-200 font-medium shadow-sm hover:shadow-md disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    <svg v-if="!isPublicInfoLoading" class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
+                    </svg>
+                    <div v-else class="animate-spin rounded-full h-4 w-4 border-2 border-white border-t-transparent mr-2"></div>
+                    {{ isPublicInfoLoading ? "重新查核中..." : "重新查核" }}
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- 候選群組卡片區域 -->
+          <div class="grid grid-cols-1 gap-6">
+            <div 
+              v-for="candidate in publicCandidateGroups" 
+              :key="candidate.rank"
+              class="bg-white rounded-lg shadow hover:shadow-lg transition-shadow cursor-pointer border border-gray-200"
+              @click="openPublicDetailSidebar(candidate)"
+            >
+              <div class="p-6">
+                <div class="flex items-center justify-between mb-4">
+                  <h3 class="text-lg font-medium text-gray-900">
+                    可能相符的公開資料 (Top {{ candidate.rank }})
+                  </h3>
+                </div>
+                
+                <!-- 對齊標籤 -->
+                <div class="flex flex-wrap gap-2 mb-4">
+                  <span 
+                    v-for="tag in candidate.alignmentTags" 
+                    :key="tag"
+                    class="px-2 py-1 text-xs font-medium bg-blue-100 text-blue-800 rounded-full"
+                  >
+                    {{ tag }}
+                  </span>
+                </div>
+
+                <!-- 核心連結 -->
+                <div class="space-y-3 mb-4">
+                  <div 
+                    v-for="link in candidate.coreLinks" 
+                    :key="link.url"
+                    class="border rounded-lg p-3 hover:bg-gray-50 transition-colors"
+                  >
+                    <div class="flex items-start justify-between">
+                      <div class="flex-1 min-w-0">
+                        <div class="flex items-center space-x-2 mb-1">
+                          <img :src="link.favicon" :alt="link.domain" class="w-4 h-4">
+                          <span class="text-sm font-medium text-gray-600">{{ link.domain }}</span>
+                        </div>
+                        <h4 class="text-sm font-medium text-gray-900 truncate mb-1">{{ link.title }}</h4>
+                        <p class="text-xs text-gray-500">{{ link.reason }}</p>
+                      </div>
+                      <div class="flex items-center space-x-2 ml-4">
+                        <button 
+                          @click.stop="openPublicInNewTab(link.url)"
+                          class="p-1 text-gray-400 hover:text-gray-600 transition-colors"
+                          title="開新分頁"
+                        >
+                          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"></path>
+                          </svg>
+                        </button>
+                        <button 
+                          @click.stop="copyPublicLink(link.url)"
+                          class="p-1 text-gray-400 hover:text-gray-600 transition-colors"
+                          title="複製連結"
+                        >
+                          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"></path>
+                          </svg>
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- 歧義備註 -->
+                <div v-if="candidate.disambiguationNotes" class="bg-yellow-50 border border-yellow-200 rounded-lg p-3">
+                  <div class="flex items-start">
+                    <svg class="w-4 h-4 text-yellow-600 mt-0.5 mr-2 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                    </svg>
+                    <p class="text-sm text-yellow-800">{{ candidate.disambiguationNotes }}</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- 合規性提醒 -->
+          <div class="bg-gray-100 rounded-lg p-6 text-center">
+            <p class="text-sm text-gray-600">
+              <strong>重要提醒：</strong>本系統僅提供可能相符之公開連結，不做身分認定。所有資訊僅供參考，請謹慎判斷並遵循相關法規。
+            </p>
+          </div>
+        </div>
+
 
       <!-- AI 聊天室內容區域 -->
       <div v-show="activeTab === 'chat' && !isTabSwitching" class="tab-content">
@@ -4372,6 +4630,133 @@ onUnmounted(() => {
         >
           ×
         </button>
+      </div>
+    </div>
+
+    <!-- 公開平台詳情側欄 -->
+    <div 
+      v-if="showPublicDetailSidebar"
+      class="fixed inset-0 z-50 overflow-hidden"
+      @click="closePublicDetailSidebar"
+    >
+      <div class="absolute inset-0 bg-gray-600 bg-opacity-75"></div>
+      <div class="fixed inset-y-0 right-0 max-w-full flex">
+        <div 
+          class="relative w-screen max-w-md"
+          @click.stop
+        >
+          <div class="h-full flex flex-col bg-white shadow-xl">
+            <div class="px-4 py-6 bg-gray-50 sm:px-6">
+              <div class="flex items-center justify-between">
+                <h2 class="text-lg font-medium text-gray-900">
+                  詳細資訊 - Top {{ selectedPublicCandidate?.rank }}
+                </h2>
+                <button 
+                  @click="closePublicDetailSidebar"
+                  class="rounded-md text-gray-400 hover:text-gray-500 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                >
+                  <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                  </svg>
+                </button>
+              </div>
+            </div>
+            <div class="flex-1 px-4 py-6 sm:px-6 overflow-y-auto">
+              <div v-if="selectedPublicCandidate" class="space-y-6">
+                <!-- 對齊標籤詳情 -->
+                <div>
+                  <h3 class="text-sm font-medium text-gray-900 mb-3">匹配標籤</h3>
+                  <div class="flex flex-wrap gap-2">
+                    <span 
+                      v-for="tag in selectedPublicCandidate.alignmentTags" 
+                      :key="tag"
+                      class="px-3 py-1 text-sm font-medium bg-blue-100 text-blue-800 rounded-full"
+                    >
+                      {{ tag }}
+                    </span>
+                  </div>
+                </div>
+
+                <!-- 核心連結詳情 -->
+                <div>
+                  <h3 class="text-sm font-medium text-gray-900 mb-3">相關連結 ({{ selectedPublicCandidate.coreLinks.length }})</h3>
+                  <div class="space-y-3">
+                    <div 
+                      v-for="(link, index) in selectedPublicCandidate.coreLinks" 
+                      :key="index"
+                      class="border rounded-lg p-3 hover:bg-gray-50 transition-colors"
+                    >
+                      <div class="flex items-start justify-between">
+                        <div class="flex-1 min-w-0">
+                          <div class="flex items-center space-x-2 mb-2">
+                            <img :src="link.favicon" :alt="link.domain" class="w-4 h-4">
+                            <span class="text-sm font-medium text-gray-900">{{ link.domain }}</span>
+                          </div>
+                          <h4 class="text-sm font-medium text-gray-800 mb-1 leading-tight">{{ link.title }}</h4>
+                          <p class="text-xs text-gray-600 mb-2">{{ link.reason }}</p>
+                          <div class="flex items-center space-x-2">
+                            <button 
+                              @click="openPublicInNewTab(link.url)"
+                              class="text-xs px-2 py-1 bg-blue-50 text-blue-600 rounded hover:bg-blue-100 transition-colors"
+                            >
+                              開啟連結
+                            </button>
+                            <button 
+                              @click="copyPublicLink(link.url)"
+                              class="text-xs px-2 py-1 bg-gray-50 text-gray-600 rounded hover:bg-gray-100 transition-colors"
+                            >
+                              複製
+                            </button>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- 比對資料 -->
+                <div v-if="selectedPublicCandidate.comparisonData">
+                  <h3 class="text-sm font-medium text-gray-900 mb-3">資料比對</h3>
+                  <div class="bg-gray-50 rounded-lg p-4">
+                    <div class="grid grid-cols-2 gap-4 text-xs">
+                      <div>
+                        <h4 class="font-medium text-gray-700 mb-2">履歷資料</h4>
+                        <div class="space-y-1">
+                          <div v-for="(value, key) in selectedPublicCandidate.comparisonData.resume" :key="key">
+                            <span class="text-gray-500">{{ key }}：</span>
+                            <span class="text-gray-900">{{ value }}</span>
+                          </div>
+                        </div>
+                      </div>
+                      <div>
+                        <h4 class="font-medium text-gray-700 mb-2">外部資料</h4>
+                        <div class="space-y-1">
+                          <div v-for="(value, key) in selectedPublicCandidate.comparisonData.external" :key="key">
+                            <span class="text-gray-500">{{ key }}：</span>
+                            <span class="text-gray-900">{{ value }}</span>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- 歧義備註詳情 -->
+                <div v-if="selectedPublicCandidate.disambiguationNotes">
+                  <h3 class="text-sm font-medium text-gray-900 mb-3">注意事項</h3>
+                  <div class="bg-yellow-50 border border-yellow-200 rounded-lg p-3">
+                    <div class="flex items-start">
+                      <svg class="w-4 h-4 text-yellow-600 mt-0.5 mr-2 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                      </svg>
+                      <p class="text-sm text-yellow-800">{{ selectedPublicCandidate.disambiguationNotes }}</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
     </div>
   </div>
