@@ -252,6 +252,34 @@ const showCopySuccess = () => {
   }, 2000);
 };
 
+// 問問全職者功能
+const askFullTimer = () => {
+  // 這裡可以實作導向聊天功能或開啟對話
+  console.log("問問全職者功能");
+  // 可以切換到聊天功能
+  activeTab.value = "chat";
+};
+
+// 下載問題範本功能
+const downloadQuestionTemplate = () => {
+  const templateText = getQuestionTemplate();
+  const blob = new Blob([templateText], { type: "text/plain;charset=utf-8" });
+  const url = URL.createObjectURL(blob);
+  
+  const link = document.createElement("a");
+  link.href = url;
+  link.download = "面試問題範本.txt";
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+  
+  // 清理 URL 物件
+  URL.revokeObjectURL(url);
+  
+  // 顯示下載成功提示
+  console.log("問題範本已下載");
+};
+
 // 功能選單切換
 const switchFunction = (funcName) => {
   activeFunction.value = funcName;
@@ -1493,7 +1521,7 @@ onUnmounted(() => {
           <!-- 卡片總結區 -->
           <div class="mb-6">
             <!-- 卡片容器 -->
-            <div class="rounded-xl h-[400px] overflow-y-auto">
+            <div class="rounded-xl h-[500px] overflow-y-auto">
               <!-- 總結卡片 -->
               <div v-show="currentCard === 0" class="w-full h-full">
                 <div class="relative h-full summary-card rounded-xl">
@@ -1619,7 +1647,7 @@ onUnmounted(() => {
               <!-- 建議問題卡片 -->
               <div v-show="currentCard === 1" class="w-full">
                 <div
-                  class="bg-gradient-to-b from-purple-50/40 to-indigo-50/60 border border-purple-200 rounded-xl p-4 sm:px-6 h-[400px] summary-card flex flex-col relative"
+                  class="bg-gradient-to-b from-purple-50/40 to-indigo-50/60 border border-purple-200 rounded-xl summary-card flex flex-col relative"
                 >
                   <div class="flex items-start mb-6">
                     <div class="flex-1">
@@ -1646,14 +1674,41 @@ onUnmounted(() => {
                             </svg>
                           </div>
                         </div>
+                        <!-- 返回總結按鈕 -->
+                        <button
+                          @click="backToSummary"
+                          class="bg-gradient-to-r from-orange-400 to-orange-500 hover:from-orange-500 hover:to-orange-600 text-white px-3 py-1.5 rounded-lg text-sm font-medium shadow-md hover:shadow-lg transition-all duration-200"
+                        >
+                          返回總結
+                        </button>
                       </div>
+                      <!-- 文案區域 -->
+                      <p class="text-slate-600 mb-3">這是我的建議問題，請參考使用：</p>
+                      
                       <!-- 統一問題內容區域 -->
                       <div class="flex-1 text-base text-slate-600">
                         <div
-                          class="bg-white border border-gray-200 rounded-lg p-4 shadow-sm"
+                          class="bg-white border border-gray-200 rounded-lg p-4 shadow-sm relative cursor-pointer hover:shadow-md transition-shadow duration-200"
+                          @click="copyAllQuestions"
                         >
+                          <!-- 複製圖標 - 右上角 -->
+                          <div class="absolute top-3 right-3 text-gray-400 hover:text-gray-600 transition-colors duration-200">
+                            <svg
+                              class="w-5 h-5"
+                              fill="none"
+                              stroke="currentColor"
+                              viewBox="0 0 24 24"
+                            >
+                              <path
+                                stroke-linecap="round"
+                                stroke-linejoin="round"
+                                stroke-width="2"
+                                d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"
+                              ></path>
+                            </svg>
+                          </div>
                           <div
-                            class="whitespace-pre-line text-slate-700 leading-relaxed"
+                            class="whitespace-pre-line text-slate-700 leading-relaxed pr-8"
                           >
                             {{ getQuestionTemplate() }}
                           </div>
@@ -1662,48 +1717,70 @@ onUnmounted(() => {
                     </div>
                   </div>
 
-                  <!-- 建議問題卡片內的操作按鈕 -->
-                  <div
-                    class="absolute bottom-3 right-3 flex flex-col space-y-2"
-                  >
-                    <!-- 返回總結按鈕 -->
+                  <!-- 底部按鈕區域 -->
+                  <div class="flex justify-center gap-3 mt-6 pb-4">
+                    <!-- 問問全職者按鈕 -->
                     <button
-                      @click="backToSummary"
-                      class="bg-gradient-to-r from-orange-400 to-orange-500 hover:from-orange-500 hover:to-orange-600 text-white px-2 py-1.5 sm:px-3 sm:py-2 rounded-lg text-xs sm:text-sm font-medium shadow-lg hover:shadow-xl transition-all duration-200 transform hover:scale-105 min-w-[80px] sm:min-w-[100px]"
+                      @click="askFullTimer"
+                      class="bg-gradient-to-r from-blue-500 to-cyan-500 hover:from-blue-600 hover:to-cyan-600 text-white px-4 py-2 rounded-lg text-sm font-medium shadow-md hover:shadow-lg transition-all duration-200 flex items-center gap-2"
                     >
-                      返回總結
+                      <svg
+                        class="w-4 h-4"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          stroke-linecap="round"
+                          stroke-linejoin="round"
+                          stroke-width="2"
+                          d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"
+                        ></path>
+                      </svg>
+                      問問全職者
                     </button>
 
-                    <!-- 全部複製按鈕 -->
-                    <div class="relative">
-                      <button
-                        @click="copyAllQuestions"
-                        class="bg-gradient-to-r from-blue-500 to-cyan-500 hover:from-blue-600 hover:to-cyan-600 text-white px-2 py-1.5 sm:px-3 sm:py-2 rounded-lg text-xs sm:text-sm font-medium shadow-lg hover:shadow-xl transition-all duration-200 transform hover:scale-105 min-w-[80px] sm:min-w-[100px]"
+                    <!-- 下載問題範本按鈕 -->
+                    <button
+                      @click="downloadQuestionTemplate"
+                      class="bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-600 hover:to-teal-600 text-white px-4 py-2 rounded-lg text-sm font-medium shadow-md hover:shadow-lg transition-all duration-200 flex items-center gap-2"
+                    >
+                      <svg
+                        class="w-4 h-4"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
                       >
-                        全部複製
-                      </button>
+                        <path
+                          stroke-linecap="round"
+                          stroke-linejoin="round"
+                          stroke-width="2"
+                          d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+                        ></path>
+                      </svg>
+                      下載問題範本
+                    </button>
+                  </div>
 
-                      <!-- 複製成功提示 -->
-                      <div
-                        v-if="showCopyToast"
-                        class="fixed top-20 right-6 bg-green-500 text-white px-3 py-1.5 rounded-lg shadow-lg z-50 flex items-center space-x-2 animate-bounce whitespace-nowrap"
-                      >
-                        <svg
-                          class="w-4 h-4"
-                          fill="none"
-                          stroke="currentColor"
-                          viewBox="0 0 24 24"
-                        >
-                          <path
-                            stroke-linecap="round"
-                            stroke-linejoin="round"
-                            stroke-width="2"
-                            d="M5 13l4 4L19 7"
-                          ></path>
-                        </svg>
-                        <span>已複製到剪貼板</span>
-                      </div>
-                    </div>
+                  <!-- 複製成功提示 -->
+                  <div
+                    v-if="showCopyToast"
+                    class="fixed top-20 right-6 bg-green-500 text-white px-3 py-1.5 rounded-lg shadow-lg z-50 flex items-center space-x-2 whitespace-nowrap"
+                  >
+                    <svg
+                      class="w-4 h-4"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                        stroke-width="2"
+                        d="M5 13l4 4L19 7"
+                      ></path>
+                    </svg>
+                    <span>已複製到剪貼板</span>
                   </div>
                 </div>
               </div>
@@ -2185,7 +2262,6 @@ onUnmounted(() => {
 
             <!-- 職缺符合度分析區域 - 只在職缺符合度功能時顯示 -->
             <div v-show="activeFunction === 'job-match'" class="space-y-6 mt-8">
-
               <!-- 符合分析概覽 -->
               <div
                 class="mb-6 p-6 bg-gradient-to-r from-blue-50 to-cyan-50 rounded-xl border border-blue-100 shadow-sm"
@@ -2209,7 +2285,9 @@ onUnmounted(() => {
                     </svg>
                   </div>
                   <h3 class="text-xl font-bold text-gray-800 mb-0">符合分析</h3>
-                  <span class="ml-4 inline-flex items-center bg-cyan-100 text-cyan-800 px-3 py-1 rounded-full text-sm font-semibold">
+                  <span
+                    class="ml-4 inline-flex items-center bg-cyan-100 text-cyan-800 px-3 py-1 rounded-full text-sm font-semibold"
+                  >
                     20項條件符合
                   </span>
                 </div>
@@ -2222,26 +2300,40 @@ onUnmounted(() => {
               <div class="space-y-6">
                 <!-- 學歷分析 -->
                 <div>
-                  <h3 class="text-lg font-bold text-gray-800 mb-3">學歷 符合</h3>
+                  <h3 class="text-lg font-bold text-gray-800 mb-3">
+                    學歷 符合
+                  </h3>
                   <div class="space-y-3">
                     <div>
-                      <h4 class="text-sm font-semibold text-gray-700 mb-2">符合項目</h4>
+                      <h4 class="text-sm font-semibold text-gray-700 mb-2">
+                        符合項目
+                      </h4>
                       <div class="flex flex-wrap gap-2">
-                        <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-green-100 text-green-800">
+                        <span
+                          class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-green-100 text-green-800"
+                        >
                           大學
                         </span>
                       </div>
                     </div>
                     <div>
-                      <h4 class="text-sm font-semibold text-gray-700 mb-2">不符合</h4>
+                      <h4 class="text-sm font-semibold text-gray-700 mb-2">
+                        不符合
+                      </h4>
                       <div class="flex flex-wrap gap-2">
-                        <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-slate-100 text-slate-600">
+                        <span
+                          class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-slate-100 text-slate-600"
+                        >
                           資訊工程科系
                         </span>
-                        <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-slate-100 text-slate-600">
+                        <span
+                          class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-slate-100 text-slate-600"
+                        >
                           碩士
                         </span>
-                        <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-slate-100 text-slate-600">
+                        <span
+                          class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-slate-100 text-slate-600"
+                        >
                           AWS
                         </span>
                       </div>
@@ -2251,11 +2343,17 @@ onUnmounted(() => {
 
                 <!-- 經歷分析 -->
                 <div>
-                  <h3 class="text-lg font-bold text-gray-800 mb-3">經歷 符合</h3>
+                  <h3 class="text-lg font-bold text-gray-800 mb-3">
+                    經歷 符合
+                  </h3>
                   <div>
-                    <h4 class="text-sm font-semibold text-gray-700 mb-2">符合項目</h4>
+                    <h4 class="text-sm font-semibold text-gray-700 mb-2">
+                      符合項目
+                    </h4>
                     <div class="flex flex-wrap gap-2">
-                      <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-green-100 text-green-800">
+                      <span
+                        class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-green-100 text-green-800"
+                      >
                         1年以上
                       </span>
                     </div>
@@ -2264,53 +2362,85 @@ onUnmounted(() => {
 
                 <!-- 技能分析 -->
                 <div>
-                  <h3 class="text-lg font-bold text-gray-800 mb-3">技能 符合</h3>
+                  <h3 class="text-lg font-bold text-gray-800 mb-3">
+                    技能 符合
+                  </h3>
                   <div class="space-y-3">
                     <div>
-                      <h4 class="text-sm font-semibold text-gray-700 mb-2">符合項目</h4>
+                      <h4 class="text-sm font-semibold text-gray-700 mb-2">
+                        符合項目
+                      </h4>
                       <div class="flex flex-wrap gap-2">
-                        <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-green-100 text-green-800">
+                        <span
+                          class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-green-100 text-green-800"
+                        >
                           Vue
                         </span>
-                        <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-green-100 text-green-800">
+                        <span
+                          class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-green-100 text-green-800"
+                        >
                           JavaScript
                         </span>
-                        <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-green-100 text-green-800">
+                        <span
+                          class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-green-100 text-green-800"
+                        >
                           HTML
                         </span>
-                        <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-green-100 text-green-800">
+                        <span
+                          class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-green-100 text-green-800"
+                        >
                           CSS
                         </span>
-                        <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-green-100 text-green-800">
+                        <span
+                          class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-green-100 text-green-800"
+                        >
                           網站開發經驗
                         </span>
-                        <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-green-100 text-green-800">
+                        <span
+                          class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-green-100 text-green-800"
+                        >
                           API 串接
                         </span>
-                        <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-green-100 text-green-800">
+                        <span
+                          class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-green-100 text-green-800"
+                        >
                           Github
                         </span>
-                        <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-green-100 text-green-800">
+                        <span
+                          class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-green-100 text-green-800"
+                        >
                           JWT
                         </span>
-                        <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-green-100 text-green-800">
+                        <span
+                          class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-green-100 text-green-800"
+                        >
                           Docker
                         </span>
-                        <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-green-100 text-green-800">
+                        <span
+                          class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-green-100 text-green-800"
+                        >
                           Vitest
                         </span>
                       </div>
                     </div>
                     <div>
-                      <h4 class="text-sm font-semibold text-gray-700 mb-2">不符合</h4>
+                      <h4 class="text-sm font-semibold text-gray-700 mb-2">
+                        不符合
+                      </h4>
                       <div class="flex flex-wrap gap-2">
-                        <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-slate-100 text-slate-600">
+                        <span
+                          class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-slate-100 text-slate-600"
+                        >
                           Node
                         </span>
-                        <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-slate-100 text-slate-600">
+                        <span
+                          class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-slate-100 text-slate-600"
+                        >
                           MySQL
                         </span>
-                        <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-slate-100 text-slate-600">
+                        <span
+                          class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-slate-100 text-slate-600"
+                        >
                           AWS
                         </span>
                       </div>
@@ -2320,32 +2450,50 @@ onUnmounted(() => {
 
                 <!-- 期望條件分析 -->
                 <div>
-                  <h3 class="text-lg font-bold text-gray-800 mb-3">期望 非常符合</h3>
+                  <h3 class="text-lg font-bold text-gray-800 mb-3">
+                    期望 非常符合
+                  </h3>
                   <div class="space-y-3">
                     <div>
-                      <h4 class="text-sm font-semibold text-gray-700 mb-2">符合項目</h4>
+                      <h4 class="text-sm font-semibold text-gray-700 mb-2">
+                        符合項目
+                      </h4>
                       <div class="flex flex-wrap gap-2">
-                        <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-green-100 text-green-800">
+                        <span
+                          class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-green-100 text-green-800"
+                        >
                           全職
                         </span>
-                        <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-green-100 text-green-800">
+                        <span
+                          class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-green-100 text-green-800"
+                        >
                           軟體工程師
                         </span>
-                        <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-green-100 text-green-800">
+                        <span
+                          class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-green-100 text-green-800"
+                        >
                           週休二日
                         </span>
-                        <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-green-100 text-green-800">
+                        <span
+                          class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-green-100 text-green-800"
+                        >
                           新北市
                         </span>
-                        <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-green-100 text-green-800">
+                        <span
+                          class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-green-100 text-green-800"
+                        >
                           日班
                         </span>
                       </div>
                     </div>
                     <div>
-                      <h4 class="text-sm font-semibold text-gray-700 mb-2">不符合</h4>
+                      <h4 class="text-sm font-semibold text-gray-700 mb-2">
+                        不符合
+                      </h4>
                       <div class="flex flex-wrap gap-2">
-                        <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-slate-100 text-slate-600">
+                        <span
+                          class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-slate-100 text-slate-600"
+                        >
                           全端工程師
                         </span>
                       </div>
@@ -2355,9 +2503,13 @@ onUnmounted(() => {
               </div>
 
               <!-- 面試聚焦建議區域 -->
-              <div class="mt-8 p-6 bg-gradient-to-r from-blue-50 to-cyan-50 rounded-xl border border-blue-100 shadow-sm">
+              <div
+                class="mt-8 p-6 bg-gradient-to-r from-blue-50 to-cyan-50 rounded-xl border border-blue-100 shadow-sm"
+              >
                 <div class="flex items-center mb-3">
-                  <div class="w-10 h-10 bg-gradient-to-r from-blue-500 to-cyan-500 rounded-lg flex items-center justify-center mr-3">
+                  <div
+                    class="w-10 h-10 bg-gradient-to-r from-blue-500 to-cyan-500 rounded-lg flex items-center justify-center mr-3"
+                  >
                     <svg
                       class="w-6 h-6 text-white"
                       fill="none"
@@ -2372,12 +2524,20 @@ onUnmounted(() => {
                       ></path>
                     </svg>
                   </div>
-                  <h3 class="text-xl font-bold text-gray-800 mb-0">面試聚焦建議</h3>
+                  <h3 class="text-xl font-bold text-gray-800 mb-0">
+                    面試聚焦建議
+                  </h3>
                 </div>
                 <div class="space-y-2">
-                  <p class="text-gray-700">• 請說明「巡迴專案 KPI、你負責的里程碑與成效證據」</p>
-                  <p class="text-gray-700">• 分享跨場地風險控管實例（如場地／車輛／人流協調）</p>
-                  <p class="text-gray-700">• 若職缺強調數位／會員經營，請評估以加分或補件後再評估處理</p>
+                  <p class="text-gray-700">
+                    • 請說明「巡迴專案 KPI、你負責的里程碑與成效證據」
+                  </p>
+                  <p class="text-gray-700">
+                    • 分享跨場地風險控管實例（如場地／車輛／人流協調）
+                  </p>
+                  <p class="text-gray-700">
+                    • 若職缺強調數位／會員經營，請評估以加分或補件後再評估處理
+                  </p>
                 </div>
               </div>
             </div>
