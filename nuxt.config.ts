@@ -7,7 +7,7 @@ export default defineNuxtConfig({
   css: ['~/assets/styles/base.scss'],
   nitro: {
     prerender: {
-      routes: ['/']
+      routes: ['/', '/ai-resume-detect', '/bc', '/per']
     }
   },
   app: {

@@ -12,9 +12,9 @@ const getResponsiveSidebarWidth = () => {
   if (typeof window === "undefined") return 400;
 
   const width = window.innerWidth;
-  if (width < 640) return Math.min(width * 0.95, 380); // 手機：95% 或最大 380px
-  if (width < 1024) return Math.min(width * 0.6, 500); // 平板：60% 或最大 500px
-  return Math.min(width * 0.33, 600); // 桌面：33% 或最大 600px
+  if (width < 640) return Math.min(width * 0.95, 420); // 手機：95% 或最大 420px
+  if (width < 1024) return Math.min(width * 0.6, 580); // 平板：60% 或最大 580px
+  return Math.min(width * 0.4, 720); // 桌面：40% 或最大 720px
 };
 
 // 初始化和響應式視窗大小處理
@@ -210,7 +210,7 @@ const copyQuestion = async (questionText, questionIndex) => {
 
 // 取得問題範本內容
 const getQuestionTemplate = () => {
-  return `李先生您好，感謝您應徵我們的職位！
+  return `鄭先生您好，感謝您應徵我們的職位！
 
 我們對您的履歷很有興趣，希望您能先協助回覆以下幾個問題，幫助我們更了解您的專業背景：
 
@@ -1524,7 +1524,7 @@ onUnmounted(() => {
               class="flex justify-center items-center mt-6 px-2 text-16px tracking-4px indent-4px min-w-50 text-white h-38px bg-#00afb8 border-solid border-1 border-#00afb8 rounded-4px font-400"
               @click="openAIDetectDrawer"
             >
-              AI履歷總覽✨
+              AI履歷助手✨
             </button>
           </div>
         </div>
