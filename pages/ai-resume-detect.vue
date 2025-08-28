@@ -2352,10 +2352,11 @@ onUnmounted(() => {
 
         <!-- 內容展示區 -->
         <div
+        v-if="isTabSwitching"
           class="bg-white/90 backdrop-blur-sm p-4 md:p-6 rounded-xl shadow-lg border border-slate-200/50"
         >
           <!-- Tab switching skeleton -->
-          <div v-if="isTabSwitching" class="tab-content skeleton-slide-in">
+          <div  class="tab-content skeleton-slide-in">
             <div class="space-y-6">
               <!-- Header skeleton -->
               <div class="bg-gradient-to-r from-blue-50 to-cyan-50 rounded-xl p-6 border border-blue-100 skeleton-progressive-1">
@@ -4451,35 +4452,7 @@ onUnmounted(() => {
 
       <!-- AI 聊天室內容區域 -->
       <div v-show="activeTab === 'chat' && !isTabSwitching" class="tab-content">
-        <!-- 現代化 AI 助手標題卡片 -->
-        <div
-          class="mb-8 p-6 bg-gradient-to-r from-blue-50 to-cyan-50 rounded-xl border border-blue-100 shadow-sm"
-        >
-          <div class="flex items-center mb-3">
-            <div
-              class="w-10 h-10 bg-gradient-to-r from-blue-500 to-cyan-500 rounded-lg flex items-center justify-center mr-3"
-            >
-              <svg
-                class="w-6 h-6 text-white"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                  stroke-width="2"
-                  d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"
-                />
-              </svg>
-            </div>
-            <h3 class="text-xl font-bold text-gray-800 mb-0">AI 人資助手</h3>
-          </div>
-          <p class="text-gray-600 leading-relaxed mb-0">
-            專為人資設計的 AI
-            助手，可以幫您分析履歷、生成面試問題、提供招募建議等。
-          </p>
-        </div>
+
 
         <!-- 現代化聊天訊息區域 -->
         <div
