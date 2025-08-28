@@ -178,11 +178,13 @@ const handleDogFeedback = (type) => {
 const generateAnalysisText = () => {
   const { concerns } = cardSummary.value;
 
-  let text = `這位求職者符合您所開的【軟體工程師】職務需求！
+  let text = `嗨 Celine, 
+這位求職者符合您的職務需求！
+
 特別是您在找尋的「網站開發經驗」，這位求職者具備【使用 Vue 3 製作 SPA 單頁式網站、整合 Vue Router 與 Pinia 狀態管理、並使用 Vite 進行環境建置與部署】的技術能力。`;
 
   if (concerns.areas.length > 0) {
-    text += `\n\n但同時我們也發現「實務專案經驗」尚未在履歷中充分呈現，建議在面試時可以多加了解其過往是否有實際參與專案的經驗與角色定位。`;
+    text += `\n\n但同時我們也發現翔駿在「旅行者之家」的經歷時間線有些重疊，履歷中有些敘述抽象、缺乏細節的部分，建議在面試時可以多加了解其過往是否有實際參與專案的經驗與角色定位。`;
   }
 
   return text;
@@ -852,7 +854,7 @@ onUnmounted(() => {
         <div class="py-4 flex justify-between gap-12">
           <div class="w-full">
             <div class="py-6px px-4 flex justify-between bg-#eee">
-              <div>應徵日期：2025/05/15 13:20</div>
+              <div>應徵日期：2025/08/22 18:08 </div>
               <div>代碼：37889955665566</div>
             </div>
             <!-- 履歷區塊 -->
@@ -863,10 +865,10 @@ onUnmounted(() => {
               <div class="relative bg-white pb-4 relative px-6">
                 <!-- avatar -->
                 <div
-                  class="flex justify-center items-center z-10 w-32 h-32 rounded-full bg-white absolute -top-8 -translate-y-8"
+                  class="flex justify-center items-center w-32 h-32 rounded-full bg-white absolute -top-8 -translate-y-8"
                 >
                   <img
-                    src="@/assets/images/ai/sword.png"
+                    src="@/assets/images/ai/avatar.png"
                     alt=""
                     class="w-30 h-30 object-cover bg-gray-300 rounded-full"
                   />
@@ -875,7 +877,7 @@ onUnmounted(() => {
                 <div
                   class="absolute -top-10 left-43 text-24px font-bold text-#292929 flex items-center"
                 >
-                  <div>李冠宇</div>
+                  <div>鄭翔駿</div>
                   <div
                     class="text-14px leading-20px font-400 text-white ml-3 bg-#292929 opacity-70 px-2 rounded-full"
                   >
@@ -885,15 +887,12 @@ onUnmounted(() => {
                 <!-- 履歷資訊 -->
                 <div class="pt-4 ml-38 text-start pb-15">
                   <p class="leading-28px font-700 mb-1 mt-0">
-                    國立清華大學 | 資訊工程學系 碩士
-                  </p>
-                  <p class="leading-28px font-700 mb-1 mt-0">
-                    國立中興大學 | 資訊管理學系 學士
+                    國立台北大學 | 休閒運動管理系 學士
                   </p>
                   <p
                     class="leading-20px text-14px font-700 text-#7e7e7e mb-4 mt-0"
                   >
-                    台中市10~11年工作經驗希望職稱：資深軟體工程師
+                    新北市新莊區 | 7~8年工作經驗 | 希望職稱：軟體工程師、Vue 前端工程師
                   </p>
                   <div class="mb-4">
                     <button
@@ -912,14 +911,11 @@ onUnmounted(() => {
                       聯繫方式
                     </button>
                   </div>
-                  <p class="leading-28px text-#7e7e7e">
-                    資深軟體工程師、全端開發工程師
-                  </p>
                 </div>
                 <div class="py-6 border-t-solid border-t-#eee">
                   <div class="flex items-center gap-6 mb-2">
                     <p class="m-0 leading-28px font-700 text-start">基本資料</p>
-                    <p class="m-0 leading-28px">男、34歲</p>
+                    <p class="m-0 leading-28px">男、37歲</p>
                   </div>
                   <div class="flex items-center gap-6 mb-2">
                     <p class="m-0 leading-28px font-700 text-start">就業狀態</p>
@@ -927,15 +923,15 @@ onUnmounted(() => {
                   </div>
                   <div class="flex items-center gap-6 mb-2">
                     <p class="m-0 leading-28px font-700 text-start">居住地區</p>
-                    <p class="m-0 leading-28px">台中市西區公益路***</p>
+                    <p class="m-0 leading-28px">新北市新莊區中正路***</p>
                   </div>
                   <div class="flex items-center gap-6 mb-2">
                     <p class="m-0 leading-28px font-700 text-start">持有駕照</p>
-                    <p class="m-0 leading-28px">普通小型車及重型機車駕照</p>
+                    <p class="m-0 leading-28px">普通重型機車駕照 、 普通小型車駕照</p>
                   </div>
                   <div class="flex items-center gap-6 mb-2">
                     <p class="m-0 leading-28px font-700 text-start">自備車輛</p>
-                    <p class="m-0 leading-28px">自備汽車</p>
+                    <p class="m-0 leading-28px">普通重型機車 、 普通小型車</p>
                   </div>
                   <div class="flex items-center gap-6 mb-2">
                     <p class="m-0 leading-28px font-700 text-start">特殊身分</p>
@@ -950,12 +946,12 @@ onUnmounted(() => {
                   </h2>
                   <div class="flex items-center gap-6 mb-2">
                     <p class="m-0 leading-28px font-700 text-start">應徵職務</p>
-                    <p class="m-0 leading-28px">資深軟體工程師</p>
+                    <p class="m-0 leading-28px">軟體工程師</p>
                   </div>
                   <div class="flex items-center gap-6 mb-2">
                     <p class="m-0 leading-28px font-700 text-start">自我推薦</p>
                     <p class="m-0 leading-28px">
-                      您好，我叫李冠宇，近日得知貴公司在徵人，希望能有參加面試的機會，謝謝！
+                      您好，我叫鄭翔駿，近日得知貴公司在徵人，希望能有參加面試的機會，謝謝！
                     </p>
                   </div>
                 </div>
@@ -971,27 +967,27 @@ onUnmounted(() => {
                   <div class="flex items-start justify-between px-6 py-3">
                     <div>
                       <p class="m-0 leading-28px font-700 text-start">
-                        國立清華大學
+                        國立台北大學
                       </p>
                       <p class="m-0 text-14px leading-24px text-start">
-                        資訊工程學系｜碩士畢業
+                        休閒運動管理系｜學士畢業
                       </p>
                     </div>
                     <p class="m-0 text-14px leading-20px font-400 text-#7e7e7e">
-                      2012/09~2014/06
+                      2007/09~2011/06
                     </p>
                   </div>
                   <div class="flex items-start justify-between px-6 py-3">
                     <div>
                       <p class="m-0 leading-28px font-700 text-start">
-                        國立中興大學
+                        中和高中
                       </p>
                       <p class="m-0 text-14px leading-24px text-start">
-                        資訊管理學系｜學士畢業
+                        普通科｜畢業
                       </p>
                     </div>
                     <p class="m-0 text-14px leading-20px font-400 text-#7e7e7e">
-                      2008/09~2012/06
+                      2004/09~2007/06
                     </p>
                   </div>
                 </div>
@@ -1006,45 +1002,50 @@ onUnmounted(() => {
                 <div class="p-6">
                   <div class="mb-4">
                     <p class="m-0 leading-28px font-700 text-start mb-2">
-                      高級程式設計
+                      JavaScript
                     </p>
                     <p class="m-0 leading-28px text-start">
-                      精通
-                      Python、JavaScript、Java，具備跨平台全端開發能力，驅動高效能系統建構。
+                      熟悉 JavaScript 基本語法、瞭解 ES6 語言特性及實作、使用 AJAX / JSON 串接 RESTful API
                     </p>
                   </div>
                   <div class="mb-4">
                     <p class="m-0 leading-28px font-700 text-start mb-2">
-                      前端與後端框架
+                      Vue 3
                     </p>
                     <p class="m-0 leading-28px text-start">
-                      熟練運用
-                      React、Node.js、Django，打造無縫用戶體驗與穩健後端架構。
+                      Vite 環境建置、Vue - Router 路由建構、Pinia 狀態管理、SPA 單頁網站製作、Vue - i18n 多語言網站套件
                     </p>
                   </div>
                   <div class="mb-4">
                     <p class="m-0 leading-28px font-700 text-start mb-2">
-                      雲端與 DevOps
+                      Web Layout
                     </p>
                     <p class="m-0 leading-28px text-start">
-                      掌握 AWS、Docker、Kubernetes，實現自動化部署與雲端優化。
+                      Tailwind CSS 3.0、Bootstrap 5、Sass / SCSS、手刻 RWD 響應式網頁
                     </p>
                   </div>
                   <div class="mb-4">
                     <p class="m-0 leading-28px font-700 text-start mb-2">
-                      資料庫管理
+                      Tools / Development
                     </p>
                     <p class="m-0 leading-28px text-start">
-                      深入操作
-                      MySQL、MongoDB，具備大規模資料處理與效能調校經驗。
+                      GraphQL 實作 API 串接、Docker 容器化部署、AWS Lambda 無伺服器功能、CI/CD 持續整合/交付流程
                     </p>
                   </div>
-                  <div>
+                  <div class="mb-4">
                     <p class="m-0 leading-28px font-700 text-start mb-2">
-                      領導與協作
+                      顧客關係管理
                     </p>
                     <p class="m-0 leading-28px text-start">
-                      卓越的跨部門溝通與專案管理能力，擅長引領團隊實現業務目標。
+                      聆聽客戶需求、耐心處理客訴案件、與客戶維繫長期且良好的關係
+                    </p>
+                  </div>
+                      <div>
+                    <p class="m-0 leading-28px font-700 text-start mb-2">
+                      專案溝通╱整合管理
+                    </p>
+                    <p class="m-0 leading-28px text-start">
+                      主動了解協作部門的工作排程，進行整合協調、傾聽其他部門之專案執行難處，提高各部門配合協作意願
                     </p>
                   </div>
                 </div>
@@ -1065,12 +1066,12 @@ onUnmounted(() => {
                     </p>
                     <div>
                       <p class="m-0 leading-24px text-18px font-700 text-start">
-                        10~11年工作經驗
+                        7~8年工作經驗
                       </p>
-                      <p class="m-0 leading-24px text-18px font-700 text-start">
+                      <!-- <p class="m-0 leading-24px text-18px font-700 text-start">
                         資深軟體工程師 (6~7年)、軟體工程師 (3~4年)、實習生
                         (1年(含)以下)
-                      </p>
+                      </p> -->
                     </div>
                   </div>
                   <!-- 一個工作經驗 -->
@@ -1078,70 +1079,7 @@ onUnmounted(() => {
                     <div
                       class="bg-#1654B9 text-white rounded-8px box-border w-14 h-14 text-24px font-700 leading-14 text-center overflow-hidden mr-12 flex-shrink-0"
                     >
-                      A
-                    </div>
-                    <div class="border-b-solid border-b-#eeeeee">
-                      <div class="flex justify-between gap-6 w-full">
-                        <div>
-                          <p
-                            class="text-start m-0 text-18px leading-24px font-700"
-                          >
-                            資深軟體工程師
-                          </p>
-                          <p
-                            class="text-start m-0 text-16px leading-28px font-700"
-                          >
-                            ABC科技股份有限公司（科技業）
-                          </p>
-                          <p
-                            class="text-start m-0 text-14px leading-20px font-400"
-                          >
-                            資深軟體工程師月薪約 120,000 元
-                          </p>
-                        </div>
-                        <p class="m-0 text-14px leading-20px text-#7e7e7e">
-                          2018/01~2024/06
-                        </p>
-                      </div>
-                      <div class="pt-3 pb-6">
-                        <p
-                          class="m-0 text-start leading-28px font-400 text-#212529"
-                        >
-                          1. 系統架構設計：主導企業級應用程式架構，運用微服務與
-                          AWS 雲端技術，提升系統可擴展性 30%。
-                        </p>
-                        <p
-                          class="m-0 text-start leading-28px font-400 text-#212529"
-                        >
-                          2. 專案領導：帶領 10
-                          人開發團隊，負責需求分析、功能規劃與敏捷開發，確保專案如期交付。
-                        </p>
-                        <p
-                          class="m-0 text-start leading-28px font-400 text-#212529"
-                        >
-                          3. 效能優化：重構後端程式碼，縮短 API 響應時間
-                          25%，顯著提升用戶滿意度。
-                        </p>
-                        <p
-                          class="m-0 text-start leading-28px font-400 text-#212529"
-                        >
-                          重要專案
-                        </p>
-                        <p
-                          class="m-0 text-start leading-28px font-400 text-#212529"
-                        >
-                          【數位轉型平台】成效：成功將傳統系統遷移至雲端，降低
-                          40% 運營成本，業績增長 15%。
-                        </p>
-                      </div>
-                    </div>
-                  </div>
-                  <!-- 一個工作經驗 -->
-                  <div class="flex py-5 px-6">
-                    <div
-                      class="bg-#6FB823 text-white rounded-8px box-border w-14 h-14 text-24px font-700 leading-14 text-center overflow-hidden mr-12 flex-shrink-0"
-                    >
-                      X
+                      自
                     </div>
                     <div class="border-b-solid border-b-#eeeeee w-full">
                       <div class="flex justify-between gap-6 w-full">
@@ -1149,55 +1087,72 @@ onUnmounted(() => {
                           <p
                             class="text-start m-0 text-18px leading-24px font-700"
                           >
-                            軟體工程師
+                            自由教練
                           </p>
                           <p
                             class="text-start m-0 text-16px leading-28px font-700"
                           >
-                            XYZ資訊有限公司（科技業）
+                            自由教練（運動服務業 1~30人）
                           </p>
                           <p
                             class="text-start m-0 text-14px leading-20px font-400"
                           >
-                            軟體工程師月薪約 80,000 元
+                            運動教練 | 新北市新莊區
                           </p>
                         </div>
-                        <p
-                          class="flex flex-col m-0 text-14px leading-20px text-#7e7e7e"
-                        >
-                          <span class="text-end">2014/07~2017/12</span>
-                          <span class="text-end">3年5個月</span>
+                        <p class="m-0 text-14px leading-20px text-#7e7e7e">
+                          2021/7~仍在職
                         </p>
                       </div>
                       <div class="pt-3 pb-6">
                         <p
                           class="m-0 text-start leading-28px font-400 text-#212529"
                         >
-                          1. 全端開發：開發並維護企業內部管理系統，使用 React 與
-                          Node.js 實現動態前端與高效後端。
-                        </p>
-                        <p
-                          class="m-0 text-start leading-28px font-400 text-#212529"
-                        >
-                          2. 流程自動化：導入 CI/CD 流程，縮短部署週期
-                          50%，提升團隊開發效率。
-                        </p>
-                        <p
-                          class="m-0 text-start leading-28px font-400 text-#212529"
-                        >
-                          3.
-                          跨部門協作：與產品經理及設計團隊合作，確保產品功能符合市場需求。
-                        </p>
-                        <p
-                          class="m-0 text-start leading-28px font-400 text-#212529"
-                        >
-                          重要專案
-                        </p>
-                        <p
-                          class="m-0 text-start leading-28px font-400 text-#212529"
-                        >
-                          【企業資源管理系統】成效：系統上線後，內部作業效率提升
-                          35%，客戶滿意度提高至 90%。
+                          ◆ 課程規劃 ｜ 清楚瞭解客戶需求，設計客製課程並持續溝通調整<br></br>
+                          ◆ 時間管理 ｜ 個人接案時間彈性，落實自我規畫管理<br></br>
+                          <br></br>
+                          ◆ 轉職契機：<br></br>
+                          <div class="ms-5 leading-[28px]">
+                            1. 由於過去受傷的經驗開始思考不同職涯規劃<br></br>
+                            2. 喜愛邏輯思考，接觸程式後喜歡上開發與其帶來的反饋感<br></br>
+                            3. 透過穩定的學習及輸出，感受到每天都比昨天的自己進步，也因此更堅定轉職的目標。<br></br>
+                          </div>
+                          <br></br>
+                          ◆ 個人進修：<br></br>
+                          <div class="ms-5 leading-[28px]">
+                            1. 學習程式：程式書籍、官方線上文件、Youtube 影片、六角學院、Udemy 線上課程<br></br>
+                            <div class="ms-5">
+                              學習期間：2022 / 06 - 持續中<br></br>
+                              <div class="flex align-items-top">
+                                <div>完成專案：</div>
+                                <div>
+                                  <div>【Vue 3 - Join Sport 運動揪團平台】</div>
+                                  <div>【Vanilla JS - HIGHROCK 攀岩場館官網】</div>
+                                  <div>【切版專案 - Gym Plate 運動場地分享平台】</div>
+                                </div>
+                              </div>
+                            </div>
+                            2. 英文進修：多益 825 分，閱讀英文文件熟悉技術名詞<br></br>
+                          </div>
+                          <br></br>
+                          ◆ 成長與成就：<br></br>
+                          <div class="ms-5 leading-[28px]">
+                            1. 接觸程式設計：<br></br>
+                            <div class="ms-5">
+                              工作中接觸到軟體工程師客戶，因此初步認識了程式語言，與工程師友人詳談後決定接觸前端語言，，
+                              透過學習把腦中的畫面呈現在螢幕上時的樂趣與成就感促使我更有動力強化自己的技能。
+                            </div>
+                            2. 分析與整合能力：<br></br>
+                            <div class="ms-5">
+                              客觀評估自身條件，擬定學習進度，由於資源眾多，前期先瞭解產業的面向與所需技能，評估自身條件
+                              後便開始整合學習資源與規劃學習階段，期望能兼顧工作與學習達到轉職目標。
+                            </div>
+                            3. 自學能力：<br></br>
+                            <div class="ms-5">
+                              學習以線上課程為主軸，但不依賴課程作業，攝取多方資源學習並整合，擬定各階段目標，維持穩定輸
+                              入及輸出，陸續完成各項專案。
+                            </div>
+                          </div>
                         </p>
                       </div>
                     </div>
@@ -1205,9 +1160,109 @@ onUnmounted(() => {
                   <!-- 一個工作經驗 -->
                   <div class="flex py-5 px-6">
                     <div
-                      class="bg-#00AFB8 text-white rounded-8px box-border w-14 h-14 text-24px font-700 leading-14 text-center overflow-hidden mr-12 flex-shrink-0"
+                      class="bg-#00afb8 text-white rounded-8px box-border w-14 h-14 text-24px font-700 leading-14 text-center overflow-hidden mr-12 flex-shrink-0"
                     >
-                      D
+                      均
+                    </div>
+                    <div class="border-b-solid border-b-#eeeeee w-full">
+                      <div class="flex justify-between gap-6 w-full">
+                        <div>
+                          <p
+                            class="text-start m-0 text-18px leading-24px font-700"
+                          >
+                            共同創辦人
+                          </p>
+                          <p
+                            class="text-start m-0 text-16px leading-28px font-700"
+                          >
+                            均均衡 舒肥健康便當（其他餐飲業 1~30人）
+                          </p>
+                          <p
+                            class="text-start m-0 text-14px leading-20px font-400"
+                          >
+                            經營管理主管 | 管理4人以下 | 新北市新店區
+                          </p>
+                        </div>
+                        <p class="m-0 text-14px leading-20px text-#7e7e7e text-end">
+                          2020/11~2021/7<br></br>9個月
+                        </p>
+                      </div>
+                      <div class="pt-3 pb-6">
+                        <p
+                          class="m-0 text-start leading-28px font-400 text-#212529"
+                        >
+                          ◆ 客戶服務與需求分析｜注重客戶需求，進行市場調查，以顧客需求為導向研發與改良產品。<br></br>
+                          ◆ 供應商管理 / 訂單管理｜控管成本，管銷與淨利計算。<br></br>
+                          ◆ 工作流程優化｜觀察每日工作流程，思考優化方式並執行，減少 20% loading。<br></br>
+                          ◆ 企業合作與行銷｜與公司企業協商合作，提供每週固定午膳，增加 10% 月營收。<br></br>
+                          <br></br>
+                          ◆ 成長與成就：<br></br>
+                          <div class="ms-5 leading-[28px]">
+                            1. 整合能力／資訊蒐集及管理：蒐集各方資訊，瞭解自身條件，選擇適合供應商並與其培養良好關係，確保穩定且有品質的來源。<br></br>
+                            2. 觀察分析能力：觀察、詢問客戶回饋，持續改良產品以提升客戶體驗，培養穩定回頭客。<br></br>
+                            3. 敏捷調整能力：隨時自我審視市場定位，根據市場需求與條件調整產品與工作流程。<br></br>
+                          </div>
+                          <br></br>
+                          ◆ 離職原因：疫情因素，評估損益與條件後決定結束營業。
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                  <!-- 一個工作經驗 -->
+                  <div class="flex py-5 px-6">
+                    <div
+                      class="bg-#92cf53 text-white rounded-8px box-border w-14 h-14 text-24px font-700 leading-14 text-center overflow-hidden mr-12 flex-shrink-0"
+                    >
+                      專
+                    </div>
+                    <div class="border-b-solid border-b-#eeeeee w-full">
+                      <div class="flex justify-between gap-6 w-full">
+                        <div>
+                          <p
+                            class="text-start m-0 text-18px leading-24px font-700"
+                          >
+                            個人教練
+                          </p>
+                          <p
+                            class="text-start m-0 text-16px leading-28px font-700"
+                          >
+                            專屬健議有限公司
+                          </p>
+                          <p
+                            class="text-start m-0 text-14px leading-20px font-400"
+                          >
+                            運動教練 | 台北市北投區
+                          </p>
+                        </div>
+                        <p class="m-0 text-14px leading-20px text-#7e7e7e text-end">
+                          2018/8~2021/2<br></br>2年7個月
+                        </p>
+                      </div>
+                      <div class="pt-3 pb-6">
+                        <p
+                          class="m-0 text-start leading-28px font-400 text-#212529"
+                        >
+                          ◆ 客戶服務與需求分析｜聆聽客戶需求，為其規畫專屬運動計畫，持續觀察與溝通調整，服務 80 位以上客戶規劃個人健身計畫<br></br>
+                          ◆ 協助制訂公司規範與 SOP｜協助公司擴建成長，參與整體決策，兩年來館人數成長 200%<br></br>
+                          ◆ 市場開發與行銷｜街頭陌生開發，社群文章撰寫分享專業知識，累積多位客戶於社群優良回饋<br></br>
+                          <br></br>
+                          ◆ 成長與成就：<br></br>
+                          <div class="ms-5 leading-[28px]">
+                            1. 自學能力：考取 NSCA-CPT 美國肌力與體能協會註冊私人教練，為國際四大證照之一並持續精進個人專業。<br></br>
+                            2. 整合溝通能力：與客戶一對一或一對多深入溝通，確實了解客戶需求並給予專屬建議，帶領完成挑戰性課程並創造良好上課體驗。<br></br>
+                            3. 業務拓展能力：在短時間的體驗課程中快速掌握客戶狀況並提供解決方案，累積成交超過 80 位以上客戶。<br></br>
+                          </div>
+                          <br></br>
+                          ◆ 離職原因：於 2019 / 09 出車禍受傷，休養過程中體認到該職缺的相關限制，開始思考不同發展的可能性。當時健身市場的成長與需求顯著，加上自身過去的教練經驗與知識，配合友人餐飲經驗，評估過後決定與友人共同加入「均均衡」，嘗試健康便當事業。
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                  <div class="flex py-5 px-6">
+                    <div
+                      class="bg-#1654B9 text-white rounded-8px box-border w-14 h-14 text-24px font-700 leading-14 text-center overflow-hidden mr-12 flex-shrink-0"
+                    >
+                      信
                     </div>
                     <div class="w-full">
                       <div class="flex justify-between gap-6 w-full">
@@ -1215,55 +1270,39 @@ onUnmounted(() => {
                           <p
                             class="text-start m-0 text-18px leading-24px font-700"
                           >
-                            軟體開發實習生
+                            櫃檯主管 / 工務主任
                           </p>
                           <p
                             class="text-start m-0 text-16px leading-28px font-700"
                           >
-                            DEF科技公司（科技業）
+                            信星旅館股份有限公司（旅遊服務業 30~100人）
                           </p>
                           <p
                             class="text-start m-0 text-14px leading-20px font-400"
                           >
-                            軟體開發實習生月薪約 30,000 元
+                            飯店工作人員 | 管理13人以上 | 台北市大同區
                           </p>
                         </div>
-                        <p
-                          class="flex flex-col m-0 text-14px leading-20px text-#7e7e7e"
-                        >
-                          <span class="text-end">2013/07~2013/08</span>
-                          <span class="text-end">2個月</span>
+                        <p class="m-0 text-14px leading-20px text-#7e7e7e text-end">
+                          2016/1~2019/1<br></br>3年1個月
                         </p>
                       </div>
                       <div class="pt-3 pb-6">
                         <p
                           class="m-0 text-start leading-28px font-400 text-#212529"
                         >
-                          1. 原型開發：協助開發公司產品原型，使用 Python 與
-                          Django 框架實現初步功能。
-                        </p>
-                        <p
-                          class="m-0 text-start leading-28px font-400 text-#212529"
-                        >
-                          2.
-                          測試與除錯：執行單元測試，提交錯誤報告，確保產品穩定性。
-                        </p>
-                        <p
-                          class="m-0 text-start leading-28px font-400 text-#212529"
-                        >
-                          3.
-                          技術研究：探索新興前端技術，為團隊提供技術可行性報告。
-                        </p>
-                        <p
-                          class="m-0 text-start leading-28px font-400 text-#212529"
-                        >
-                          重要專案
-                        </p>
-                        <p
-                          class="m-0 text-start leading-28px font-400 text-#212529"
-                        >
-                          【產品原型展示】成果：原型獲得客戶高度評價，促成後續
-                          500 萬資金投資。
+                          ◆ 客戶服務與危機處理｜負責旅館櫃台接待、入住退房手續、處理客戶抱怨與緊急應變。<br></br>
+                          ◆ 設施維護與協調｜與維修廠商及清潔團隊溝通協調，確保設施正常運作及環境整潔。<br></br>
+                          ◆ 團隊協作與排班｜管理櫃台排班，培訓新進人員，確保營運順暢。<br></br>
+                          <br></br>
+                          ◆ 成長與成就：<br></br>
+                          <div class="ms-5 leading-[28px]">
+                            1. 問題解決能力：有效應對突發狀況，確保客戶滿意度。<br></br>
+                            2. 跨部門溝通：與清潔、維修部門保持良好溝通，提高工作效率。<br></br>
+                            3. 營運管理：協助優化接待流程，提升整體服務品質。<br></br>
+                          </div>
+                          <br></br>
+                          ◆  離職原因：尋求個人職涯發展與轉型機會。
                         </p>
                       </div>
                     </div>
@@ -1305,14 +1344,14 @@ onUnmounted(() => {
                       <p class="m-0 leading-28px font-700 text-start">
                         希望待遇
                       </p>
-                      <p class="m-0 leading-28px">期望月薪 130,000 元起</p>
+                      <p class="m-0 leading-28px">期望月薪 60,000 元起</p>
                     </div>
                     <div class="flex items-center gap-6 mb-2">
                       <p class="m-0 leading-28px font-700 text-start">
                         希望地點
                       </p>
                       <p class="m-0 leading-28px">
-                        台中市、台北市、其他科技中心城市
+                        新北市、台北市、台中市
                       </p>
                     </div>
                     <div class="flex items-center gap-6 mb-2">
@@ -1327,7 +1366,7 @@ onUnmounted(() => {
                       <p class="m-0 leading-28px font-700 text-start">
                         希望職稱
                       </p>
-                      <p class="m-0 leading-28px">資深軟體工程師</p>
+                      <p class="m-0 leading-28px">軟體工程師、Vue 前端工程師</p>
                     </div>
                     <div class="flex items-center gap-6 mb-2">
                       <p class="m-0 leading-28px font-700 text-start">
@@ -1339,14 +1378,19 @@ onUnmounted(() => {
                       <p class="m-0 leading-28px font-700 text-start">
                         希望產業
                       </p>
-                      <p class="m-0 leading-28px">科技業、電商</p>
+                      <p class="m-0 leading-28px">網際網路相關業、電子資訊／軟體／半導體相關業、住宿／餐飲服務業、金融投顧及保險業、旅遊／休閒／運動業</p>
                     </div>
-                    <div class="flex items-center gap-6 mb-2">
-                      <p class="m-0 leading-28px font-700 text-start">
+                    <div class="flex items-top gap-6 mb-2">
+                      <p class="m-0 leading-28px font-700 text-start shrink-0">
                         希望內容
                       </p>
                       <p class="m-0 leading-28px">
-                        系統架構設計、專案管理、技術領導
+                        1. 負責軟體之分析、設計以及程式撰寫。<br></br>
+                        2. 規劃執行軟體架構及模組之設計，並控管軟體設計進度。<br></br>
+                        3. 進行軟體之測試與修改。<br></br>
+                        4. 規劃、執行與維護量產的產品。<br></br>
+                        5. 協助研發軟體新技術與新工具。<br></br>
+                        6. 管控軟體開發成本。<br></br>
                       </p>
                     </div>
                   </div>
@@ -1360,16 +1404,68 @@ onUnmounted(() => {
                   </p>
                 </div>
                 <div class="p-6">
-                  <p class="m-0 text-16px leading-28px text-start">
-                    本人在資訊科技領域深耕逾十年，畢業於國立中興大學資訊管理學系，並於國立清華大學取得資訊工程碩士學位，奠定堅實的技術基礎。職業生涯始於
-                    DEF 科技公司實習，隨後於 XYZ 資訊有限公司及 ABC
-                    科技股份有限公司擔任軟體工程師與資深工程師，累積豐富的全端開發、雲端架構與專案管理經驗。我精通多種程式語言與框架，擅長將複雜需求轉化為高效解決方案，曾主導多項關鍵專案，例如
-                    ABC 科技的數位轉型平台，成功降低 40%
-                    運營成本並提升市場競爭力。
-                  </p>
-                  <p class="m-0 text-16px leading-28px text-start mt-4">
-                    我堅信技術創新與團隊協作是驅動成功的核心，始終以積極的學習態度與卓越的執行力迎接挑戰。未來，我期盼加入貴公司，貢獻我的專業技能與領導經驗，與團隊共同打造具影響力的產品，實現企業願景。
-                  </p>
+                 【自我介紹】<br></br><br></br>
+                 <div class="ms-5 mb-5">
+                   您好，我是鄭翔駿，我喜愛運動，平時興趣是攀岩、看運動比賽、影集跟打電動。現職為接案的自由教練，準備成為
+                   前端工程師！
+                 </div>
+                    【團隊合作與整合溝通：櫃台主管／工務主任】<br></br><br></br>
+                    <div class="ms-5 mb-5">
+                      我的溝通風格是先綜觀全局，逐步分析找出問題核心後便可高效率解決雙邊或多邊溝通的痛點。<br></br>
+                      透過全方位的策略規劃，我致力於促進跨部門的協同合作，並主動發掘潛在的成長契機，以達到全面性的卓越。<br></br>
+                      在青旅工作期間，退房後到入住前是最忙碌的時段，各部門都想盡快完成自己的工作，在沒有管理的情況下容易發
+                      生衝突。第一步我會先向各部門瞭解狀況，瞭解每日每週入住情形與確認各部門人力後，依照輕重緩急預先排定打掃流
+                      程，建置且確保高效完善的作業流程。也因為長期且有效的溝通模式累積了良好的合作信譽，曾連續三年在公司年終內
+                      部投票中獲得第 1 名。
+                    </div>
+                    【變化與挑戰：個人教練／均均衡創辦人】<br></br><br></br>
+                    <div class="ms-5 mb-5">
+                      在穩定的當下，我也時常保持思考自己的職涯與成長。旅館工作期間接觸到了新的機會，考量到自己在原職位的成長
+                      有限，審慎評估後決定離開待了4 年半的工作進入專屬健議有限公司擔任個人教練。<br></br><br></br>
+                      健身教練須為每個不同的顧客著想規劃，憑藉著累積多年的溝通與客戶服務的能力，我能夠在有限時間內快速了解需
+                      求，溝通顧客期望達成的目標，而這些經驗也讓我在製作網頁上隨時以使用者的需求作為出發點思考如何創造更好的使
+                      用者體驗。<br></br><br></br>
+                      然而在一次車禍過後，因為腳受傷在床上躺了四個月，休養期間無法工作的失落感讓我體認到相關限制，開始思考不
+                      同發展的可能性。鑑於當時健身市場的成長與需求顯著，加上自身過去的教練經驗與知識，配合友人餐飲經驗，於是在
+                      評估過後決定與友人共同加入「均均衡」，開啟健康便當事業。<br></br><br></br>
+                      便當事業為我帶來許多充實有趣的挑戰，從市場分析、擺攤地點的選擇與協調、與客戶及供應商的關係管理、自我管
+                      理等等。經過努力，我們也終於有穩定的供應來源及穩定的回頭客甚至是合作企業。可惜在正式營運約四個月後碰上疫
+                      情爆發，曾嘗試轉型，但在評估損益與自身條件後決定結束營業，及時止損。在創業的這段時間裡，在條件不斷變動的
+                      情況下隨時因應調整計畫，讓我學習時刻自我反省，接納壓力並調適情緒，提升面對挫折的抗壓性及彈性應變的能力。
+                    </div>
+                    【轉變的契機：成為前端工程師】<br></br><br></br>
+                    <div class="ms-5 mb-5">
+                      回歸教練一職後，在工作上時常會接觸到不同產業的客戶，因此讓我有機會認識到程式語言，在跟工程師友人諮詢過
+                      後決定嘗試，實際接觸程式後便愛上開發，相當享受挑戰邏輯思考的過程，於是開始在工作之餘投入大量的時間學習。<br></br><br></br>
+                      在決定學習資源時因經濟需求須維持工作，全心投入實體班是不太實際的選擇，考量過後決定以線上課程為主，搭配
+                      大量的書籍與影音資源來學習。學習過程中了解到前端領域的深度，考量自身條件，我知道我必須要有足夠的產出才有
+                      機會讓人看到，我也希望持續探索自己對於這行業的熱愛程度與能力，便給自己設下需要有足夠程度的作品集才能開始
+                      找前端工作，不急於一時。<br></br><br></br>
+                      為了完善技能，設定各階段目標逐步磨練，要完成切版、原生 JS、JS 框架各一個作品，並且不依賴於線上課程的作
+                      業。發想時學習使用 Whimsical 規劃 SiteMap，使用 Figma 繪製 Wireframe，製作時使用 JS 與 Vue 終於靠自己打造
+                      出多個不同階段的專屬作品。三個作品從發想開始到程式皆為獨立開發完成，並使用 JSON Server 模擬後端 API 進行
+                      串接。透過輸出，看到成品的喜悅也讓我更堅定要往前端工程師這個目標前進。<br></br><br></br>
+                      自學期間，常常遇到錯誤訊息的挫折及時間壓力，也曾因為光是要 debug 就花上許多時間。但過程中的樂趣，切出
+                      想要的畫面的成就感、逐步理解邏輯並解決問題的暢快都讓我覺得開發是件有趣的事。我也逐漸培養出面對問題、上網
+                      搜尋官方文件、Stack Overflow、ChatGPT 等，解決問題的能力，也因此從中獲得廣泛的知識和經驗。
+                    </div>
+                    【讓過去成為助力】<br></br><br></br>
+                    <div class="ms-5 mb-5">
+                      過往的經歷帶給我許多養分，讓我更專注在提升自己、與人溝通以及提升使用者體驗，期望我用我的能力做出使用者
+                      體驗良好的作品。工作之餘，我也將運動融合生活，保持體力與身心健康，讓熱愛學習新事物的我也能適應快速變化的
+                      前端趨勢，隨時學習新技術。<br></br><br></br>
+                      <div class="ms-5 mb-5">
+                        ◆ 良好的溝通能力幫助我未來在工作上與同事、主管甚至是客戶都能有保持順暢的溝通。<br></br>
+                        ◆ 擅長分析、拆解問題、找尋核心的能力讓我能夠獨自或是共同解決問題<br></br>
+                        ◆ 積極良好自學能力讓我能學習所需技術並應用在工作上<br></br>
+                      </div>
+                      轉職期間我也繼續充實自我持續學習，穩定基礎並掌握更新的技術。因目前 Vue 專案是使用 Option Api 撰寫，期望
+                      能盡快掌握 Composition Api 並實際應用，並掌握非常重要的 Git 版控能力。也希望盡快學習 TypeScript 穩定自己的程
+                      式碼，學習 Node.js 瞭解後端概念。<br></br><br></br>
+                      如果有幸能跟貴公司合作，希望在短期內盡快了解公司文化並協助開發，增進實戰經驗
+                      ；第 1 年熟練公司主要使用的技術並以協作的方式參與專案，期望自己在 2-3 年內成為穩定獨立的開發者。未來 3-5
+                      年也期許自己可以更全面性地瞭解與思考開發流程，並且累積管理技術團隊的經驗與能力。
+                    </div>
                 </div>
               </div>
             </section>
