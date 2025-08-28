@@ -11,6 +11,8 @@ export default defineNuxtConfig({
     }
   },
   app: {
-    baseURL: '/aidetect/'
+    baseURL: '/aidetect/',
+    buildAssetsDir: '/_nuxt/',
+    cdnURL: '/aidetect/'
   }
 })

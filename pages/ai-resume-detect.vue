@@ -28,6 +28,7 @@ const handleWindowResize = () => {
   }
 };
 const isLoading = ref(false);
+const isTabSwitching = ref(false); // 新增 tab 切換載入狀態
 const isInterviewQuestionsExpanded = ref(false);
 const highlightedElement = ref(null);
 const isCopied = ref(false);
@@ -284,7 +285,13 @@ const downloadQuestionTemplate = () => {
 };
 
 // 功能選單切換
-const switchFunction = (funcName) => {
+const switchFunction = async (funcName) => {
+  // 開始 tab 切換載入狀態
+  isTabSwitching.value = true;
+  
+  // 模擬載入延遲以顯示 skeleton
+  await new Promise(resolve => setTimeout(resolve, 300));
+  
   activeFunction.value = funcName;
   // 根據功能同步切換對應的 tab
   const functionTabMap = {
@@ -295,6 +302,12 @@ const switchFunction = (funcName) => {
     "ai-chat": "chat",
   };
   activeTab.value = functionTabMap[funcName];
+
+  // 再加一個短暫延遲確保內容載入
+  await new Promise(resolve => setTimeout(resolve, 200));
+  
+  // 結束載入狀態
+  isTabSwitching.value = false;
 
   // 滿動到功能選單區域頂部
   setTimeout(() => {
@@ -1108,21 +1121,21 @@ onUnmounted(() => {
                         <p
                           class="m-0 text-start leading-28px font-400 text-#212529"
                         >
-                          ◆ 課程規劃 ｜ 清楚瞭解客戶需求，設計客製課程並持續溝通調整<br></br>
-                          ◆ 時間管理 ｜ 個人接案時間彈性，落實自我規畫管理<br></br>
-                          <br></br>
-                          ◆ 轉職契機：<br></br>
+                          ◆ 課程規劃 ｜ 清楚瞭解客戶需求，設計客製課程並持續溝通調整<br />
+                          ◆ 時間管理 ｜ 個人接案時間彈性，落實自我規畫管理<br />
+                          <br />
+                          ◆ 轉職契機：<br />
                           <div class="ms-5 leading-[28px]">
-                            1. 由於過去受傷的經驗開始思考不同職涯規劃<br></br>
-                            2. 喜愛邏輯思考，接觸程式後喜歡上開發與其帶來的反饋感<br></br>
-                            3. 透過穩定的學習及輸出，感受到每天都比昨天的自己進步，也因此更堅定轉職的目標。<br></br>
+                            1. 由於過去受傷的經驗開始思考不同職涯規劃<br />
+                            2. 喜愛邏輯思考，接觸程式後喜歡上開發與其帶來的反饋感<br />
+                            3. 透過穩定的學習及輸出，感受到每天都比昨天的自己進步，也因此更堅定轉職的目標。<br />
                           </div>
-                          <br></br>
-                          ◆ 個人進修：<br></br>
+                          <br />
+                          ◆ 個人進修：<br />
                           <div class="ms-5 leading-[28px]">
-                            1. 學習程式：程式書籍、官方線上文件、Youtube 影片、六角學院、Udemy 線上課程<br></br>
+                            1. 學習程式：程式書籍、官方線上文件、Youtube 影片、六角學院、Udemy 線上課程<br />
                             <div class="ms-5">
-                              學習期間：2022 / 06 - 持續中<br></br>
+                              學習期間：2022 / 06 - 持續中<br />
                               <div class="flex align-items-top">
                                 <div>完成專案：</div>
                                 <div>
@@ -1132,22 +1145,22 @@ onUnmounted(() => {
                                 </div>
                               </div>
                             </div>
-                            2. 英文進修：多益 825 分，閱讀英文文件熟悉技術名詞<br></br>
+                            2. 英文進修：多益 825 分，閱讀英文文件熟悉技術名詞<br>
                           </div>
-                          <br></br>
-                          ◆ 成長與成就：<br></br>
+                          <br>
+                          ◆ 成長與成就：<br>
                           <div class="ms-5 leading-[28px]">
-                            1. 接觸程式設計：<br></br>
+                            1. 接觸程式設計：<br>
                             <div class="ms-5">
                               工作中接觸到軟體工程師客戶，因此初步認識了程式語言，與工程師友人詳談後決定接觸前端語言，，
                               透過學習把腦中的畫面呈現在螢幕上時的樂趣與成就感促使我更有動力強化自己的技能。
                             </div>
-                            2. 分析與整合能力：<br></br>
+                            2. 分析與整合能力：<br>
                             <div class="ms-5">
                               客觀評估自身條件，擬定學習進度，由於資源眾多，前期先瞭解產業的面向與所需技能，評估自身條件
                               後便開始整合學習資源與規劃學習階段，期望能兼顧工作與學習達到轉職目標。
                             </div>
-                            3. 自學能力：<br></br>
+                            3. 自學能力：<br>
                             <div class="ms-5">
                               學習以線上課程為主軸，但不依賴課程作業，攝取多方資源學習並整合，擬定各階段目標，維持穩定輸
                               入及輸出，陸續完成各項專案。
@@ -1184,25 +1197,25 @@ onUnmounted(() => {
                           </p>
                         </div>
                         <p class="m-0 text-14px leading-20px text-#7e7e7e text-end">
-                          2020/11~2021/7<br></br>9個月
+                          2020/11~2021/7<br>9個月
                         </p>
                       </div>
                       <div class="pt-3 pb-6">
                         <p
                           class="m-0 text-start leading-28px font-400 text-#212529"
                         >
-                          ◆ 客戶服務與需求分析｜注重客戶需求，進行市場調查，以顧客需求為導向研發與改良產品。<br></br>
-                          ◆ 供應商管理 / 訂單管理｜控管成本，管銷與淨利計算。<br></br>
-                          ◆ 工作流程優化｜觀察每日工作流程，思考優化方式並執行，減少 20% loading。<br></br>
-                          ◆ 企業合作與行銷｜與公司企業協商合作，提供每週固定午膳，增加 10% 月營收。<br></br>
-                          <br></br>
-                          ◆ 成長與成就：<br></br>
+                          ◆ 客戶服務與需求分析｜注重客戶需求，進行市場調查，以顧客需求為導向研發與改良產品。<br>
+                          ◆ 供應商管理 / 訂單管理｜控管成本，管銷與淨利計算。<br>
+                          ◆ 工作流程優化｜觀察每日工作流程，思考優化方式並執行，減少 20% loading。<br>
+                          ◆ 企業合作與行銷｜與公司企業協商合作，提供每週固定午膳，增加 10% 月營收。<br>
+                          <br>
+                          ◆ 成長與成就：<br>
                           <div class="ms-5 leading-[28px]">
-                            1. 整合能力／資訊蒐集及管理：蒐集各方資訊，瞭解自身條件，選擇適合供應商並與其培養良好關係，確保穩定且有品質的來源。<br></br>
-                            2. 觀察分析能力：觀察、詢問客戶回饋，持續改良產品以提升客戶體驗，培養穩定回頭客。<br></br>
-                            3. 敏捷調整能力：隨時自我審視市場定位，根據市場需求與條件調整產品與工作流程。<br></br>
+                            1. 整合能力／資訊蒐集及管理：蒐集各方資訊，瞭解自身條件，選擇適合供應商並與其培養良好關係，確保穩定且有品質的來源。<br>
+                            2. 觀察分析能力：觀察、詢問客戶回饋，持續改良產品以提升客戶體驗，培養穩定回頭客。<br>
+                            3. 敏捷調整能力：隨時自我審視市場定位，根據市場需求與條件調整產品與工作流程。<br>
                           </div>
-                          <br></br>
+                          <br>
                           ◆ 離職原因：疫情因素，評估損益與條件後決定結束營業。
                         </p>
                       </div>
@@ -1235,24 +1248,24 @@ onUnmounted(() => {
                           </p>
                         </div>
                         <p class="m-0 text-14px leading-20px text-#7e7e7e text-end">
-                          2018/8~2021/2<br></br>2年7個月
+                          2018/8~2021/2<br>2年7個月
                         </p>
                       </div>
                       <div class="pt-3 pb-6">
                         <p
                           class="m-0 text-start leading-28px font-400 text-#212529"
                         >
-                          ◆ 客戶服務與需求分析｜聆聽客戶需求，為其規畫專屬運動計畫，持續觀察與溝通調整，服務 80 位以上客戶規劃個人健身計畫<br></br>
-                          ◆ 協助制訂公司規範與 SOP｜協助公司擴建成長，參與整體決策，兩年來館人數成長 200%<br></br>
-                          ◆ 市場開發與行銷｜街頭陌生開發，社群文章撰寫分享專業知識，累積多位客戶於社群優良回饋<br></br>
-                          <br></br>
-                          ◆ 成長與成就：<br></br>
+                          ◆ 客戶服務與需求分析｜聆聽客戶需求，為其規畫專屬運動計畫，持續觀察與溝通調整，服務 80 位以上客戶規劃個人健身計畫<br>
+                          ◆ 協助制訂公司規範與 SOP｜協助公司擴建成長，參與整體決策，兩年來館人數成長 200%<br>
+                          ◆ 市場開發與行銷｜街頭陌生開發，社群文章撰寫分享專業知識，累積多位客戶於社群優良回饋<br>
+                          <br>
+                          ◆ 成長與成就：<br>
                           <div class="ms-5 leading-[28px]">
-                            1. 自學能力：考取 NSCA-CPT 美國肌力與體能協會註冊私人教練，為國際四大證照之一並持續精進個人專業。<br></br>
-                            2. 整合溝通能力：與客戶一對一或一對多深入溝通，確實了解客戶需求並給予專屬建議，帶領完成挑戰性課程並創造良好上課體驗。<br></br>
-                            3. 業務拓展能力：在短時間的體驗課程中快速掌握客戶狀況並提供解決方案，累積成交超過 80 位以上客戶。<br></br>
+                            1. 自學能力：考取 NSCA-CPT 美國肌力與體能協會註冊私人教練，為國際四大證照之一並持續精進個人專業。<br>
+                            2. 整合溝通能力：與客戶一對一或一對多深入溝通，確實了解客戶需求並給予專屬建議，帶領完成挑戰性課程並創造良好上課體驗。<br>
+                            3. 業務拓展能力：在短時間的體驗課程中快速掌握客戶狀況並提供解決方案，累積成交超過 80 位以上客戶。<br>
                           </div>
-                          <br></br>
+                          <br>
                           ◆ 離職原因：於 2019 / 09 出車禍受傷，休養過程中體認到該職缺的相關限制，開始思考不同發展的可能性。當時健身市場的成長與需求顯著，加上自身過去的教練經驗與知識，配合友人餐飲經驗，評估過後決定與友人共同加入「均均衡」，嘗試健康便當事業。
                         </p>
                       </div>
@@ -1284,24 +1297,24 @@ onUnmounted(() => {
                           </p>
                         </div>
                         <p class="m-0 text-14px leading-20px text-#7e7e7e text-end">
-                          2016/1~2019/1<br></br>3年1個月
+                          2016/1~2019/1<br>3年1個月
                         </p>
                       </div>
                       <div class="pt-3 pb-6">
                         <p
                           class="m-0 text-start leading-28px font-400 text-#212529"
                         >
-                          ◆ 客戶服務與危機處理｜負責旅館櫃台接待、入住退房手續、處理客戶抱怨與緊急應變。<br></br>
-                          ◆ 設施維護與協調｜與維修廠商及清潔團隊溝通協調，確保設施正常運作及環境整潔。<br></br>
-                          ◆ 團隊協作與排班｜管理櫃台排班，培訓新進人員，確保營運順暢。<br></br>
-                          <br></br>
-                          ◆ 成長與成就：<br></br>
+                          ◆ 客戶服務與危機處理｜負責旅館櫃台接待、入住退房手續、處理客戶抱怨與緊急應變。<br>
+                          ◆ 設施維護與協調｜與維修廠商及清潔團隊溝通協調，確保設施正常運作及環境整潔。<br>
+                          ◆ 團隊協作與排班｜管理櫃台排班，培訓新進人員，確保營運順暢。<br>
+                          <br>
+                          ◆ 成長與成就：<br>
                           <div class="ms-5 leading-[28px]">
-                            1. 問題解決能力：有效應對突發狀況，確保客戶滿意度。<br></br>
-                            2. 跨部門溝通：與清潔、維修部門保持良好溝通，提高工作效率。<br></br>
-                            3. 營運管理：協助優化接待流程，提升整體服務品質。<br></br>
+                            1. 問題解決能力：有效應對突發狀況，確保客戶滿意度。<br>
+                            2. 跨部門溝通：與清潔、維修部門保持良好溝通，提高工作效率。<br>
+                            3. 營運管理：協助優化接待流程，提升整體服務品質。<br>
                           </div>
-                          <br></br>
+                          <br>
                           ◆  離職原因：尋求個人職涯發展與轉型機會。
                         </p>
                       </div>
@@ -1385,12 +1398,12 @@ onUnmounted(() => {
                         希望內容
                       </p>
                       <p class="m-0 leading-28px">
-                        1. 負責軟體之分析、設計以及程式撰寫。<br></br>
-                        2. 規劃執行軟體架構及模組之設計，並控管軟體設計進度。<br></br>
-                        3. 進行軟體之測試與修改。<br></br>
-                        4. 規劃、執行與維護量產的產品。<br></br>
-                        5. 協助研發軟體新技術與新工具。<br></br>
-                        6. 管控軟體開發成本。<br></br>
+                        1. 負責軟體之分析、設計以及程式撰寫。<br>
+                        2. 規劃執行軟體架構及模組之設計，並控管軟體設計進度。<br>
+                        3. 進行軟體之測試與修改。<br>
+                        4. 規劃、執行與維護量產的產品。<br>
+                        5. 協助研發軟體新技術與新工具。<br>
+                        6. 管控軟體開發成本。<br>
                       </p>
                     </div>
                   </div>
@@ -1404,64 +1417,64 @@ onUnmounted(() => {
                   </p>
                 </div>
                 <div class="p-6">
-                 【自我介紹】<br></br><br></br>
+                 【自我介紹】<br><br>
                  <div class="ms-5 mb-5">
                    您好，我是鄭翔駿，我喜愛運動，平時興趣是攀岩、看運動比賽、影集跟打電動。現職為接案的自由教練，準備成為
                    前端工程師！
                  </div>
-                    【團隊合作與整合溝通：櫃台主管／工務主任】<br></br><br></br>
+                    【團隊合作與整合溝通：櫃台主管／工務主任】<br><br>
                     <div class="ms-5 mb-5">
-                      我的溝通風格是先綜觀全局，逐步分析找出問題核心後便可高效率解決雙邊或多邊溝通的痛點。<br></br>
-                      透過全方位的策略規劃，我致力於促進跨部門的協同合作，並主動發掘潛在的成長契機，以達到全面性的卓越。<br></br>
+                      我的溝通風格是先綜觀全局，逐步分析找出問題核心後便可高效率解決雙邊或多邊溝通的痛點。<br>
+                      透過全方位的策略規劃，我致力於促進跨部門的協同合作，並主動發掘潛在的成長契機，以達到全面性的卓越。<br>
                       在青旅工作期間，退房後到入住前是最忙碌的時段，各部門都想盡快完成自己的工作，在沒有管理的情況下容易發
                       生衝突。第一步我會先向各部門瞭解狀況，瞭解每日每週入住情形與確認各部門人力後，依照輕重緩急預先排定打掃流
                       程，建置且確保高效完善的作業流程。也因為長期且有效的溝通模式累積了良好的合作信譽，曾連續三年在公司年終內
                       部投票中獲得第 1 名。
                     </div>
-                    【變化與挑戰：個人教練／均均衡創辦人】<br></br><br></br>
+                    【變化與挑戰：個人教練／均均衡創辦人】<br><br>
                     <div class="ms-5 mb-5">
                       在穩定的當下，我也時常保持思考自己的職涯與成長。旅館工作期間接觸到了新的機會，考量到自己在原職位的成長
-                      有限，審慎評估後決定離開待了4 年半的工作進入專屬健議有限公司擔任個人教練。<br></br><br></br>
+                      有限，審慎評估後決定離開待了4 年半的工作進入專屬健議有限公司擔任個人教練。<br><br>
                       健身教練須為每個不同的顧客著想規劃，憑藉著累積多年的溝通與客戶服務的能力，我能夠在有限時間內快速了解需
                       求，溝通顧客期望達成的目標，而這些經驗也讓我在製作網頁上隨時以使用者的需求作為出發點思考如何創造更好的使
-                      用者體驗。<br></br><br></br>
+                      用者體驗。<br><br>
                       然而在一次車禍過後，因為腳受傷在床上躺了四個月，休養期間無法工作的失落感讓我體認到相關限制，開始思考不
                       同發展的可能性。鑑於當時健身市場的成長與需求顯著，加上自身過去的教練經驗與知識，配合友人餐飲經驗，於是在
-                      評估過後決定與友人共同加入「均均衡」，開啟健康便當事業。<br></br><br></br>
+                      評估過後決定與友人共同加入「均均衡」，開啟健康便當事業。<br><br>
                       便當事業為我帶來許多充實有趣的挑戰，從市場分析、擺攤地點的選擇與協調、與客戶及供應商的關係管理、自我管
                       理等等。經過努力，我們也終於有穩定的供應來源及穩定的回頭客甚至是合作企業。可惜在正式營運約四個月後碰上疫
                       情爆發，曾嘗試轉型，但在評估損益與自身條件後決定結束營業，及時止損。在創業的這段時間裡，在條件不斷變動的
                       情況下隨時因應調整計畫，讓我學習時刻自我反省，接納壓力並調適情緒，提升面對挫折的抗壓性及彈性應變的能力。
                     </div>
-                    【轉變的契機：成為前端工程師】<br></br><br></br>
+                    【轉變的契機：成為前端工程師】<br><br>
                     <div class="ms-5 mb-5">
                       回歸教練一職後，在工作上時常會接觸到不同產業的客戶，因此讓我有機會認識到程式語言，在跟工程師友人諮詢過
-                      後決定嘗試，實際接觸程式後便愛上開發，相當享受挑戰邏輯思考的過程，於是開始在工作之餘投入大量的時間學習。<br></br><br></br>
+                      後決定嘗試，實際接觸程式後便愛上開發，相當享受挑戰邏輯思考的過程，於是開始在工作之餘投入大量的時間學習。<br><br>
                       在決定學習資源時因經濟需求須維持工作，全心投入實體班是不太實際的選擇，考量過後決定以線上課程為主，搭配
                       大量的書籍與影音資源來學習。學習過程中了解到前端領域的深度，考量自身條件，我知道我必須要有足夠的產出才有
                       機會讓人看到，我也希望持續探索自己對於這行業的熱愛程度與能力，便給自己設下需要有足夠程度的作品集才能開始
-                      找前端工作，不急於一時。<br></br><br></br>
+                      找前端工作，不急於一時。<br><br>
                       為了完善技能，設定各階段目標逐步磨練，要完成切版、原生 JS、JS 框架各一個作品，並且不依賴於線上課程的作
                       業。發想時學習使用 Whimsical 規劃 SiteMap，使用 Figma 繪製 Wireframe，製作時使用 JS 與 Vue 終於靠自己打造
                       出多個不同階段的專屬作品。三個作品從發想開始到程式皆為獨立開發完成，並使用 JSON Server 模擬後端 API 進行
-                      串接。透過輸出，看到成品的喜悅也讓我更堅定要往前端工程師這個目標前進。<br></br><br></br>
+                      串接。透過輸出，看到成品的喜悅也讓我更堅定要往前端工程師這個目標前進。<br><br>
                       自學期間，常常遇到錯誤訊息的挫折及時間壓力，也曾因為光是要 debug 就花上許多時間。但過程中的樂趣，切出
                       想要的畫面的成就感、逐步理解邏輯並解決問題的暢快都讓我覺得開發是件有趣的事。我也逐漸培養出面對問題、上網
                       搜尋官方文件、Stack Overflow、ChatGPT 等，解決問題的能力，也因此從中獲得廣泛的知識和經驗。
                     </div>
-                    【讓過去成為助力】<br></br><br></br>
+                    【讓過去成為助力】<br><br>
                     <div class="ms-5 mb-5">
                       過往的經歷帶給我許多養分，讓我更專注在提升自己、與人溝通以及提升使用者體驗，期望我用我的能力做出使用者
                       體驗良好的作品。工作之餘，我也將運動融合生活，保持體力與身心健康，讓熱愛學習新事物的我也能適應快速變化的
-                      前端趨勢，隨時學習新技術。<br></br><br></br>
+                      前端趨勢，隨時學習新技術。<br><br>
                       <div class="ms-5 mb-5">
-                        ◆ 良好的溝通能力幫助我未來在工作上與同事、主管甚至是客戶都能有保持順暢的溝通。<br></br>
-                        ◆ 擅長分析、拆解問題、找尋核心的能力讓我能夠獨自或是共同解決問題<br></br>
-                        ◆ 積極良好自學能力讓我能學習所需技術並應用在工作上<br></br>
+                        ◆ 良好的溝通能力幫助我未來在工作上與同事、主管甚至是客戶都能有保持順暢的溝通。<br>
+                        ◆ 擅長分析、拆解問題、找尋核心的能力讓我能夠獨自或是共同解決問題<br>
+                        ◆ 積極良好自學能力讓我能學習所需技術並應用在工作上<br>
                       </div>
                       轉職期間我也繼續充實自我持續學習，穩定基礎並掌握更新的技術。因目前 Vue 專案是使用 Option Api 撰寫，期望
                       能盡快掌握 Composition Api 並實際應用，並掌握非常重要的 Git 版控能力。也希望盡快學習 TypeScript 穩定自己的程
-                      式碼，學習 Node.js 瞭解後端概念。<br></br><br></br>
+                      式碼，學習 Node.js 瞭解後端概念。<br><br>
                       如果有幸能跟貴公司合作，希望在短期內盡快了解公司文化並協助開發，增進實戰經驗
                       ；第 1 年熟練公司主要使用的技術並以協作的方式參與專案，期望自己在 2-3 年內成為穩定獨立的開發者。未來 3-5
                       年也期許自己可以更全面性地瞭解與思考開發流程，並且累積管理技術團隊的經驗與能力。
@@ -1616,13 +1629,201 @@ onUnmounted(() => {
             <div
               class="grid grid-cols-3 sm:grid-cols-5 gap-2 sm:gap-3 max-w-4xl mx-auto"
             >
-              <div class="skeleton-block aspect-square rounded-xl"></div>
-              <div class="skeleton-block aspect-square rounded-xl"></div>
-              <div class="skeleton-block aspect-square rounded-xl"></div>
-              <div class="skeleton-block aspect-square rounded-xl"></div>
-              <div class="skeleton-block aspect-square rounded-xl"></div>
+              <div class="skeleton-block aspect-square rounded-xl skeleton-wave skeleton-progressive-1" />
+              <div class="skeleton-block aspect-square rounded-xl skeleton-wave skeleton-progressive-2" />
+              <div class="skeleton-block aspect-square rounded-xl skeleton-wave skeleton-progressive-3" />
+              <div class="skeleton-block aspect-square rounded-xl skeleton-wave skeleton-progressive-4" />
+              <div class="skeleton-block aspect-square rounded-xl skeleton-wave skeleton-progressive-5" />
             </div>
           </div>
+          
+          <!-- Tab content area skeleton -->
+          <div class="mt-6">
+            <div class="bg-white/90 backdrop-blur-sm p-4 md:p-6 rounded-xl shadow-lg border border-slate-200/50">
+              
+              <!-- Description tab skeleton -->
+              <div class="space-y-6">
+                <!-- Timeline skeleton -->
+                <div class="flex justify-center mb-6">
+                  <div class="skeleton-block w-full max-w-2xl h-48 rounded-lg" />
+                </div>
+                
+                <!-- Job match analysis skeleton -->
+                <div class="space-y-4">
+                  <div class="bg-gradient-to-r from-blue-50 to-cyan-50 rounded-xl p-6 border border-blue-100">
+                    <div class="flex items-center mb-4">
+                      <div class="skeleton-circle w-10 h-10" />
+                      <div class="ml-3 flex-1">
+                        <div class="skeleton-line w-1/2 h-5" />
+                      </div>
+                    </div>
+                    <div class="skeleton-line w-full h-4" />
+                    <div class="skeleton-line w-3/4 h-4 mt-2" />
+                  </div>
+                  
+                  <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div class="bg-green-50 border border-green-200 rounded-xl p-4">
+                      <div class="skeleton-line w-1/3 h-5 mb-3" />
+                      <div class="space-y-2">
+                        <div class="skeleton-line w-full h-4" />
+                        <div class="skeleton-line w-5/6 h-4" />
+                        <div class="skeleton-line w-4/5 h-4" />
+                      </div>
+                    </div>
+                    <div class="bg-yellow-50 border border-yellow-200 rounded-xl p-4">
+                      <div class="skeleton-line w-1/3 h-5 mb-3" />
+                      <div class="space-y-2">
+                        <div class="skeleton-line w-full h-4" />
+                        <div class="skeleton-line w-5/6 h-4" />
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                
+                <!-- AI Analysis skeleton -->
+                <div class="space-y-4">
+                  <div class="bg-gradient-to-r from-indigo-50 to-purple-50 border border-indigo-200 p-6 rounded-xl">
+                    <div class="flex items-center mb-3">
+                      <div class="skeleton-circle w-10 h-10" />
+                      <div class="ml-3 flex-1">
+                        <div class="skeleton-line w-2/3 h-5" />
+                      </div>
+                    </div>
+                    <div class="skeleton-line w-full h-4" />
+                    <div class="skeleton-line w-4/5 h-4 mt-2" />
+                  </div>
+                  
+                  <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                    <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-4">
+                      <div class="skeleton-line w-1/2 h-5 mb-4" />
+                      <div class="space-y-3">
+                        <div class="skeleton-line w-full h-4" />
+                        <div class="skeleton-line w-5/6 h-4" />
+                        <div class="skeleton-line w-4/5 h-4" />
+                      </div>
+                    </div>
+                    <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-4">
+                      <div class="skeleton-line w-1/2 h-5 mb-4" />
+                      <div class="space-y-3">
+                        <div class="skeleton-line w-full h-4" />
+                        <div class="skeleton-line w-5/6 h-4" />
+                      </div>
+                    </div>
+                    <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-4">
+                      <div class="skeleton-line w-1/2 h-5 mb-4" />
+                      <div class="space-y-3">
+                        <div class="skeleton-line w-full h-4" />
+                        <div class="skeleton-line w-4/5 h-4" />
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                
+                <!-- Fact check skeleton -->
+                <div class="space-y-6">
+                  <div class="bg-gradient-to-r from-emerald-50 to-teal-50 border border-emerald-200 rounded-xl p-6">
+                    <div class="flex items-start space-x-4">
+                      <div class="skeleton-circle w-12 h-12" />
+                      <div class="flex-1">
+                        <div class="skeleton-line w-1/2 h-6 mb-2" />
+                        <div class="skeleton-line w-full h-4" />
+                        <div class="skeleton-line w-5/6 h-4 mt-2" />
+                      </div>
+                    </div>
+                  </div>
+                  
+                  <div class="bg-white rounded-xl shadow-lg border border-slate-200 p-6">
+                    <div class="skeleton-block w-full h-32 mb-4" />
+                    <div class="flex gap-3">
+                      <div class="skeleton-button w-32 h-12" />
+                      <div class="skeleton-button w-24 h-12" />
+                    </div>
+                  </div>
+                </div>
+                
+                <!-- Questions skeleton -->
+                <div class="space-y-4">
+                  <div class="bg-gradient-to-r from-purple-50 to-indigo-50 rounded-xl border border-purple-100 p-6">
+                    <div class="flex items-center mb-3">
+                      <div class="skeleton-circle w-10 h-10" />
+                      <div class="ml-3 flex-1">
+                        <div class="skeleton-line w-1/3 h-5" />
+                      </div>
+                    </div>
+                    <div class="skeleton-line w-full h-4" />
+                  </div>
+                  
+                  <div class="space-y-3">
+                    <div class="bg-white border border-gray-200 rounded-lg p-4">
+                      <div class="skeleton-line w-3/4 h-5 mb-2" />
+                      <div class="skeleton-line w-full h-4" />
+                      <div class="skeleton-line w-5/6 h-4 mt-2" />
+                    </div>
+                    <div class="bg-white border border-gray-200 rounded-lg p-4">
+                      <div class="skeleton-line w-4/5 h-5 mb-2" />
+                      <div class="skeleton-line w-full h-4" />
+                    </div>
+                    <div class="bg-white border border-gray-200 rounded-lg p-4">
+                      <div class="skeleton-line w-2/3 h-5 mb-2" />
+                      <div class="skeleton-line w-full h-4" />
+                      <div class="skeleton-line w-4/5 h-4 mt-2" />
+                    </div>
+                  </div>
+                </div>
+                
+                <!-- Chat interface skeleton -->
+                <div class="space-y-4">
+                  <div class="bg-gradient-to-r from-blue-50 to-cyan-50 rounded-xl border border-blue-100 p-6">
+                    <div class="flex items-center mb-3">
+                      <div class="skeleton-circle w-10 h-10" />
+                      <div class="ml-3 flex-1">
+                        <div class="skeleton-line w-1/4 h-5" />
+                      </div>
+                    </div>
+                    <div class="skeleton-line w-full h-4" />
+                  </div>
+                  
+                  <div class="bg-white rounded-xl border border-gray-200 h-64">
+                    <div class="p-4 space-y-4">
+                      <!-- Chat messages skeleton -->
+                      <div class="flex justify-start">
+                        <div class="flex space-x-3 max-w-xs">
+                          <div class="skeleton-circle w-8 h-8" />
+                          <div class="bg-gray-100 rounded-lg p-3 flex-1">
+                            <div class="skeleton-line w-full h-4" />
+                            <div class="skeleton-line w-3/4 h-4 mt-2" />
+                          </div>
+                        </div>
+                      </div>
+                      <div class="flex justify-end">
+                        <div class="bg-blue-500 rounded-lg p-3 max-w-xs">
+                          <div class="skeleton-line w-full h-4 bg-white/30" />
+                          <div class="skeleton-line w-2/3 h-4 mt-2 bg-white/30" />
+                        </div>
+                      </div>
+                      <div class="flex justify-start">
+                        <div class="flex space-x-3 max-w-xs">
+                          <div class="skeleton-circle w-8 h-8" />
+                          <div class="bg-gray-100 rounded-lg p-3 flex-1">
+                            <div class="skeleton-line w-full h-4" />
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                    
+                    <!-- Chat input skeleton -->
+                    <div class="border-t border-gray-200 bg-gray-50 p-4">
+                      <div class="flex gap-3">
+                        <div class="skeleton-block flex-1 h-12 rounded-xl" />
+                        <div class="skeleton-button w-20 h-12" />
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          
           <div class="skeleton-pulse text-center mt-6 text-slate-800 text-18px">
             正在分析履歷內容...
           </div>
@@ -1659,7 +1860,7 @@ onUnmounted(() => {
           <!-- 卡片總結區 -->
           <div class="mb-6">
             <!-- 卡片容器 -->
-            <div class="rounded-xl h-[470px] overflow-y-auto scrollbar-auto">
+            <div class="rounded-xl h-[600px] overflow-y-auto scrollbar-auto">
               <!-- 總結卡片 -->
               <div v-show="currentCard === 0" class="w-full h-full">
                 <div class="relative h-full summary-card rounded-xl">
@@ -1860,7 +2061,7 @@ onUnmounted(() => {
                   </div>
 
                   <!-- 底部按鈕區域 -->
-                  <div class="flex justify-center gap-3 mt-6 pb-4">
+                  <div class="flex justify-center gap-3 pb-4">
                     <!-- 問問全職者按鈕 -->
                     <button
                       @click="askFullTimer"
@@ -1879,29 +2080,9 @@ onUnmounted(() => {
                           d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"
                         ></path>
                       </svg>
-                      問問全職者
+                      問問求職者
                     </button>
 
-                    <!-- 下載問題範本按鈕 -->
-                    <button
-                      @click="downloadQuestionTemplate"
-                      class="bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-600 hover:to-teal-600 text-white px-4 py-2 rounded-lg text-sm font-medium shadow-md hover:shadow-lg transition-all duration-200 flex items-center gap-2"
-                    >
-                      <svg
-                        class="w-4 h-4"
-                        fill="none"
-                        stroke="currentColor"
-                        viewBox="0 0 24 24"
-                      >
-                        <path
-                          stroke-linecap="round"
-                          stroke-linejoin="round"
-                          stroke-width="2"
-                          d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
-                        ></path>
-                      </svg>
-                      下載問題範本
-                    </button>
                   </div>
 
                   <!-- 複製成功提示 -->
@@ -2116,7 +2297,44 @@ onUnmounted(() => {
         <div
           class="bg-white/90 backdrop-blur-sm p-4 md:p-6 rounded-xl shadow-lg border border-slate-200/50"
         >
-          <div v-show="activeTab === 'description'" class="tab-content">
+          <!-- Tab switching skeleton -->
+          <div v-if="isTabSwitching" class="tab-content skeleton-slide-in">
+            <div class="space-y-6">
+              <!-- Header skeleton -->
+              <div class="bg-gradient-to-r from-blue-50 to-cyan-50 rounded-xl p-6 border border-blue-100 skeleton-progressive-1">
+                <div class="flex items-center mb-4">
+                  <div class="skeleton-circle w-10 h-10 skeleton-wave" />
+                  <div class="ml-3 flex-1">
+                    <div class="skeleton-line w-1/2 h-5 skeleton-progressive-2" />
+                  </div>
+                </div>
+                <div class="skeleton-line w-full h-4 skeleton-progressive-3" />
+                <div class="skeleton-line w-3/4 h-4 mt-2 skeleton-progressive-4" />
+              </div>
+              
+              <!-- Content skeleton -->
+              <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div class="space-y-3 skeleton-progressive-2">
+                  <div class="skeleton-line w-full h-4 skeleton-progressive-1" />
+                  <div class="skeleton-line w-5/6 h-4 skeleton-progressive-2" />
+                  <div class="skeleton-line w-4/5 h-4 skeleton-progressive-3" />
+                </div>
+                <div class="space-y-3 skeleton-progressive-3">
+                  <div class="skeleton-line w-full h-4 skeleton-progressive-2" />
+                  <div class="skeleton-line w-3/4 h-4 skeleton-progressive-3" />
+                </div>
+              </div>
+              
+              <!-- Loading text -->
+              <div class="text-center py-8 skeleton-progressive-5">
+                <div class="skeleton-pulse text-slate-600 text-lg">
+                  正在載入內容...
+                </div>
+              </div>
+            </div>
+          </div>
+          
+          <div v-show="activeTab === 'description' && !isTabSwitching" class="tab-content">
             <!-- 學經歷時間軸視覺化 - 只在非職缺符合度功能時顯示 -->
             <div
               v-show="activeFunction !== 'job-match'"
@@ -2414,12 +2632,12 @@ onUnmounted(() => {
 
           <!-- 履歷上下文分析區域 - 只在履歷上下文分析功能時顯示 -->
           <div
-            v-show="activeTab === 'ai' && activeFunction === 'context-analysis'"
+            v-show="activeTab === 'ai' && activeFunction === 'context-analysis' && !isTabSwitching"
             class="tab-content space-y-8"
           >
             <!-- 履歷上下文分析標題 -->
             <div
-              class="bg-gradient-to-r from-indigo-50 to-purple-50 border border-indigo-200 p-6 rounded-xl shadow-sm"
+              class="bg-gradient-to-r from-indigo-50 to-purple-50 border border-indigo-200 p-4 rounded-xl shadow-sm"
             >
               <h3
                 class="text-xl font-bold text-slate-800 mb-3 flex items-center"
@@ -2440,7 +2658,7 @@ onUnmounted(() => {
                 履歷上下文分析
               </h3>
               <p class="text-slate-600 leading-relaxed">
-                分析履歷內容的一致性、邏輯性和真實性，檢查是否有矛盾、誇大或不合理的敘述。
+                分析履歷內容的一致性、邏輯性，檢查是否有矛盾、誇大或不合理的敘述。
               </p>
             </div>
 
@@ -3073,7 +3291,7 @@ onUnmounted(() => {
         </div>
 
         <!-- 事實查核內容區域 -->
-        <div v-show="activeTab === 'fact-check'" class="tab-content space-y-8">
+        <div v-show="activeTab === 'fact-check' && !isTabSwitching" class="tab-content space-y-8">
           <!-- 履歷上傳區域 -->
           <div v-if="factCheckProgress === 0" class="space-y-6">
             <!-- 特色介紹區塊 -->
@@ -3945,7 +4163,7 @@ onUnmounted(() => {
       </div>
 
       <!-- 建議提問內容區域 -->
-      <div v-show="activeTab === 'questions'" class="tab-content">
+      <div v-show="activeTab === 'questions' && !isTabSwitching" class="tab-content">
         <!-- 現代化標題卡片 -->
         <div
           class="mb-8 p-6 bg-gradient-to-r from-purple-50 to-indigo-50 rounded-xl border border-purple-100 shadow-sm"
@@ -4316,7 +4534,7 @@ onUnmounted(() => {
             </div>
 
             <!-- 現代化按鈕區域 -->
-            <div class="border-t border-gray-100 pt-6 mt-8">
+            <div class="border-t border-gray-100 pt-6 mt-3">
               <div
                 class="flex flex-col sm:flex-row gap-4 justify-center items-center"
               >
@@ -4371,7 +4589,7 @@ onUnmounted(() => {
       </div>
 
       <!-- AI 聊天室內容區域 -->
-      <div v-show="activeTab === 'chat'" class="tab-content">
+      <div v-show="activeTab === 'chat' && !isTabSwitching" class="tab-content">
         <!-- 現代化 AI 助手標題卡片 -->
         <div
           class="mb-8 p-6 bg-gradient-to-r from-blue-50 to-cyan-50 rounded-xl border border-blue-100 shadow-sm"
@@ -4830,6 +5048,99 @@ main {
   50% {
     opacity: 0.3;
   }
+}
+
+/* Progressive Loading Animations */
+.skeleton-progressive-1 {
+  animation-delay: 0.1s;
+}
+
+/* Responsive skeleton adjustments */
+@media (max-width: 640px) {
+  .skeleton-line {
+    height: 14px;
+  }
+  
+  .skeleton-block {
+    height: 50px;
+  }
+  
+  .skeleton-circle {
+    width: 32px;
+    height: 32px;
+  }
+  
+  .skeleton-container {
+    padding: 8px 0;
+  }
+}
+
+.skeleton-progressive-2 {
+  animation-delay: 0.2s;
+}
+
+.skeleton-progressive-3 {
+  animation-delay: 0.3s;
+}
+
+.skeleton-progressive-4 {
+  animation-delay: 0.4s;
+}
+
+.skeleton-progressive-5 {
+  animation-delay: 0.5s;
+}
+
+@keyframes skeleton-fade-in {
+  0% {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.skeleton-container {
+  animation: skeleton-fade-in 0.6s ease-out;
+}
+
+.skeleton-slide-in {
+  animation: skeleton-fade-in 0.8s ease-out forwards;
+}
+
+/* Wave animation for progressive loading */
+@keyframes skeleton-wave {
+  0% {
+    transform: translateX(-100%);
+  }
+  50% {
+    transform: translateX(100%);
+  }
+  100% {
+    transform: translateX(100%);
+  }
+}
+
+.skeleton-wave::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.6), transparent);
+  animation: skeleton-wave 2s infinite;
+  border-radius: inherit;
+}
+
+.skeleton-line,
+.skeleton-block,
+.skeleton-circle,
+.skeleton-button {
+  position: relative;
+  overflow: hidden;
 }
 
 /* 複製狀態提示 */
