@@ -33,8 +33,8 @@ const isCopied = ref(false);
 // 新增 tab 切換控制變數
 const activeTab = ref("description"); // 可選值: 'description', 'ai', 'fact-check', 'questions', 'chat'
 
-// 新增卡片總結區狀態變數（暫時保留，未來可能使用）
-// const currentCard = ref(0); // 0: 總結卡片, 1: 建議問題卡片
+// 新增卡片總結區狀態變數
+const currentCard = ref(0); // 0: 總結卡片, 1: 建議問題卡片
 const cardSummary = ref({
   recommendation: "高度推薦", // 高度推薦 | 需關注問題
   jobMatch: {
@@ -137,58 +137,12 @@ const handleFeedback = (itemId, type) => {
   }
 };
 
-// 卡片滑動功能
-const cardContainer = ref(null);
-
-const scrollToCard = (index) => {
-  if (cardContainer.value) {
-    const cardWidth = cardContainer.value.children[0].offsetWidth + 16; // 卡片寬度 + gap
-    cardContainer.value.scrollTo({
-      left: index * cardWidth,
-      behavior: "smooth",
-    });
-  }
-};
-
-// 滑鼠拖曳功能
-const isDragging = ref(false);
-const startX = ref(0);
-const scrollLeft = ref(0);
-
-const handleMouseDown = (e) => {
-  if (!cardContainer.value) return;
-  isDragging.value = true;
-  startX.value = e.pageX - cardContainer.value.offsetLeft;
-  scrollLeft.value = cardContainer.value.scrollLeft;
-  cardContainer.value.style.cursor = "grabbing";
-};
-
-const handleMouseMove = (e) => {
-  if (!isDragging.value || !cardContainer.value) return;
-  e.preventDefault();
-  const x = e.pageX - cardContainer.value.offsetLeft;
-  const walk = (x - startX.value) * 2; // 拖曳速度倍數
-  cardContainer.value.scrollLeft = scrollLeft.value - walk;
-};
-
-const handleMouseUp = () => {
-  if (!cardContainer.value) return;
-  isDragging.value = false;
-  cardContainer.value.style.cursor = "grab";
-};
-
-const handleMouseLeave = () => {
-  if (!cardContainer.value) return;
-  isDragging.value = false;
-  cardContainer.value.style.cursor = "grab";
-};
-
 const showQuestionCard = () => {
-  scrollToCard(1);
+  currentCard.value = 1;
 };
 
 const backToSummary = () => {
-  scrollToCard(0);
+  currentCard.value = 0;
 };
 
 const scheduleInterview = () => {
@@ -250,21 +204,30 @@ const copyQuestion = async (questionText, questionIndex) => {
   }
 };
 
-const copyAllQuestions = async () => {
-  const questions = [
-    "請分享您在前一份工作中遇到的最大挑戰，以及如何解決的？",
-    "您對於這個職位有什麼特別的想法或期待？",
-    "請描述一次您需要快速學習新技能的經驗。",
-  ];
+// 取得問題範本內容
+const getQuestionTemplate = () => {
+  return `李先生您好，感謝您應徵我們的職位！
 
-  const allQuestionsText = questions.map((q, i) => `${i + 1}. ${q}`).join("\n");
+我們對您的履歷很有興趣，希望您能先協助回覆以下幾個問題，幫助我們更了解您的專業背景：
+
+1. 您在履歷中提到在ABC科技時提升系統可擴展性30%，能否簡要說明當時的系統架構以及您採取了哪些具體措施來實現這個改善？
+
+2. 您列出精通多種技術如Python、JavaScript和Java等，能否分享一個您最熟悉的技術棧，以及一個您使用這些技術解決的最具挑戰性問題？
+
+3. 關於數位轉型平台專案，您提到降低了40%的運營成本，這個數據是如何計算的？過程中遇到了哪些主要困難，您是如何解決的？
+
+感謝您的配合！您的回覆將幫助我們更好地準備面試內容。期待您的回音，也期待不久後與您見面交流。`;
+};
+
+const copyAllQuestions = async () => {
+  const templateText = getQuestionTemplate();
 
   try {
-    await navigator.clipboard.writeText(allQuestionsText);
-    showCopySuccess("已複製全部問題");
+    await navigator.clipboard.writeText(templateText);
+    showCopySuccess("已複製完整問題範本");
   } catch (err) {
     console.error("複製失敗:", err);
-    fallbackCopy(allQuestionsText);
+    fallbackCopy(templateText);
   }
 };
 
@@ -505,18 +468,8 @@ const resetQuestionSection = () => {
 
 // 下載提問建議功能
 const downloadQuestions = () => {
-  // 問題範本文本
-  const content = `李先生您好，感謝您應徵我們的職位！
-
-我們對您的履歷很有興趣，希望您能先協助回覆以下幾個問題，幫助我們更了解您的專業背景：
-
-1. 您在履歷中提到在ABC科技時提升系統可擴展性30%，能否簡要說明當時的系統架構以及您採取了哪些具體措施來實現這個改善？
-
-2. 您列出精通多種技術如Python、JavaScript和Java等，能否分享一個您最熟悉的技術棧，以及一個您使用這些技術解決的最具挑戰性問題？
-
-3. 關於數位轉型平台專案，您提到降低了40%的運營成本，這個數據是如何計算的？過程中遇到了哪些主要困難，您是如何解決的？
-
-感謝您的配合！您的回覆將幫助我們更好地準備面試內容。期待您的回音，也期待不久後與您見面交流。`;
+  // 使用統一的問題範本
+  const content = getQuestionTemplate();
 
   // 創建Blob對象
   const blob = new Blob([content], { type: "text/plain" });
@@ -713,6 +666,7 @@ onUnmounted(() => {
 
 <template>
   <div class="resume bg-#f3f3f3 flex flex-col min-h-screen relative">
+    <!-- header -->
     <header>
       <div
         class="headerBlack bg-#292929 h-30px flex justify-start items-center"
@@ -746,6 +700,7 @@ onUnmounted(() => {
         </div>
       </div>
     </header>
+    <!-- nav -->
     <nav class="flex items-center px-44px h-40px bg-white">
       <ul class="flex items-center list-none p-0 m-0">
         <li>
@@ -843,7 +798,7 @@ onUnmounted(() => {
                   class="flex justify-center items-center z-10 w-32 h-32 rounded-full bg-white absolute -top-8 -translate-y-8"
                 >
                   <img
-                    src="@/assets/images/ai/avatar.svg"
+                    src="@/assets/images/ai/sword.png"
                     alt=""
                     class="w-30 h-30 object-cover bg-gray-300 rounded-full"
                   />
@@ -1510,7 +1465,7 @@ onUnmounted(() => {
         <!-- 實際內容 -->
         <div v-else>
           <!-- 分析僅供參考提示 -->
-          <div class="mb-4">
+          <!-- <div class="mb-4">
             <div
               class="bg-gradient-to-r from-amber-50 to-yellow-50 border border-amber-200 p-2 rounded-xl shadow-sm"
             >
@@ -1533,57 +1488,18 @@ onUnmounted(() => {
                 分析僅供參考，建議結合面試表現進行綜合評估。
               </p>
             </div>
-          </div>
+          </div> -->
 
           <!-- 卡片總結區 -->
           <div class="mb-6">
-            <!-- 卡片容器 - 改用橫向滑動 -->
-            <div
-              ref="cardContainer"
-              class="flex space-x-4 overflow-x-auto rounded-xl cursor-grab select-none"
-              @mousedown="handleMouseDown"
-              @mousemove="handleMouseMove"
-              @mouseup="handleMouseUp"
-              @mouseleave="handleMouseLeave"
-            >
+            <!-- 卡片容器 -->
+            <div class="rounded-xl h-[400px] overflow-y-auto">
               <!-- 總結卡片 -->
-              <div class="w-[94%] flex-shrink-0">
-                <div class="relative h-[400px] summary-card">
+              <div v-show="currentCard === 0" class="w-full h-full">
+                <div class="relative h-full summary-card rounded-xl">
                   <!-- 柴犬角色 -->
                   <div class="absolute top-4 left-6 z-20">
                     <div class="relative">
-                      <!-- 推薦標籤對話泡泡 - 在柴犬右側永久顯示 -->
-                      <div
-                        class="absolute -right-4 -top-2 transform translate-x-full z-30"
-                      >
-                        <!-- 對話泡泡 -->
-                        <div
-                          :class="
-                            cardSummary.recommendation === '高度推薦'
-                              ? 'bg-green-100 text-green-700 border-green-300'
-                              : 'bg-yellow-100 text-yellow-700 border-yellow-300'
-                          "
-                          class="relative px-3 py-2 rounded-xl shadow-lg border-2"
-                        >
-                          <div class="text-xs font-bold whitespace-nowrap">
-                            {{ cardSummary.recommendation }}
-                          </div>
-                          <!-- 對話泡泡尾巴指向柴犬 -->
-                          <div
-                            class="absolute left-0 top-1/2 transform -translate-y-1/2 -translate-x-1"
-                          >
-                            <div
-                              :class="
-                                cardSummary.recommendation === '高度推薦'
-                                  ? 'border-r-green-300'
-                                  : 'border-r-yellow-300'
-                              "
-                              class="w-0 h-0 border-t-4 border-b-4 border-r-8 border-transparent"
-                            ></div>
-                          </div>
-                        </div>
-                      </div>
-
                       <!-- 反饋提示訊息 - 在高度推薦下方 -->
                       <div
                         v-if="dogFeedback.showToast"
@@ -1606,69 +1522,13 @@ onUnmounted(() => {
                           </div>
                         </div>
                       </div>
-
-                      <!-- 柴犬頭部 -->
-                      <div
-                        class="w-16 h-16 rounded-full bg-gradient-to-br from-orange-300 to-orange-400 border-4 border-white shadow-lg relative overflow-hidden transition-all duration-500"
-                        :class="
-                          cardSummary.recommendation === '高度推薦'
-                            ? 'animate-bounce'
-                            : ''
-                        "
-                      >
-                        <!-- 柴犬面部特徵 -->
-                        <div
-                          class="absolute inset-0 flex flex-col items-center justify-center"
-                        >
-                          <!-- 眼睛 -->
-                          <div class="flex space-x-2 mb-1">
-                            <div
-                              class="w-2 h-2 bg-black rounded-full transition-all duration-300"
-                              :class="
-                                cardSummary.recommendation === '高度推薦'
-                                  ? 'transform scale-110'
-                                  : ''
-                              "
-                            ></div>
-                            <div
-                              class="w-2 h-2 bg-black rounded-full transition-all duration-300"
-                              :class="
-                                cardSummary.recommendation === '高度推薦'
-                                  ? 'transform scale-110'
-                                  : ''
-                              "
-                            ></div>
-                          </div>
-                          <!-- 鼻子 -->
-                          <div
-                            class="w-1.5 h-1 bg-black rounded-full mb-1"
-                          ></div>
-                          <!-- 嘴巴 -->
-                          <div
-                            class="w-3 h-1.5 border-b-2 border-black rounded-full transition-all duration-300"
-                            :class="
-                              cardSummary.recommendation === '高度推薦'
-                                ? 'transform rotate-12'
-                                : cardSummary.recommendation === '需關注問題'
-                                ? 'transform -rotate-12'
-                                : ''
-                            "
-                          ></div>
-                        </div>
-                        <!-- 耳朵 -->
-                        <div
-                          class="absolute -top-1 left-2 w-3 h-4 bg-orange-400 rounded-t-full transform -rotate-12"
-                        ></div>
-                        <div
-                          class="absolute -top-1 right-2 w-3 h-4 bg-orange-400 rounded-t-full transform rotate-12"
-                        ></div>
-                      </div>
+                      <img src="@/assets/images/ai/talent.png" class="w-10" />
                     </div>
                   </div>
 
                   <!-- 對話框 -->
                   <div
-                    class="bg-gradient-to-br from-orange-50 via-white to-orange-50 border-2 border-orange-200 rounded-3xl p-6 h-full relative shadow-xl"
+                    class="bg-gradient-to-br from-orange-50 via-white to-orange-50 border-2 border-orange-200 rounded-xl p-6 h-full relative shadow-xl"
                   >
                     <!-- 對話框尾巴 -->
                     <div
@@ -1757,15 +1617,15 @@ onUnmounted(() => {
               </div>
 
               <!-- 建議問題卡片 -->
-              <div class="w-full flex-shrink-0">
+              <div v-show="currentCard === 1" class="w-full">
                 <div
-                  class="bg-gradient-to-b from-purple-50/40 to-indigo-50/60 border border-purple-200 rounded-xl p-4 sm:p-8 h-[400px] summary-card flex flex-col relative"
+                  class="bg-gradient-to-b from-purple-50/40 to-indigo-50/60 border border-purple-200 rounded-xl p-4 sm:px-6 h-[400px] summary-card flex flex-col relative"
                 >
                   <div class="flex items-start mb-6">
                     <div class="flex-1">
                       <div class="flex items-center justify-between mb-4">
                         <div class="flex items-center gap-2">
-                          <h3 class="text-xl font-bold text-slate-800">
+                          <h3 class="text-xl font-bold text-slate-800 my-0">
                             建議面試問題
                           </h3>
                           <div
@@ -1787,174 +1647,16 @@ onUnmounted(() => {
                           </div>
                         </div>
                       </div>
-                      <div class="space-y-3 text-base text-slate-600 flex-1">
+                      <!-- 統一問題內容區域 -->
+                      <div class="flex-1 text-base text-slate-600">
                         <div
-                          class="flex items-start justify-between group hover:bg-purple-50 rounded-lg p-3 -mx-2 transition-colors duration-200 border border-transparent hover:border-purple-200"
+                          class="bg-white border border-gray-200 rounded-lg p-4 shadow-sm"
                         >
-                          <div class="flex items-start flex-1">
-                            <span
-                              class="w-6 h-6 rounded-full bg-purple-100 text-purple-600 text-sm flex items-center justify-center flex-shrink-0 mt-0.5 mr-3 font-medium"
-                              >1</span
-                            >
-                            <div class="flex-1">
-                              <span class="text-slate-700 font-medium"
-                                >請分享您在前一份工作中遇到的最大挑戰，以及如何解決的？</span
-                              >
-                            </div>
-                          </div>
-                          <button
-                            @click="
-                              copyQuestion(
-                                '請分享您在前一份工作中遇到的最大挑戰，以及如何解決的？',
-                                1
-                              )
-                            "
-                            :class="
-                              copiedQuestions.has(1)
-                                ? 'bg-green-100 text-green-600 border-green-300'
-                                : 'bg-purple-50 text-purple-500 hover:bg-purple-100 border-purple-200'
-                            "
-                            class="ml-3 opacity-80 hover:opacity-100 transition-all duration-200 flex-shrink-0 px-2 py-1 rounded-md border text-xs font-medium"
-                            title="複製問題"
+                          <div
+                            class="whitespace-pre-line text-slate-700 leading-relaxed"
                           >
-                            <div class="flex items-center space-x-1">
-                              <svg
-                                class="w-3 h-3"
-                                fill="none"
-                                stroke="currentColor"
-                                viewBox="0 0 24 24"
-                              >
-                                <path
-                                  v-if="copiedQuestions.has(1)"
-                                  stroke-linecap="round"
-                                  stroke-linejoin="round"
-                                  stroke-width="2"
-                                  d="M5 13l4 4L19 7"
-                                ></path>
-                                <path
-                                  v-else
-                                  stroke-linecap="round"
-                                  stroke-linejoin="round"
-                                  stroke-width="2"
-                                  d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3"
-                                ></path>
-                              </svg>
-                              <span v-if="copiedQuestions.has(1)">已複製</span>
-                              <span v-else>複製</span>
-                            </div>
-                          </button>
-                        </div>
-                        <div
-                          class="flex items-start justify-between group hover:bg-purple-50 rounded-lg p-3 -mx-2 transition-colors duration-200 border border-transparent hover:border-purple-200"
-                        >
-                          <div class="flex items-start flex-1">
-                            <span
-                              class="w-6 h-6 rounded-full bg-purple-100 text-purple-600 text-sm flex items-center justify-center flex-shrink-0 mt-0.5 mr-3 font-medium"
-                              >2</span
-                            >
-                            <div class="flex-1">
-                              <span class="text-slate-700 font-medium"
-                                >您對於這個職位有什麼特別的想法或期待？</span
-                              >
-                            </div>
+                            {{ getQuestionTemplate() }}
                           </div>
-                          <button
-                            @click="
-                              copyQuestion(
-                                '您對於這個職位有什麼特別的想法或期待？',
-                                2
-                              )
-                            "
-                            :class="
-                              copiedQuestions.has(2)
-                                ? 'bg-green-100 text-green-600 border-green-300'
-                                : 'bg-purple-50 text-purple-500 hover:bg-purple-100 border-purple-200'
-                            "
-                            class="ml-3 opacity-80 hover:opacity-100 transition-all duration-200 flex-shrink-0 px-2 py-1 rounded-md border text-xs font-medium"
-                            title="複製問題"
-                          >
-                            <div class="flex items-center space-x-1">
-                              <svg
-                                class="w-3 h-3"
-                                fill="none"
-                                stroke="currentColor"
-                                viewBox="0 0 24 24"
-                              >
-                                <path
-                                  v-if="copiedQuestions.has(2)"
-                                  stroke-linecap="round"
-                                  stroke-linejoin="round"
-                                  stroke-width="2"
-                                  d="M5 13l4 4L19 7"
-                                ></path>
-                                <path
-                                  v-else
-                                  stroke-linecap="round"
-                                  stroke-linejoin="round"
-                                  stroke-width="2"
-                                  d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3"
-                                ></path>
-                              </svg>
-                              <span v-if="copiedQuestions.has(2)">已複製</span>
-                              <span v-else>複製</span>
-                            </div>
-                          </button>
-                        </div>
-                        <div
-                          class="flex items-start justify-between group hover:bg-purple-50 rounded-lg p-3 -mx-2 transition-colors duration-200 border border-transparent hover:border-purple-200"
-                        >
-                          <div class="flex items-start flex-1">
-                            <span
-                              class="w-6 h-6 rounded-full bg-purple-100 text-purple-600 text-sm flex items-center justify-center flex-shrink-0 mt-0.5 mr-3 font-medium"
-                              >3</span
-                            >
-                            <div class="flex-1">
-                              <span class="text-slate-700 font-medium"
-                                >請描述一次您需要快速學習新技能的經驗。</span
-                              >
-                            </div>
-                          </div>
-                          <button
-                            @click="
-                              copyQuestion(
-                                '請描述一次您需要快速學習新技能的經驗。',
-                                3
-                              )
-                            "
-                            :class="
-                              copiedQuestions.has(3)
-                                ? 'bg-green-100 text-green-600 border-green-300'
-                                : 'bg-purple-50 text-purple-500 hover:bg-purple-100 border-purple-200'
-                            "
-                            class="ml-3 opacity-80 hover:opacity-100 transition-all duration-200 flex-shrink-0 px-2 py-1 rounded-md border text-xs font-medium"
-                            title="複製問題"
-                          >
-                            <div class="flex items-center space-x-1">
-                              <svg
-                                class="w-3 h-3"
-                                fill="none"
-                                stroke="currentColor"
-                                viewBox="0 0 24 24"
-                              >
-                                <path
-                                  v-if="copiedQuestions.has(3)"
-                                  stroke-linecap="round"
-                                  stroke-linejoin="round"
-                                  stroke-width="2"
-                                  d="M5 13l4 4L19 7"
-                                ></path>
-                                <path
-                                  v-else
-                                  stroke-linecap="round"
-                                  stroke-linejoin="round"
-                                  stroke-width="2"
-                                  d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3"
-                                ></path>
-                              </svg>
-                              <span v-if="copiedQuestions.has(3)">已複製</span>
-                              <span v-else>複製</span>
-                            </div>
-                          </button>
                         </div>
                       </div>
                     </div>
@@ -2033,7 +1735,7 @@ onUnmounted(() => {
                   >以上內容有幫助嗎？</span
                 >
               </div>
-              <span class="text-xs text-slate-500 ml-2 text-center"
+              <span class="text-sm text-slate-500 mt-1 text-center"
                 >需要我幫你再呈現更詳細的資料嗎，或許你想看：</span
               >
             </div>
@@ -2483,38 +2185,181 @@ onUnmounted(() => {
 
             <!-- 職缺符合度分析區域 - 只在職缺符合度功能時顯示 -->
             <div v-show="activeFunction === 'job-match'" class="space-y-6 mt-8">
-              <!-- AI 分析建議區域 - 置頂顯示 -->
-              <div
-                class="bg-gradient-to-r from-green-50 via-orange-50 to-green-50 border border-green-200 rounded-xl p-6 shadow-lg"
-              >
-                <h3
-                  class="text-xl font-bold text-slate-800 mb-6 flex items-center"
-                >
-                  <svg
-                    class="w-6 h-6 mr-3 text-green-600"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      stroke-linecap="round"
-                      stroke-linejoin="round"
-                      stroke-width="2"
-                      d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"
-                    ></path>
-                  </svg>
-                  關於職務符合度的分析建議
-                </h3>
 
-                <!-- 面試重點 -->
-                <div
-                  class="bg-orange-50 border border-orange-200 rounded-xl p-6"
-                >
-                  <h4
-                    class="text-lg font-semibold text-orange-800 mb-4 flex items-center"
+              <!-- 符合分析概覽 -->
+              <div
+                class="mb-6 p-6 bg-gradient-to-r from-blue-50 to-cyan-50 rounded-xl border border-blue-100 shadow-sm"
+              >
+                <div class="flex items-center mb-3">
+                  <div
+                    class="w-10 h-10 bg-gradient-to-r from-blue-500 to-cyan-500 rounded-lg flex items-center justify-center mr-3"
                   >
                     <svg
-                      class="w-5 h-5 mr-2 text-orange-600"
+                      class="w-6 h-6 text-white"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                        stroke-width="2"
+                        d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"
+                      ></path>
+                    </svg>
+                  </div>
+                  <h3 class="text-xl font-bold text-gray-800 mb-0">符合分析</h3>
+                  <span class="ml-4 inline-flex items-center bg-cyan-100 text-cyan-800 px-3 py-1 rounded-full text-sm font-semibold">
+                    20項條件符合
+                  </span>
+                </div>
+                <p class="text-gray-600 leading-relaxed mb-0">
+                  根據此份履歷的學歷、經歷、技能等指標，與您的職務所需條件進行比對分析結果。
+                </p>
+              </div>
+
+              <!-- 四大分析類別 -->
+              <div class="space-y-6">
+                <!-- 學歷分析 -->
+                <div>
+                  <h3 class="text-lg font-bold text-gray-800 mb-3">學歷 符合</h3>
+                  <div class="space-y-3">
+                    <div>
+                      <h4 class="text-sm font-semibold text-gray-700 mb-2">符合項目</h4>
+                      <div class="flex flex-wrap gap-2">
+                        <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-green-100 text-green-800">
+                          大學
+                        </span>
+                      </div>
+                    </div>
+                    <div>
+                      <h4 class="text-sm font-semibold text-gray-700 mb-2">不符合</h4>
+                      <div class="flex flex-wrap gap-2">
+                        <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-slate-100 text-slate-600">
+                          資訊工程科系
+                        </span>
+                        <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-slate-100 text-slate-600">
+                          碩士
+                        </span>
+                        <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-slate-100 text-slate-600">
+                          AWS
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- 經歷分析 -->
+                <div>
+                  <h3 class="text-lg font-bold text-gray-800 mb-3">經歷 符合</h3>
+                  <div>
+                    <h4 class="text-sm font-semibold text-gray-700 mb-2">符合項目</h4>
+                    <div class="flex flex-wrap gap-2">
+                      <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-green-100 text-green-800">
+                        1年以上
+                      </span>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- 技能分析 -->
+                <div>
+                  <h3 class="text-lg font-bold text-gray-800 mb-3">技能 符合</h3>
+                  <div class="space-y-3">
+                    <div>
+                      <h4 class="text-sm font-semibold text-gray-700 mb-2">符合項目</h4>
+                      <div class="flex flex-wrap gap-2">
+                        <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-green-100 text-green-800">
+                          Vue
+                        </span>
+                        <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-green-100 text-green-800">
+                          JavaScript
+                        </span>
+                        <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-green-100 text-green-800">
+                          HTML
+                        </span>
+                        <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-green-100 text-green-800">
+                          CSS
+                        </span>
+                        <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-green-100 text-green-800">
+                          網站開發經驗
+                        </span>
+                        <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-green-100 text-green-800">
+                          API 串接
+                        </span>
+                        <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-green-100 text-green-800">
+                          Github
+                        </span>
+                        <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-green-100 text-green-800">
+                          JWT
+                        </span>
+                        <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-green-100 text-green-800">
+                          Docker
+                        </span>
+                        <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-green-100 text-green-800">
+                          Vitest
+                        </span>
+                      </div>
+                    </div>
+                    <div>
+                      <h4 class="text-sm font-semibold text-gray-700 mb-2">不符合</h4>
+                      <div class="flex flex-wrap gap-2">
+                        <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-slate-100 text-slate-600">
+                          Node
+                        </span>
+                        <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-slate-100 text-slate-600">
+                          MySQL
+                        </span>
+                        <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-slate-100 text-slate-600">
+                          AWS
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- 期望條件分析 -->
+                <div>
+                  <h3 class="text-lg font-bold text-gray-800 mb-3">期望 非常符合</h3>
+                  <div class="space-y-3">
+                    <div>
+                      <h4 class="text-sm font-semibold text-gray-700 mb-2">符合項目</h4>
+                      <div class="flex flex-wrap gap-2">
+                        <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-green-100 text-green-800">
+                          全職
+                        </span>
+                        <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-green-100 text-green-800">
+                          軟體工程師
+                        </span>
+                        <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-green-100 text-green-800">
+                          週休二日
+                        </span>
+                        <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-green-100 text-green-800">
+                          新北市
+                        </span>
+                        <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-green-100 text-green-800">
+                          日班
+                        </span>
+                      </div>
+                    </div>
+                    <div>
+                      <h4 class="text-sm font-semibold text-gray-700 mb-2">不符合</h4>
+                      <div class="flex flex-wrap gap-2">
+                        <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-slate-100 text-slate-600">
+                          全端工程師
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- 面試聚焦建議區域 -->
+              <div class="mt-8 p-6 bg-gradient-to-r from-blue-50 to-cyan-50 rounded-xl border border-blue-100 shadow-sm">
+                <div class="flex items-center mb-3">
+                  <div class="w-10 h-10 bg-gradient-to-r from-blue-500 to-cyan-500 rounded-lg flex items-center justify-center mr-3">
+                    <svg
+                      class="w-6 h-6 text-white"
                       fill="none"
                       stroke="currentColor"
                       viewBox="0 0 24 24"
@@ -2526,221 +2371,13 @@ onUnmounted(() => {
                         d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
                       ></path>
                     </svg>
-                    面試聚焦
-                  </h4>
-                  <div class="space-y-3">
-                    <div class="flex items-start space-x-3">
-                      <div
-                        class="w-2 h-2 bg-orange-500 rounded-full mt-2 flex-shrink-0"
-                      ></div>
-                      <p class="text-slate-700">
-                        請說明「巡迴專案 KPI、你負責的里程碑與成效證據」
-                      </p>
-                    </div>
-                    <div class="flex items-start space-x-3">
-                      <div
-                        class="w-2 h-2 bg-orange-500 rounded-full mt-2 flex-shrink-0"
-                      ></div>
-                      <p class="text-slate-700">
-                        分享跨場地風險控管實例（如場地／車輛／人流協調）
-                      </p>
-                    </div>
-                    <div class="flex items-start space-x-3">
-                      <div
-                        class="w-2 h-2 bg-orange-500 rounded-full mt-2 flex-shrink-0"
-                      ></div>
-                      <p class="text-slate-700">
-                        若職缺強調數位／會員經營，請評估以加分或補件後再評估處理
-                      </p>
-                    </div>
                   </div>
+                  <h3 class="text-xl font-bold text-gray-800 mb-0">面試聚焦建議</h3>
                 </div>
-              </div>
-
-              <!-- 職缺符合度概覽 -->
-              <div
-                class="bg-gradient-to-r from-blue-50 to-cyan-50 border border-blue-200 p-6 rounded-xl shadow-sm"
-              >
-                <h3
-                  class="text-xl font-bold text-slate-800 mb-6 flex items-center"
-                >
-                  <svg
-                    class="w-6 h-6 mr-3 text-blue-600"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      stroke-linecap="round"
-                      stroke-linejoin="round"
-                      stroke-width="2"
-                      d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"
-                    ></path>
-                  </svg>
-                  職缺符合度（活動行銷企劃／百貨・美妝）
-                </h3>
-
-                <!-- 符合度總覽 -->
-                <div class="mb-6">
-                  <div
-                    class="bg-white rounded-xl p-6 border border-green-200 shadow-sm max-w-md mx-auto"
-                  >
-                    <div class="flex items-center justify-between">
-                      <div>
-                        <h4 class="text-lg font-medium text-slate-600">
-                          總共符合
-                        </h4>
-                        <p class="text-3xl font-bold text-green-600 mt-2">
-                          必備 4/4（加分 2/3）
-                        </p>
-                        <p class="text-sm text-slate-500 mt-1">
-                          完全符合職缺必備條件
-                        </p>
-                      </div>
-                      <div
-                        class="w-16 h-16 bg-green-100 rounded-xl flex items-center justify-center"
-                      >
-                        <svg
-                          class="w-8 h-8 text-green-600"
-                          fill="none"
-                          stroke="currentColor"
-                          viewBox="0 0 24 24"
-                        >
-                          <path
-                            stroke-linecap="round"
-                            stroke-linejoin="round"
-                            stroke-width="2"
-                            d="M5 13l4 4L19 7"
-                          ></path>
-                        </svg>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-
-                <!-- 技能比對明細 -->
-                <div class="space-y-6">
-                  <!-- 符合職缺要求的技能 -->
-                  <div
-                    class="bg-white rounded-xl p-6 border border-slate-200 shadow-sm"
-                  >
-                    <h4
-                      class="text-lg font-semibold text-slate-800 mb-4 flex items-center"
-                    >
-                      <div class="w-4 h-4 bg-green-500 rounded-full mr-3"></div>
-                      符合職缺要求的技能（舉證）
-                    </h4>
-                    <div class="space-y-4">
-                      <div
-                        class="bg-green-50 border border-green-200 rounded-lg p-4"
-                      >
-                        <h5 class="font-semibold text-green-800 mb-2">
-                          活動企劃與執行
-                        </h5>
-                        <p class="text-sm text-green-700">含現場統籌</p>
-                      </div>
-                      <div
-                        class="bg-green-50 border border-green-200 rounded-lg p-4"
-                      >
-                        <h5 class="font-semibold text-green-800 mb-2">
-                          巡迴／跨場地協調
-                        </h5>
-                        <p class="text-sm text-green-700">
-                          北中南多據點，含場控與場佈撤場協作
-                        </p>
-                      </div>
-                      <div
-                        class="bg-green-50 border border-green-200 rounded-lg p-4"
-                      >
-                        <h5 class="font-semibold text-green-800 mb-2">
-                          結案與成效彙整
-                        </h5>
-                        <p class="text-sm text-green-700">
-                          KPI/成效追蹤、結案報告
-                        </p>
-                      </div>
-                      <div
-                        class="bg-green-50 border border-green-200 rounded-lg p-4"
-                      >
-                        <h5 class="font-semibold text-green-800 mb-2">
-                          異業合作溝通
-                        </h5>
-                        <p class="text-sm text-green-700">易遊網、甲上娛樂等</p>
-                      </div>
-                    </div>
-                  </div>
-
-                  <!-- 職缺要求但候選人未具備的技能 -->
-                  <div
-                    class="bg-white rounded-xl p-6 border border-slate-200 shadow-sm"
-                  >
-                    <h4
-                      class="text-lg font-semibold text-slate-800 mb-4 flex items-center"
-                    >
-                      <div
-                        class="w-4 h-4 bg-yellow-500 rounded-full mr-3"
-                      ></div>
-                      職缺要求但候選人未具備的技能
-                    </h4>
-                    <div
-                      class="bg-yellow-50 border border-yellow-200 rounded-lg p-4"
-                    >
-                      <h5 class="font-semibold text-yellow-800 mb-2">
-                        數位投放／CRM
-                      </h5>
-                      <p class="text-sm text-yellow-700">
-                        履歷未見明確佐證；若此為必備，建議面談釐清
-                      </p>
-                    </div>
-                  </div>
-
-                  <!-- 候選人額外具備的技能 -->
-                  <div
-                    class="bg-white rounded-xl p-6 border border-slate-200 shadow-sm"
-                  >
-                    <h4
-                      class="text-lg font-semibold text-slate-800 mb-4 flex items-center"
-                    >
-                      <div class="w-4 h-4 bg-blue-500 rounded-full mr-3"></div>
-                      候選人額外具備的技能（加分）
-                    </h4>
-                    <div class="space-y-3">
-                      <div
-                        class="bg-blue-50 border border-blue-200 rounded-lg p-4"
-                      >
-                        <h5 class="font-semibold text-blue-800 mb-2">
-                          主持與對外互動
-                        </h5>
-                        <p class="text-sm text-blue-700">直播主持／現場主持</p>
-                      </div>
-                      <div
-                        class="bg-blue-50 border border-blue-200 rounded-lg p-4"
-                      >
-                        <h5 class="font-semibold text-blue-800 mb-2">
-                          多媒體／設計工具
-                        </h5>
-                        <p class="text-sm text-blue-700">
-                          Premiere、Photoshop、Illustrator
-                        </p>
-                      </div>
-                      <div
-                        class="bg-blue-50 border border-blue-200 rounded-lg p-4"
-                      >
-                        <h5 class="font-semibold text-blue-800 mb-2">
-                          英文 TOEIC 840
-                        </h5>
-                        <p class="text-sm text-blue-700">具備英文工作基礎</p>
-                      </div>
-                      <div
-                        class="bg-blue-50 border border-blue-200 rounded-lg p-4"
-                      >
-                        <h5 class="font-semibold text-blue-800 mb-2">
-                          中英打字速度佳
-                        </h5>
-                        <p class="text-sm text-blue-700">內外溝通效率</p>
-                      </div>
-                    </div>
-                  </div>
+                <div class="space-y-2">
+                  <p class="text-gray-700">• 請說明「巡迴專案 KPI、你負責的里程碑與成效證據」</p>
+                  <p class="text-gray-700">• 分享跨場地風險控管實例（如場地／車輛／人流協調）</p>
+                  <p class="text-gray-700">• 若職缺強調數位／會員經營，請評估以加分或補件後再評估處理</p>
                 </div>
               </div>
             </div>
@@ -2939,70 +2576,6 @@ onUnmounted(() => {
                           </svg>
                         </div>
                       </div>
-                    </div>
-                  </div>
-                </div>
-
-                <!-- 建議提問區塊 -->
-                <div>
-                  <h4
-                    class="text-sm font-semibold text-slate-900 mb-3 flex items-center"
-                  >
-                    <svg
-                      class="w-4 h-4 mr-2 text-slate-500"
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
-                    >
-                      <path
-                        stroke-linecap="round"
-                        stroke-linejoin="round"
-                        stroke-width="2"
-                        d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-                      ></path>
-                    </svg>
-                    建議提問
-                  </h4>
-                  <div
-                    class="bg-gradient-to-r from-purple-50 to-indigo-50 border border-purple-200 rounded-xl p-5 cursor-pointer hover:shadow-lg transition-all duration-300 group/question relative overflow-hidden"
-                    @click="
-                      copyToClipboard(
-                        '面試提問建議：\n\n闇於數據準確性，您可以請求求職者分享更詳細的計算方法，例如詢問系統可擴展性提升30%的具體指標，以及40%運營成本降低的計算基礎。\n\n關於時間線方面，可以委婉地請求確認在XYZ公司的確切在職時間，以及詢問碩士學位與第一份全職工作時間重疊的情況，了解求職者是如何兼顧的。透過這些對話，您能更全面評估履歷的真實性。'
-                      )
-                    "
-                  >
-                    <!-- 複製圖標 -->
-                    <div
-                      class="absolute top-4 right-4 opacity-0 group-hover/question:opacity-100 transition-all duration-200"
-                    >
-                      <div
-                        class="w-8 h-8 bg-white/80 backdrop-blur-sm rounded-lg flex items-center justify-center shadow-sm"
-                      >
-                        <svg
-                          class="w-4 h-4 text-purple-600"
-                          fill="none"
-                          stroke="currentColor"
-                          viewBox="0 0 24 24"
-                        >
-                          <path
-                            stroke-linecap="round"
-                            stroke-linejoin="round"
-                            stroke-width="2"
-                            d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"
-                          ></path>
-                        </svg>
-                      </div>
-                    </div>
-
-                    <!-- 漸層裝飾 -->
-                    <div
-                      class="absolute inset-0 bg-gradient-to-r from-purple-500/5 to-indigo-500/5 opacity-0 group-hover/question:opacity-100 transition-opacity duration-300"
-                    ></div>
-
-                    <div class="relative">
-                      <p class="text-slate-700 leading-relaxed mb-0">
-                        您可以詢問數據背後的計算方法，例如系統可擴展性提升30%的具體指標和運營成本降低40%的計算基礎。同時，委婉地核對時間線問題，如不同公司的在職時間及碩士學位與工作的時間重疊，這些對話有助於評估履歷真實性。
-                      </p>
                     </div>
                   </div>
                 </div>
@@ -3257,70 +2830,6 @@ onUnmounted(() => {
                     </div>
                   </div>
                 </div>
-
-                <!-- 建議提問區塊 -->
-                <div>
-                  <h4
-                    class="text-sm font-semibold text-slate-900 mb-3 flex items-center"
-                  >
-                    <svg
-                      class="w-4 h-4 mr-2 text-slate-500"
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
-                    >
-                      <path
-                        stroke-linecap="round"
-                        stroke-linejoin="round"
-                        stroke-width="2"
-                        d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-                      ></path>
-                    </svg>
-                    建議提問
-                  </h4>
-                  <div
-                    class="bg-gradient-to-r from-purple-50 to-indigo-50 border border-purple-200 rounded-xl p-5 cursor-pointer hover:shadow-lg transition-all duration-300 group/question relative overflow-hidden"
-                    @click="
-                      copyToClipboard(
-                        '面試提問建議：\n\n您可以邀請求職者深入分享技術經驗，例如詢問在列出的技術中（Python、JavaScript、Java）最擅長哪一項，以及使用這項技術解決過的具體挑戰。\n\n同時，關於專案經驗，您可以請求分享帶領10人開發團隊的管理方法，以及在微服務架構實踐中遇到的具體挑戰和解決方案。這些對話能幫助您評估求職者技術能力的真實深度。'
-                      )
-                    "
-                  >
-                    <!-- 複製圖標 -->
-                    <div
-                      class="absolute top-4 right-4 opacity-0 group-hover/question:opacity-100 transition-all duration-200"
-                    >
-                      <div
-                        class="w-8 h-8 bg-white/80 backdrop-blur-sm rounded-lg flex items-center justify-center shadow-sm"
-                      >
-                        <svg
-                          class="w-4 h-4 text-purple-600"
-                          fill="none"
-                          stroke="currentColor"
-                          viewBox="0 0 24 24"
-                        >
-                          <path
-                            stroke-linecap="round"
-                            stroke-linejoin="round"
-                            stroke-width="2"
-                            d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"
-                          ></path>
-                        </svg>
-                      </div>
-                    </div>
-
-                    <!-- 漸層裝飾 -->
-                    <div
-                      class="absolute inset-0 bg-gradient-to-r from-purple-500/5 to-indigo-500/5 opacity-0 group-hover/question:opacity-100 transition-opacity duration-300"
-                    ></div>
-
-                    <div class="relative">
-                      <p class="text-slate-700 leading-relaxed mb-0">
-                        您可以請求職者分享技術專長的具體應用，例如在列出的技術中最擅長哪一項，以及解決過的實際挑戰。同時詢問團隊管理經驗和微服務架構實踐中遇到的困難，這有助於了解求職者技術深度與解決問題的能力。
-                      </p>
-                    </div>
-                  </div>
-                </div>
               </div>
             </div>
 
@@ -3526,72 +3035,6 @@ onUnmounted(() => {
                           </div>
                         </div>
                       </div>
-                    </div>
-                  </div>
-                </div>
-
-                <!-- 建議提問區塊 -->
-                <div>
-                  <h4
-                    class="text-sm font-semibold text-slate-900 mb-3 flex items-center"
-                  >
-                    <svg
-                      class="w-4 h-4 mr-2 text-slate-500"
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
-                    >
-                      <path
-                        stroke-linecap="round"
-                        stroke-linejoin="round"
-                        stroke-width="2"
-                        d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-                      ></path>
-                    </svg>
-                    建議提問
-                  </h4>
-                  <div
-                    class="bg-gradient-to-r from-purple-50 to-indigo-50 border border-purple-200 rounded-xl p-5 cursor-pointer hover:shadow-lg transition-all duration-300 group/question relative overflow-hidden"
-                    @click="
-                      copyToClipboard(
-                        '面試提問建議：\n\n您可以請求職者分享具體方法，例如詢問雲端優化方面的具體做法，如使用了哪些 AWS 服務、為什麼選擇 Docker 而非其他容器方案。\n\n關於效能優化，可以詢問後端程式碼重構的具體技術，API 響應時間縮短 25% 的實現方式，以及用什麼方法衡量用戶滿意度。這些問題能幫助您了解求職者真正的技術能力與經驗。'
-                      )
-                    "
-                  >
-                    <!-- 複製圖標 -->
-                    <div
-                      class="absolute top-4 right-4 opacity-0 group-hover/question:opacity-100 transition-all duration-200"
-                    >
-                      <div
-                        class="w-8 h-8 bg-white/80 backdrop-blur-sm rounded-lg flex items-center justify-center shadow-sm"
-                      >
-                        <svg
-                          class="w-4 h-4 text-purple-600"
-                          fill="none"
-                          stroke="currentColor"
-                          viewBox="0 0 24 24"
-                        >
-                          <path
-                            stroke-linecap="round"
-                            stroke-linejoin="round"
-                            stroke-width="2"
-                            d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"
-                          ></path>
-                        </svg>
-                      </div>
-                    </div>
-
-                    <!-- 漸層裝飾 -->
-                    <div
-                      class="absolute inset-0 bg-gradient-to-r from-purple-500/5 to-indigo-500/5 opacity-0 group-hover/question:opacity-100 transition-opacity duration-300"
-                    ></div>
-
-                    <div class="relative">
-                      <p class="text-slate-700 leading-relaxed mb-0">
-                        您可以請求就雲端優化和效能提升的具體作法做更深入的探討，例如使用了哪些
-                        AWS
-                        服務、重構後端的具體技術手段，以及如何衡量效能改善。這樣能更好地評估求職者的技術深度。
-                      </p>
                     </div>
                   </div>
                 </div>
