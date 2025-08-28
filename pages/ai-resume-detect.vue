@@ -32,6 +32,7 @@ const isTabSwitching = ref(false); // 新增 tab 切換載入狀態
 const isInterviewQuestionsExpanded = ref(false);
 const highlightedElement = ref(null);
 const isCopied = ref(false);
+const showImageModal = ref(false);
 
 // 新增 tab 切換控制變數
 const activeTab = ref("description"); // 可選值: 'description', 'ai', 'fact-check', 'questions', 'chat'
@@ -354,6 +355,31 @@ const copyToClipboard = (text) => {
       isCopied.value = false;
     }, 2000);
   });
+};
+
+// 打開圖片模態框
+const openImageModal = () => {
+  showImageModal.value = true;
+  // 防止背景滾動
+  document.body.style.overflow = 'hidden';
+  // 添加鍵盤事件監聽器
+  document.addEventListener('keydown', handleEscapeKey);
+};
+
+// 關閉圖片模態框
+const closeImageModal = () => {
+  showImageModal.value = false;
+  // 恢復背景滾動
+  document.body.style.overflow = 'auto';
+  // 移除鍵盤事件監聽器
+  document.removeEventListener('keydown', handleEscapeKey);
+};
+
+// 處理 ESC 鍵關閉模態框
+const handleEscapeKey = (event) => {
+  if (event.key === 'Escape') {
+    closeImageModal();
+  }
 };
 
 // 開始事實查核流程
@@ -767,6 +793,11 @@ onUnmounted(() => {
       element._cleanupScrollListener();
     }
   });
+
+  // 清理圖片模態框相關事件監聽器
+  document.removeEventListener('keydown', handleEscapeKey);
+  // 確保頁面滾動恢復
+  document.body.style.overflow = 'auto';
 });
 </script>
 
@@ -2364,12 +2395,13 @@ onUnmounted(() => {
             <!-- 學經歷時間軸視覺化 - 只在非職缺符合度功能時顯示 -->
             <div
               v-show="activeFunction !== 'job-match'"
-              class="flex justify-center"
+              class="roadmap-container overflow-x-auto"
             >
               <img
                 src="@/assets/images/ai/map.png"
                 alt="學經歷地圖"
-                class="max-w-full h-auto rounded-lg shadow-md"
+                class="roadmap-image rounded-lg shadow-md cursor-pointer"
+                @click="openImageModal"
               />
             </div>
 
@@ -4733,6 +4765,24 @@ onUnmounted(() => {
         </div>
       </div>
     </div>
+
+    <!-- 圖片放大模態框 -->
+    <div v-if="showImageModal" class="image-modal-overlay" @click="closeImageModal">
+      <div class="image-modal-content" @click.stop>
+        <img
+          src="@/assets/images/ai/map.png"
+          alt="學經歷地圖"
+          class="image-modal-image"
+        >
+        <button
+          class="image-modal-close"
+          title="關閉"
+          @click="closeImageModal"
+        >
+          ×
+        </button>
+      </div>
+    </div>
   </div>
 </template>
 
@@ -4806,6 +4856,79 @@ main {
     background-color: rgb(255 235 59 / 85%);
     box-shadow: 0 0 16px rgb(255 235 59 / 80%);
   }
+}
+
+/* 學經歷地圖樣式 */
+.roadmap-container {
+  height: 300px; /* 固定容器高度 */
+  border-radius: 8px;
+  border: 1px solid #e5e7eb;
+  background-color: #f9fafb;
+}
+
+.roadmap-image {
+  height: 100%; /* 高度撐滿容器 */
+  width: auto; /* 寬度自動，保持比例 */
+  min-width: 100%; /* 確保至少撐滿容器寬度 */
+  object-fit: contain;
+  transition: transform 0.2s ease;
+}
+
+.roadmap-image:hover {
+  transform: scale(1.02);
+}
+
+/* 圖片放大模態框樣式 */
+.image-modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.8);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 9999;
+  backdrop-filter: blur(4px);
+}
+
+.image-modal-content {
+  position: relative;
+  max-width: 95vw;
+  max-height: 95vh;
+  border-radius: 8px;
+  overflow: hidden;
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+}
+
+.image-modal-image {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
+.image-modal-close {
+  position: absolute;
+  top: 16px;
+  right: 16px;
+  background-color: rgba(0, 0, 0, 0.6);
+  color: white;
+  border: none;
+  border-radius: 50%;
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  font-size: 20px;
+  font-weight: bold;
+  transition: background-color 0.2s ease;
+}
+
+.image-modal-close:hover {
+  background-color: rgba(0, 0, 0, 0.8);
 }
 
 /* Skeleton Loading 樣式 */
