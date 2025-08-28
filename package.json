@@ -7,7 +7,9 @@
     "dev": "nuxt dev",
     "generate": "nuxt generate",
     "preview": "nuxt preview",
-    "postinstall": "nuxt prepare"
+    "postinstall": "nuxt prepare",
+    "deploy": "nuxt generate && gh-pages -d .output/public",
+    "deploy:clean": "gh-pages-clean && nuxt generate && gh-pages -d .output/public"
   },
   "dependencies": {
     "@nuxt/eslint": "1.5.2",
@@ -23,6 +25,7 @@
     "@unocss/preset-icons": "^66.3.3",
     "@unocss/preset-uno": "^66.3.3",
     "@unocss/preset-web-fonts": "^66.3.3",
+    "gh-pages": "^6.3.0",
     "sass-embedded": "^1.89.2",
     "unocss": "^66.3.3"
   }
