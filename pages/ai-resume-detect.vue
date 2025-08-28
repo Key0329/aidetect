@@ -2314,8 +2314,8 @@ onUnmounted(() => {
                     d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
                   ></path>
                 </svg>
-                <div class="font-medium text-sm sm:text-base leading-tight">
-                  公開平台資訊
+                <div class="flex flex-col items-center font-medium text-sm sm:text-base leading-tight">
+                  公開平台<span>資訊</span>
                 </div>
               </div>
             </button>
@@ -2352,11 +2352,10 @@ onUnmounted(() => {
 
         <!-- 內容展示區 -->
         <div
-        v-if="isTabSwitching"
           class="bg-white/90 backdrop-blur-sm p-4 md:p-6 rounded-xl shadow-lg border border-slate-200/50"
         >
           <!-- Tab switching skeleton -->
-          <div  class="tab-content skeleton-slide-in">
+          <div v-if="isTabSwitching" class="tab-content skeleton-slide-in">
             <div class="space-y-6">
               <!-- Header skeleton -->
               <div class="bg-gradient-to-r from-blue-50 to-cyan-50 rounded-xl p-6 border border-blue-100 skeleton-progressive-1">
@@ -3150,9 +3149,8 @@ onUnmounted(() => {
               </div>
             </div>
           </div>
-        </div>
 
-        <!-- 事實查核內容區域 -->
+                 <!-- 事實查核內容區域 -->
         <div v-show="activeTab === 'fact-check' && !isTabSwitching" class="tab-content space-y-8">
           <!-- 履歷上傳區域 -->
           <div v-if="factCheckProgress === 0" class="space-y-6">
@@ -4020,435 +4018,6 @@ onUnmounted(() => {
           </div>
         </div>
 
-        <!-- 結束 v-show="activeTab === 'ai'" 區塊 -->
-        <!-- Tab 導航 -->
-      </div>
-
-      <!-- 建議提問內容區域 -->
-      <div v-show="activeTab === 'questions' && !isTabSwitching" class="tab-content">
-        <!-- 現代化標題卡片 -->
-        <div
-          class="mb-8 p-6 bg-gradient-to-r from-purple-50 to-indigo-50 rounded-xl border border-purple-100 shadow-sm"
-        >
-          <div class="flex items-center mb-3">
-            <div
-              class="w-10 h-10 bg-gradient-to-r from-purple-500 to-indigo-500 rounded-lg flex items-center justify-center mr-3"
-            >
-              <svg
-                class="w-5 h-5 text-white"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                  stroke-width="2"
-                  d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-                />
-              </svg>
-            </div>
-            <h3 class="text-xl font-bold text-gray-800 mb-0">建議面試問題</h3>
-          </div>
-          <p class="text-gray-600 leading-relaxed mb-0">
-            根據履歷內容生成專業的面試問題，幫助您深入了解候選人的能力和經驗。
-          </p>
-        </div>
-
-        <!-- 現代化問題範本卡片 -->
-        <div
-          class="bg-white rounded-xl shadow-lg border border-gray-100 overflow-hidden"
-        >
-          <div
-            class="flex justify-between items-center cursor-pointer p-6 hover:bg-gray-50 transition-colors"
-            @click="toggleInterviewQuestions"
-          >
-            <div class="flex items-center">
-              <div
-                class="w-8 h-8 bg-gradient-to-r from-purple-500 to-indigo-500 rounded-lg flex items-center justify-center mr-3"
-              >
-                <svg
-                  class="w-4 h-4 text-white"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                    stroke-width="2"
-                    d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
-                  />
-                </svg>
-              </div>
-              <h3 class="text-lg font-bold text-gray-800 mb-0">建議問題範本</h3>
-              <!-- 現代化重置按鈕 -->
-              <button
-                class="ml-4 px-3 py-1.5 text-sm text-gray-600 hover:text-gray-800 hover:bg-gray-100 border border-gray-200 rounded-lg transition-all duration-200 flex items-center"
-                @click.stop="resetQuestionSection"
-              >
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  width="14"
-                  height="14"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  stroke-width="2"
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                  class="mr-1.5"
-                >
-                  <polyline points="1 4 1 10 7 10"></polyline>
-                  <path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"></path>
-                </svg>
-                重置
-              </button>
-            </div>
-            <div class="flex items-center">
-              <div
-                class="w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center"
-              >
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  width="16"
-                  height="16"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  stroke-width="2"
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                  class="transform transition-all duration-300"
-                  :class="{ 'rotate-180': isInterviewQuestionsExpanded }"
-                >
-                  <polyline points="6 9 12 15 18 9"></polyline>
-                </svg>
-              </div>
-            </div>
-          </div>
-
-          <!-- 現代化問題內容展開區域 -->
-          <template v-if="isInterviewQuestionsExpanded">
-            <div class="border-t border-gray-100">
-              <div class="p-6 space-y-8">
-                <!-- 技術深度問題 -->
-                <div
-                  class="bg-gradient-to-r from-blue-50 to-cyan-50 rounded-xl p-6 border-l-4 border-blue-400"
-                >
-                  <div class="flex items-center mb-4">
-                    <div
-                      class="w-8 h-8 bg-gradient-to-r from-blue-500 to-cyan-500 rounded-lg flex items-center justify-center mr-3"
-                    >
-                      <svg
-                        class="w-4 h-4 text-white"
-                        fill="none"
-                        stroke="currentColor"
-                        viewBox="0 0 24 24"
-                      >
-                        <path
-                          stroke-linecap="round"
-                          stroke-linejoin="round"
-                          stroke-width="2"
-                          d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4"
-                        />
-                      </svg>
-                    </div>
-                    <h4 class="text-lg font-bold text-gray-800">
-                      技術深度問題
-                    </h4>
-                  </div>
-                  <div class="space-y-4">
-                    <div
-                      class="bg-white rounded-lg p-4 shadow-sm border border-blue-100"
-                    >
-                      <div class="flex items-start">
-                        <div
-                          class="w-6 h-6 bg-blue-500 text-white rounded-full flex items-center justify-center text-xs font-bold mr-3 mt-0.5 flex-shrink-0"
-                        >
-                          1
-                        </div>
-                        <div>
-                          <h5 class="font-semibold text-gray-800 mb-2">
-                            具體實作經驗
-                          </h5>
-                          <p class="text-gray-600 text-sm leading-relaxed">
-                            請詳細說明您在ABC科技時如何實現40%運營成本降低？能否分享具體的技術方案和實施過程？
-                          </p>
-                        </div>
-                      </div>
-                    </div>
-                    <div
-                      class="bg-white rounded-lg p-4 shadow-sm border border-blue-100"
-                    >
-                      <div class="flex items-start">
-                        <div
-                          class="w-6 h-6 bg-blue-500 text-white rounded-full flex items-center justify-center text-xs font-bold mr-3 mt-0.5 flex-shrink-0"
-                        >
-                          2
-                        </div>
-                        <div>
-                          <h5 class="font-semibold text-gray-800 mb-2">
-                            技術選型能力
-                          </h5>
-                          <p class="text-gray-600 text-sm leading-relaxed">
-                            在全端開發中，您如何處理前後端的技術選型？請舉例說明您的決策過程和考量因素。
-                          </p>
-                        </div>
-                      </div>
-                    </div>
-                    <div
-                      class="bg-white rounded-lg p-4 shadow-sm border border-blue-100"
-                    >
-                      <div class="flex items-start">
-                        <div
-                          class="w-6 h-6 bg-blue-500 text-white rounded-full flex items-center justify-center text-xs font-bold mr-3 mt-0.5 flex-shrink-0"
-                        >
-                          3
-                        </div>
-                        <div>
-                          <h5 class="font-semibold text-gray-800 mb-2">
-                            系統架構設計
-                          </h5>
-                          <p class="text-gray-600 text-sm leading-relaxed">
-                            請描述您設計過最複雜的系統架構，包括技術棧選擇、擴展性考慮和性能優化策略。
-                          </p>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-
-                <!-- 團隊協作問題 -->
-                <div
-                  class="bg-gradient-to-r from-green-50 to-emerald-50 rounded-xl p-6 border-l-4 border-green-400"
-                >
-                  <div class="flex items-center mb-4">
-                    <div
-                      class="w-8 h-8 bg-gradient-to-r from-green-500 to-emerald-500 rounded-lg flex items-center justify-center mr-3"
-                    >
-                      <svg
-                        class="w-4 h-4 text-white"
-                        fill="none"
-                        stroke="currentColor"
-                        viewBox="0 0 24 24"
-                      >
-                        <path
-                          stroke-linecap="round"
-                          stroke-linejoin="round"
-                          stroke-width="2"
-                          d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"
-                        />
-                      </svg>
-                    </div>
-                    <h4 class="text-lg font-bold text-gray-800">
-                      團隊協作問題
-                    </h4>
-                  </div>
-                  <div class="space-y-4">
-                    <div
-                      class="bg-white rounded-lg p-4 shadow-sm border border-green-100"
-                    >
-                      <div class="flex items-start">
-                        <div
-                          class="w-6 h-6 bg-green-500 text-white rounded-full flex items-center justify-center text-xs font-bold mr-3 mt-0.5 flex-shrink-0"
-                        >
-                          4
-                        </div>
-                        <div>
-                          <h5 class="font-semibold text-gray-800 mb-2">
-                            領導經驗
-                          </h5>
-                          <p class="text-gray-600 text-sm leading-relaxed">
-                            請分享一個您領導團隊解決技術難題的經驗，包括遇到的挑戰和解決方案。
-                          </p>
-                        </div>
-                      </div>
-                    </div>
-                    <div
-                      class="bg-white rounded-lg p-4 shadow-sm border border-green-100"
-                    >
-                      <div class="flex items-start">
-                        <div
-                          class="w-6 h-6 bg-green-500 text-white rounded-full flex items-center justify-center text-xs font-bold mr-3 mt-0.5 flex-shrink-0"
-                        >
-                          5
-                        </div>
-                        <div>
-                          <h5 class="font-semibold text-gray-800 mb-2">
-                            溝通協調
-                          </h5>
-                          <p class="text-gray-600 text-sm leading-relaxed">
-                            如何與非技術團隊成員（如產品經理、設計師）溝通複雜的技術問題？
-                          </p>
-                        </div>
-                      </div>
-                    </div>
-                    <div
-                      class="bg-white rounded-lg p-4 shadow-sm border border-green-100"
-                    >
-                      <div class="flex items-start">
-                        <div
-                          class="w-6 h-6 bg-green-500 text-white rounded-full flex items-center justify-center text-xs font-bold mr-3 mt-0.5 flex-shrink-0"
-                        >
-                          6
-                        </div>
-                        <div>
-                          <h5 class="font-semibold text-gray-800 mb-2">
-                            知識分享
-                          </h5>
-                          <p class="text-gray-600 text-sm leading-relaxed">
-                            您如何幫助團隊成員提升技術能力？有沒有建立過技術分享或培訓機制？
-                          </p>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-
-                <!-- 職涯發展問題 -->
-                <div
-                  class="bg-gradient-to-r from-purple-50 to-pink-50 rounded-xl p-6 border-l-4 border-purple-400"
-                >
-                  <div class="flex items-center mb-4">
-                    <div
-                      class="w-8 h-8 bg-gradient-to-r from-purple-500 to-pink-500 rounded-lg flex items-center justify-center mr-3"
-                    >
-                      <svg
-                        class="w-4 h-4 text-white"
-                        fill="none"
-                        stroke="currentColor"
-                        viewBox="0 0 24 24"
-                      >
-                        <path
-                          stroke-linecap="round"
-                          stroke-linejoin="round"
-                          stroke-width="2"
-                          d="M13 10V3L4 14h7v7l9-11h-7z"
-                        />
-                      </svg>
-                    </div>
-                    <h4 class="text-lg font-bold text-gray-800">
-                      職涯發展問題
-                    </h4>
-                  </div>
-                  <div class="space-y-4">
-                    <div
-                      class="bg-white rounded-lg p-4 shadow-sm border border-purple-100"
-                    >
-                      <div class="flex items-start">
-                        <div
-                          class="w-6 h-6 bg-purple-500 text-white rounded-full flex items-center justify-center text-xs font-bold mr-3 mt-0.5 flex-shrink-0"
-                        >
-                          7
-                        </div>
-                        <div>
-                          <h5 class="font-semibold text-gray-800 mb-2">
-                            職業規劃
-                          </h5>
-                          <p class="text-gray-600 text-sm leading-relaxed">
-                            您期待在我們公司獲得什麼樣的成長機會？未來3-5年的職業目標是什麼？
-                          </p>
-                        </div>
-                      </div>
-                    </div>
-                    <div
-                      class="bg-white rounded-lg p-4 shadow-sm border border-purple-100"
-                    >
-                      <div class="flex items-start">
-                        <div
-                          class="w-6 h-6 bg-purple-500 text-white rounded-full flex items-center justify-center text-xs font-bold mr-3 mt-0.5 flex-shrink-0"
-                        >
-                          8
-                        </div>
-                        <div>
-                          <h5 class="font-semibold text-gray-800 mb-2">
-                            挑戰認知
-                          </h5>
-                          <p class="text-gray-600 text-sm leading-relaxed">
-                            對於這個職位，您認為最大的挑戰是什麼？您會如何應對？
-                          </p>
-                        </div>
-                      </div>
-                    </div>
-                    <div
-                      class="bg-white rounded-lg p-4 shadow-sm border border-purple-100"
-                    >
-                      <div class="flex items-start">
-                        <div
-                          class="w-6 h-6 bg-purple-500 text-white rounded-full flex items-center justify-center text-xs font-bold mr-3 mt-0.5 flex-shrink-0"
-                        >
-                          9
-                        </div>
-                        <div>
-                          <h5 class="font-semibold text-gray-800 mb-2">
-                            學習能力
-                          </h5>
-                          <p class="text-gray-600 text-sm leading-relaxed">
-                            面對新技術或不熟悉的領域，您的學習方法是什麼？能否舉例說明？
-                          </p>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            <!-- 現代化按鈕區域 -->
-            <div class="border-t border-gray-100 pt-6 mt-3">
-              <div
-                class="flex flex-col sm:flex-row gap-4 justify-center items-center"
-              >
-                <nuxt-link
-                  to="/bc"
-                  class="w-full sm:w-auto inline-flex items-center justify-center px-6 py-3 text-base font-medium text-white bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 rounded-xl shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 transition-all duration-200"
-                >
-                  <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    width="20"
-                    height="20"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    stroke-width="2"
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                    class="mr-2"
-                  >
-                    <path
-                      d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"
-                    ></path>
-                  </svg>
-                  問問求職者
-                </nuxt-link>
-                <button
-                  class="w-full sm:w-auto inline-flex items-center justify-center px-6 py-3 text-base font-medium text-purple-600 bg-white hover:bg-purple-50 border-2 border-purple-200 hover:border-purple-300 rounded-xl shadow-md hover:shadow-lg transform hover:-translate-y-0.5 transition-all duration-200"
-                  @click="downloadQuestions"
-                >
-                  <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    width="20"
-                    height="20"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    stroke-width="2"
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                    class="mr-2"
-                  >
-                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
-                    <polyline points="7 10 12 15 17 10"></polyline>
-                    <line x1="12" y1="15" x2="12" y2="3"></line>
-                  </svg>
-                  下載問題範本
-                </button>
-              </div>
-            </div>
-          </template>
-        </div>
-      </div>
 
       <!-- AI 聊天室內容區域 -->
       <div v-show="activeTab === 'chat' && !isTabSwitching" class="tab-content">
@@ -4737,6 +4306,14 @@ onUnmounted(() => {
           </div>
         </div>
       </div>
+
+
+        </div>
+
+ 
+
+      </div>
+
     </div>
 
     <!-- 圖片放大模態框 -->
