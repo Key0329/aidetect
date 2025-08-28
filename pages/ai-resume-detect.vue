@@ -178,11 +178,11 @@ const handleDogFeedback = (type) => {
 const generateAnalysisText = () => {
   const { concerns } = cardSummary.value;
 
-  let text = `這位求職者很符合您所開的【行銷企劃職缺】職務需求！
-特別是您在找尋的「實際行銷活動經驗」，這位求職者曾有【大型檔期與巡迴執行、跨場地協調與結案】經驗`;
+  let text = `這位求職者符合您所開的【軟體工程師】職務需求！
+特別是您在找尋的「網站開發經驗」，這位求職者具備【使用 Vue 3 製作 SPA 單頁式網站、整合 Vue Router 與 Pinia 狀態管理、並使用 Vite 進行環境建置與部署】的技術能力。`;
 
   if (concerns.areas.length > 0) {
-    text += `\n\n但同時我們也發現「數位投放/成效工具經驗」有需要關注的地方，建議在面試時可以多加了解。`;
+    text += `\n\n但同時我們也發現「實務專案經驗」尚未在履歷中充分呈現，建議在面試時可以多加了解其過往是否有實際參與專案的經驗與角色定位。`;
   }
 
   return text;
@@ -1577,7 +1577,7 @@ onUnmounted(() => {
                       >
                         <!-- 對話泡泡 -->
                         <div
-                          class="relative bg-orange-500 text-white px-3 py-2 rounded-xl shadow-lg"
+                          class="relative bg-gradient-to-r from-emerald-500 to-cyan-500 text-white px-3 py-2 rounded-xl shadow-lg"
                         >
                           <div class="text-xs font-medium whitespace-nowrap">
                             {{ dogFeedback.toastMessage }}
@@ -1587,7 +1587,7 @@ onUnmounted(() => {
                             class="absolute left-0 top-1/2 transform -translate-y-1/2 -translate-x-1"
                           >
                             <div
-                              class="w-0 h-0 border-t-4 border-b-4 border-r-8 border-transparent border-r-orange-500"
+                              class="w-0 h-0 border-t-4 border-b-4 border-r-8 border-transparent border-r-emerald-500"
                             ></div>
                           </div>
                         </div>
@@ -1598,11 +1598,11 @@ onUnmounted(() => {
 
                   <!-- 對話框 -->
                   <div
-                    class="bg-gradient-to-br from-orange-50 via-white to-orange-50 border-2 border-orange-200 rounded-xl p-6 h-full relative shadow-xl"
+                    class="bg-gradient-to-br from-cyan-50 via-white to-green-50 border-2 border-cyan-200 rounded-xl p-6 h-full relative shadow-xl"
                   >
                     <!-- 對話框尾巴 -->
                     <div
-                      class="absolute top-3 left-12 w-6 h-6 bg-white border-l-2 border-t-2 border-orange-200 transform rotate-45 z-10"
+                      class="absolute top-3 left-12 w-6 h-6 bg-white border-l-2 border-t-2 border-cyan-200 transform rotate-45 z-10"
                     ></div>
 
                     <!-- 標題區域 -->
@@ -1610,7 +1610,7 @@ onUnmounted(() => {
 
                     <!-- 分析內容 -->
                     <div
-                      class="bg-white/70 rounded-2xl p-4 mb-6 border border-orange-100 shadow-inner"
+                      class="bg-white/70 rounded-2xl p-4 mb-6 border border-cyan-100 shadow-inner"
                     >
                       <div
                         class="text-slate-700 text-base leading-relaxed whitespace-pre-line"
@@ -1669,7 +1669,7 @@ onUnmounted(() => {
                       <!-- 建議問題按鈕 -->
                       <button
                         @click="showQuestionCard"
-                        class="bg-gradient-to-r from-purple-500 to-indigo-500 hover:from-purple-600 hover:to-indigo-600 text-white px-3 py-2 rounded-lg text-xs sm:text-sm font-medium shadow-lg hover:shadow-xl transition-all duration-200 transform hover:scale-105 min-w-[90px]"
+                        class="bg-gradient-to-r from-cyan-500 to-teal-500 hover:from-cyan-600 hover:to-teal-600 text-white px-3 py-2 rounded-lg text-xs sm:text-sm font-medium shadow-lg hover:shadow-xl transition-all duration-200 transform hover:scale-105 min-w-[90px]"
                       >
                         建議問題
                       </button>
@@ -1689,14 +1689,14 @@ onUnmounted(() => {
               <!-- 建議問題卡片 -->
               <div v-show="currentCard === 1" class="w-full">
                 <div
-                  class="bg-gradient-to-b from-purple-50/40 to-indigo-50/60 border border-purple-200 rounded-xl summary-card flex flex-col relative"
+                  class="bg-gradient-to-b from-cyan-50/40 to-teal-50/60 border p-4 border-cyan-200 rounded-xl summary-card flex flex-col relative"
                 >
                   <div class="flex items-start mb-6">
                     <div class="flex-1">
                       <div class="flex items-center justify-between mb-4">
                         <div class="flex items-center gap-2">
                           <h3 class="text-xl font-bold text-slate-800 my-0">
-                            建議面試問題
+                            建議問題範本
                           </h3>
                           <div
                             class="w-8 h-8 mb-2 bg-purple-100 rounded-full flex items-center justify-center flex-shrink-0 mr-2"
@@ -1719,7 +1719,7 @@ onUnmounted(() => {
                         <!-- 返回總結按鈕 -->
                         <button
                           @click="backToSummary"
-                          class="bg-gradient-to-r from-orange-400 to-orange-500 hover:from-orange-500 hover:to-orange-600 text-white px-3 py-1.5 rounded-lg text-sm font-medium shadow-md hover:shadow-lg transition-all duration-200"
+                          class="bg-gradient-to-r from-slate-400 to-slate-500 hover:from-slate-500 hover:to-slate-600 text-white px-3 py-1.5 rounded-lg text-sm font-medium shadow-md hover:shadow-lg transition-all duration-200"
                         >
                           返回總結
                         </button>
@@ -1768,7 +1768,7 @@ onUnmounted(() => {
                     <!-- 問問全職者按鈕 -->
                     <button
                       @click="askFullTimer"
-                      class="bg-gradient-to-r from-blue-500 to-cyan-500 hover:from-blue-600 hover:to-cyan-600 text-white px-4 py-2 rounded-lg text-sm font-medium shadow-md hover:shadow-lg transition-all duration-200 flex items-center gap-2"
+                      class="bg-gradient-to-r from-cyan-500 to-teal-500 hover:from-cyan-600 hover:to-teal-600 text-white px-4 py-2 rounded-lg text-sm font-medium shadow-md hover:shadow-lg transition-all duration-200 flex items-center gap-2"
                     >
                       <svg
                         class="w-4 h-4"
@@ -1897,7 +1897,7 @@ onUnmounted(() => {
                   ></path>
                 </svg>
                 <div class="font-medium text-xs sm:text-sm leading-tight">
-                  職缺符合度
+                  履歷符合度
                 </div>
               </div>
             </button>
@@ -1981,7 +1981,7 @@ onUnmounted(() => {
                   ></path>
                 </svg>
                 <div class="font-medium text-xs sm:text-sm leading-tight">
-                  事實查核
+                  公開平台資訊
                 </div>
               </div>
             </button>
@@ -2022,288 +2022,15 @@ onUnmounted(() => {
         >
           <div v-show="activeTab === 'description'" class="tab-content">
             <!-- 學經歷時間軸視覺化 - 只在非職缺符合度功能時顯示 -->
-            <div v-show="activeFunction !== 'job-match'" class="space-y-8">
-              <!-- 教育背景區塊 -->
-              <div class="relative">
-                <h3
-                  class="text-lg font-semibold text-slate-800 mb-4 flex items-center"
-                >
-                  <svg
-                    class="w-5 h-5 mr-2 text-blue-600"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      stroke-linecap="round"
-                      stroke-linejoin="round"
-                      stroke-width="2"
-                      d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.746 0 3.332.477 4.5 1.253v13C19.832 18.477 18.246 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"
-                    ></path>
-                  </svg>
-                  教育背景
-                </h3>
-
-                <!-- 教育時間軸 -->
-                <div class="relative pl-6">
-                  <!-- 時間軸線 -->
-                  <div
-                    class="absolute left-2 top-0 bottom-0 w-0.5 bg-gradient-to-b from-blue-200 to-blue-400"
-                  ></div>
-
-                  <!-- 碩士學位 -->
-                  <div class="relative mb-6">
-                    <div
-                      class="absolute left-[-0.5rem] w-4 h-4 bg-blue-600 rounded-full border-2 border-white shadow-lg"
-                    ></div>
-                    <div
-                      class="bg-white rounded-lg p-4 border border-blue-200 shadow-sm hover:shadow-md transition-shadow"
-                    >
-                      <div class="flex justify-between items-start mb-2">
-                        <h4 class="font-semibold text-slate-800">
-                          國立清華大學
-                        </h4>
-                        <span class="text-sm text-slate-500">2012-2014</span>
-                      </div>
-                      <p class="text-sm text-slate-600 mb-1">
-                        資訊工程學系 碩士
-                      </p>
-                      <div class="flex items-center text-xs text-blue-600">
-                        <svg
-                          class="w-3 h-3 mr-1"
-                          fill="currentColor"
-                          viewBox="0 0 20 20"
-                        >
-                          <path
-                            fill-rule="evenodd"
-                            d="M10.394 2.08a1 1 0 00-.788 0l-7 3a1 1 0 000 1.84L5.25 8.051a.999.999 0 01.356-.257l4-1.714a1 1 0 11.788 1.838L7.667 9.088l1.94.831a1 1 0 00.787 0l7-3a1 1 0 000-1.838l-7-3zM3.31 9.397L5 10.12v4.102a8.969 8.969 0 00-1.05-.174 1 1 0 01-.89-.89 11.115 11.115 0 01.25-3.762zM9.3 16.573A9.026 9.026 0 007 14.935v-3.957l1.818.78a3 3 0 002.364 0l5.508-2.361a11.026 11.026 0 01.25 3.762 1 1 0 01-.89.89 8.968 8.968 0 00-5.35 2.524 1 1 0 01-1.4 0zM6 18a1 1 0 001-1v-2.065a8.935 8.935 0 00-2-.712V17a1 1 0 001 1z"
-                            clip-rule="evenodd"
-                          ></path>
-                        </svg>
-                        研究所畢業
-                      </div>
-                    </div>
-                  </div>
-
-                  <!-- 學士學位 -->
-                  <div class="relative">
-                    <div
-                      class="absolute left-[-0.5rem] w-4 h-4 bg-blue-400 rounded-full border-2 border-white shadow-lg"
-                    ></div>
-                    <div
-                      class="bg-white rounded-lg p-4 border border-blue-200 shadow-sm hover:shadow-md transition-shadow"
-                    >
-                      <div class="flex justify-between items-start mb-2">
-                        <h4 class="font-semibold text-slate-800">
-                          國立中興大學
-                        </h4>
-                        <span class="text-sm text-slate-500">2008-2012</span>
-                      </div>
-                      <p class="text-sm text-slate-600 mb-1">
-                        資訊管理學系 學士
-                      </p>
-                      <div class="flex items-center text-xs text-blue-600">
-                        <svg
-                          class="w-3 h-3 mr-1"
-                          fill="currentColor"
-                          viewBox="0 0 20 20"
-                        >
-                          <path
-                            fill-rule="evenodd"
-                            d="M10.394 2.08a1 1 0 00-.788 0l-7 3a1 1 0 000 1.84L5.25 8.051a.999.999 0 01.356-.257l4-1.714a1 1 0 11.788 1.838L7.667 9.088l1.94.831a1 1 0 00.787 0l7-3a1 1 0 000-1.838l-7-3zM3.31 9.397L5 10.12v4.102a8.969 8.969 0 00-1.05-.174 1 1 0 01-.89-.89 11.115 11.115 0 01.25-3.762zM9.3 16.573A9.026 9.026 0 007 14.935v-3.957l1.818.78a3 3 0 002.364 0l5.508-2.361a11.026 11.026 0 01.25 3.762 1 1 0 01-.89.89 8.968 8.968 0 00-5.35 2.524 1 1 0 01-1.4 0zM6 18a1 1 0 001-1v-2.065a8.935 8.935 0 00-2-.712V17a1 1 0 001 1z"
-                            clip-rule="evenodd"
-                          ></path>
-                        </svg>
-                        大學畢業
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              <!-- 工作經歷區塊 -->
-              <div class="relative">
-                <h3
-                  class="text-lg font-semibold text-slate-800 mb-4 flex items-center"
-                >
-                  <svg
-                    class="w-5 h-5 mr-2 text-green-600"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      stroke-linecap="round"
-                      stroke-linejoin="round"
-                      stroke-width="2"
-                      d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2-2v2m8 0V6a2 2 0 012 2v6a2 2 0 01-2 2H6a2 2 0 01-2-2V8a2 2 0 012-2V6"
-                    ></path>
-                  </svg>
-                  工作經歷
-                </h3>
-
-                <!-- 工作時間軸 -->
-                <div class="relative pl-6">
-                  <!-- 時間軸線 -->
-                  <div
-                    class="absolute left-2 top-0 bottom-0 w-0.5 bg-gradient-to-b from-green-200 to-green-400"
-                  ></div>
-
-                  <!-- 資深軟體工程師 -->
-                  <div class="relative mb-6">
-                    <div
-                      class="absolute left-[-0.5rem] w-4 h-4 bg-green-600 rounded-full border-2 border-white shadow-lg"
-                    ></div>
-                    <div
-                      class="bg-white rounded-lg p-4 border border-green-200 shadow-sm hover:shadow-md transition-shadow"
-                    >
-                      <div class="flex justify-between items-start mb-2">
-                        <h4 class="font-semibold text-slate-800">
-                          ABC科技股份有限公司
-                        </h4>
-                        <span class="text-sm text-slate-500">2018-2024</span>
-                      </div>
-                      <p class="text-sm text-slate-600 mb-2">資深軟體工程師</p>
-                      <p class="text-xs text-slate-500 mb-2">
-                        成功將傳統系統遷移至雲端，降低 40% 運營成本
-                      </p>
-                      <div class="flex items-center text-xs text-green-600">
-                        <span class="bg-green-100 px-2 py-1 rounded-full"
-                          >6年經驗</span
-                        >
-                      </div>
-                    </div>
-                  </div>
-
-                  <!-- 軟體工程師 -->
-                  <div class="relative mb-6">
-                    <div
-                      class="absolute left-[-0.5rem] w-4 h-4 bg-green-500 rounded-full border-2 border-white shadow-lg"
-                    ></div>
-                    <div
-                      class="bg-white rounded-lg p-4 border border-green-200 shadow-sm hover:shadow-md transition-shadow"
-                    >
-                      <div class="flex justify-between items-start mb-2">
-                        <h4 class="font-semibold text-slate-800">
-                          XYZ科技有限公司
-                        </h4>
-                        <span class="text-sm text-slate-500">2015-2018</span>
-                      </div>
-                      <p class="text-sm text-slate-600 mb-2">軟體工程師</p>
-                      <p class="text-xs text-slate-500 mb-2">
-                        開發多個企業級應用系統
-                      </p>
-                      <div class="flex items-center text-xs text-green-600">
-                        <span class="bg-green-100 px-2 py-1 rounded-full"
-                          >3年經驗</span
-                        >
-                      </div>
-                    </div>
-                  </div>
-
-                  <!-- 初級工程師 -->
-                  <div class="relative">
-                    <div
-                      class="absolute left-[-0.5rem] w-4 h-4 bg-green-400 rounded-full border-2 border-white shadow-lg"
-                    ></div>
-                    <div
-                      class="bg-white rounded-lg p-4 border border-green-200 shadow-sm hover:shadow-md transition-shadow"
-                    >
-                      <div class="flex justify-between items-start mb-2">
-                        <h4 class="font-semibold text-slate-800">
-                          DEF軟體企業
-                        </h4>
-                        <span class="text-sm text-slate-500">2014-2015</span>
-                      </div>
-                      <p class="text-sm text-slate-600 mb-2">初級軟體工程師</p>
-                      <p class="text-xs text-slate-500 mb-2">
-                        學習企業軟體開發流程
-                      </p>
-                      <div class="flex items-center text-xs text-green-600">
-                        <span class="bg-green-100 px-2 py-1 rounded-full"
-                          >1年經驗</span
-                        >
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              <!-- 技能標籤雲 -->
-              <div class="relative">
-                <h3
-                  class="text-lg font-semibold text-slate-800 mb-4 flex items-center"
-                >
-                  <svg
-                    class="w-5 h-5 mr-2 text-purple-600"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      stroke-linecap="round"
-                      stroke-linejoin="round"
-                      stroke-width="2"
-                      d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014.846 21H9.154a3.374 3.374 0 00-2.894-1.789L5.712 18.3z"
-                    ></path>
-                  </svg>
-                  核心技能
-                </h3>
-
-                <div class="flex flex-wrap gap-2">
-                  <!-- 程式語言 -->
-                  <span
-                    class="bg-blue-100 text-blue-800 px-3 py-1 rounded-full text-sm font-medium"
-                    >Python</span
-                  >
-                  <span
-                    class="bg-yellow-100 text-yellow-800 px-3 py-1 rounded-full text-sm font-medium"
-                    >JavaScript</span
-                  >
-                  <span
-                    class="bg-red-100 text-red-800 px-3 py-1 rounded-full text-sm font-medium"
-                    >Java</span
-                  >
-
-                  <!-- 框架技術 -->
-                  <span
-                    class="bg-cyan-100 text-cyan-800 px-3 py-1 rounded-full text-sm font-medium"
-                    >React</span
-                  >
-                  <span
-                    class="bg-green-100 text-green-800 px-3 py-1 rounded-full text-sm font-medium"
-                    >Node.js</span
-                  >
-                  <span
-                    class="bg-indigo-100 text-indigo-800 px-3 py-1 rounded-full text-sm font-medium"
-                    >Django</span
-                  >
-
-                  <!-- 雲端技術 -->
-                  <span
-                    class="bg-orange-100 text-orange-800 px-3 py-1 rounded-full text-sm font-medium"
-                    >AWS</span
-                  >
-                  <span
-                    class="bg-gray-100 text-gray-800 px-3 py-1 rounded-full text-sm font-medium"
-                    >Docker</span
-                  >
-                  <span
-                    class="bg-purple-100 text-purple-800 px-3 py-1 rounded-full text-sm font-medium"
-                    >Kubernetes</span
-                  >
-
-                  <!-- 資料庫 -->
-                  <span
-                    class="bg-teal-100 text-teal-800 px-3 py-1 rounded-full text-sm font-medium"
-                    >MySQL</span
-                  >
-                  <span
-                    class="bg-emerald-100 text-emerald-800 px-3 py-1 rounded-full text-sm font-medium"
-                    >MongoDB</span
-                  >
-                </div>
-              </div>
+            <div
+              v-show="activeFunction !== 'job-match'"
+              class="flex justify-center"
+            >
+              <img
+                src="@/assets/images/ai/map.png"
+                alt="學經歷地圖"
+                class="max-w-full h-auto rounded-lg shadow-md"
+              />
             </div>
 
             <!-- 職缺符合度分析區域 - 只在職缺符合度功能時顯示 -->
