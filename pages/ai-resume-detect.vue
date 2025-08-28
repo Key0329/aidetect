@@ -220,20 +220,13 @@ const handleDogFeedback = (type) => {
 
 // 生成個性化分析文案
 const generateAnalysisText = () => {
-  const { jobMatch, concerns } = cardSummary.value;
+  const { concerns } = cardSummary.value;
 
-  let text = `這位求職者很符合你所開的【${
-    jobMatch.position
-  }】職務需求，特別是你在找尋的【${jobMatch.strengths.join(
-    "、"
-  )}】特質，這位求職者在【${jobMatch.resumeHighlights.join(
-    "、"
-  )}】中也有提到。`;
+  let text = `這位求職者很符合您所開的【行銷企劃職缺】職務需求！
+特別是您在找尋的「實際行銷活動經驗」，這位求職者曾有【大型檔期與巡迴執行、跨場地協調與結案】經驗`;
 
   if (concerns.areas.length > 0) {
-    text += `\n\n但同時我們也發現【${concerns.areas.join(
-      "、"
-    )}】這部分有需要關注的地方，建議在面試時可以多加了解。`;
+    text += `\n\n但同時我們也發現「數位投放/成效工具經驗」有需要關注的地方，建議在面試時可以多加了解。`;
   }
 
   return text;
@@ -1431,7 +1424,7 @@ onUnmounted(() => {
         :style="{ opacity: showAIDetectDrawer ? 1 : 0 }"
       ></div>
       <div
-        class="drawer-header bg-white/50 backdrop-blur border-b border-slate-200 px-6 py-4 flex justify-between items-center ml-1"
+        class="drawer-header bg-white/50 backdrop-blur border-b border-slate-200 px-6 py-2 flex justify-between items-center ml-1"
       >
         <h2
           class="text-2xl font-bold m-0 text-slate-800 truncate flex items-center"
@@ -1490,12 +1483,11 @@ onUnmounted(() => {
           </div>
 
           <!-- 「以上內容有幫助嗎？」區塊 skeleton -->
-          <div class="mt-8">
+          <div class="mt-6">
             <div
-              class="bg-gradient-to-r from-blue-50 to-cyan-50 border border-blue-200 p-4 rounded-xl shadow-sm"
+              class="bg-gradient-to-r from-blue-50 to-cyan-50 border border-blue-200 px-3 py-2 rounded-lg shadow-sm"
             >
-              <div class="skeleton-line w-1/2 mb-3"></div>
-              <div class="skeleton-block w-3/4"></div>
+              <div class="skeleton-line w-3/4 h-4"></div>
             </div>
           </div>
           <!-- 進階功能區塊 skeleton -->
@@ -1518,9 +1510,9 @@ onUnmounted(() => {
         <!-- 實際內容 -->
         <div v-else>
           <!-- 分析僅供參考提示 -->
-          <div class="mb-6">
+          <div class="mb-4">
             <div
-              class="bg-gradient-to-r from-amber-50 to-yellow-50 border border-amber-200 p-4 rounded-xl shadow-sm"
+              class="bg-gradient-to-r from-amber-50 to-yellow-50 border border-amber-200 p-2 rounded-xl shadow-sm"
             >
               <p
                 class="m-0 leading-6 text-amber-700 font-medium flex items-center text-sm"
@@ -1556,14 +1548,46 @@ onUnmounted(() => {
             >
               <!-- 總結卡片 -->
               <div class="w-[94%] flex-shrink-0">
-                <div class="relative h-[450px] sm:h-[500px] summary-card">
+                <div class="relative h-[400px] summary-card">
                   <!-- 柴犬角色 -->
                   <div class="absolute top-4 left-6 z-20">
                     <div class="relative">
-                      <!-- 反饋提示訊息 - 在柴犬旁邊的對話泡泡 -->
+                      <!-- 推薦標籤對話泡泡 - 在柴犬右側永久顯示 -->
+                      <div
+                        class="absolute -right-4 -top-2 transform translate-x-full z-30"
+                      >
+                        <!-- 對話泡泡 -->
+                        <div
+                          :class="
+                            cardSummary.recommendation === '高度推薦'
+                              ? 'bg-green-100 text-green-700 border-green-300'
+                              : 'bg-yellow-100 text-yellow-700 border-yellow-300'
+                          "
+                          class="relative px-3 py-2 rounded-xl shadow-lg border-2"
+                        >
+                          <div class="text-xs font-bold whitespace-nowrap">
+                            {{ cardSummary.recommendation }}
+                          </div>
+                          <!-- 對話泡泡尾巴指向柴犬 -->
+                          <div
+                            class="absolute left-0 top-1/2 transform -translate-y-1/2 -translate-x-1"
+                          >
+                            <div
+                              :class="
+                                cardSummary.recommendation === '高度推薦'
+                                  ? 'border-r-green-300'
+                                  : 'border-r-yellow-300'
+                              "
+                              class="w-0 h-0 border-t-4 border-b-4 border-r-8 border-transparent"
+                            ></div>
+                          </div>
+                        </div>
+                      </div>
+
+                      <!-- 反饋提示訊息 - 在高度推薦下方 -->
                       <div
                         v-if="dogFeedback.showToast"
-                        class="absolute -right-4 -top-2 transform translate-x-full z-30"
+                        class="absolute -right-4 top-12 transform translate-x-full z-30"
                       >
                         <!-- 對話泡泡 -->
                         <div
@@ -1652,20 +1676,7 @@ onUnmounted(() => {
                     ></div>
 
                     <!-- 標題區域 -->
-                    <div class="pt-8 mb-6">
-                      <div class="flex justify-center mb-4">
-                        <span
-                          :class="
-                            cardSummary.recommendation === '高度推薦'
-                              ? 'bg-green-100 text-green-700 border-green-300'
-                              : 'bg-yellow-100 text-yellow-700 border-yellow-300'
-                          "
-                          class="px-4 py-2 rounded-full text-sm font-bold border-2 shadow-sm"
-                        >
-                          {{ cardSummary.recommendation }}
-                        </span>
-                      </div>
-                    </div>
+                    <div class="pt-8 mb-6"></div>
 
                     <!-- 分析內容 -->
                     <div
@@ -1678,11 +1689,13 @@ onUnmounted(() => {
                       </div>
                     </div>
 
-                    <!-- 讚/倒讚按鈕 -->
-                    <div class="absolute bottom-4 right-4 flex space-x-2">
+                    <!-- 讚/倒讚按鈕 - 移到對話框內右下方 -->
+                    <div
+                      class="absolute bottom-3 right-3 flex space-x-1.5 z-20"
+                    >
                       <button
                         @click="handleDogFeedback('like')"
-                        class="w-10 h-10 rounded-full transition-all duration-200 transform hover:scale-110 shadow-md flex items-center justify-center"
+                        class="w-8 h-8 rounded-full transition-all duration-200 transform hover:scale-110 shadow-md flex items-center justify-center"
                         :class="
                           dogFeedback.liked
                             ? 'bg-green-500 text-white'
@@ -1690,7 +1703,7 @@ onUnmounted(() => {
                         "
                       >
                         <svg
-                          class="w-5 h-5"
+                          class="w-4 h-4"
                           fill="currentColor"
                           viewBox="0 0 24 24"
                         >
@@ -1701,7 +1714,7 @@ onUnmounted(() => {
                       </button>
                       <button
                         @click="handleDogFeedback('dislike')"
-                        class="w-10 h-10 rounded-full transition-all duration-200 transform hover:scale-110 shadow-md flex items-center justify-center"
+                        class="w-8 h-8 rounded-full transition-all duration-200 transform hover:scale-110 shadow-md flex items-center justify-center"
                         :class="
                           dogFeedback.disliked
                             ? 'bg-red-500 text-white'
@@ -1709,7 +1722,7 @@ onUnmounted(() => {
                         "
                       >
                         <svg
-                          class="w-5 h-5"
+                          class="w-4 h-4"
                           fill="currentColor"
                           viewBox="0 0 24 24"
                           style="transform: rotate(180deg)"
@@ -1721,10 +1734,8 @@ onUnmounted(() => {
                       </button>
                     </div>
 
-                    <!-- 操作按鈕 -->
-                    <div
-                      class="absolute bottom-4 left-4 flex flex-col space-y-2"
-                    >
+                    <!-- 操作按鈕 - 移至右下方並排 -->
+                    <div class="absolute bottom-4 right-4 flex space-x-2 mr-20">
                       <!-- 建議問題按鈕 -->
                       <button
                         @click="showQuestionCard"
@@ -1748,7 +1759,7 @@ onUnmounted(() => {
               <!-- 建議問題卡片 -->
               <div class="w-full flex-shrink-0">
                 <div
-                  class="bg-gradient-to-b from-purple-50/40 to-indigo-50/60 border border-purple-200 rounded-xl p-4 sm:p-8 h-[450px] sm:h-[500px] summary-card flex flex-col relative"
+                  class="bg-gradient-to-b from-purple-50/40 to-indigo-50/60 border border-purple-200 rounded-xl p-4 sm:p-8 h-[400px] summary-card flex flex-col relative"
                 >
                   <div class="flex items-start mb-6">
                     <div class="flex-1">
@@ -1999,16 +2010,14 @@ onUnmounted(() => {
         </div>
 
         <!-- 內容導引提示 -->
-        <div class="mb-6">
+        <div class="mb-4">
           <div
-            class="bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200 p-2 rounded-2xl shadow-sm"
+            class="bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200 px-3 py-2 rounded-lg shadow-sm"
           >
-            <div class="text-center mb-4">
-              <h3
-                class="text-lg font-semibold text-slate-700 mb-2 flex items-center justify-center"
-              >
+            <div class="flex flex-col justify-center">
+              <div class="flex items-center justify-center">
                 <svg
-                  class="w-5 h-5 mr-2 text-blue-500"
+                  class="w-4 h-4 mr-2 text-blue-500"
                   fill="none"
                   stroke="currentColor"
                   viewBox="0 0 24 24"
@@ -2020,11 +2029,13 @@ onUnmounted(() => {
                     d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
                   ></path>
                 </svg>
-                以上內容有幫助嗎？
-              </h3>
-              <p class="text-slate-600 text-sm">
-                需要我幫你再呈現更詳細的資料嗎，或許你想看：
-              </p>
+                <span class="text-sm font-medium text-slate-700"
+                  >以上內容有幫助嗎？</span
+                >
+              </div>
+              <span class="text-xs text-slate-500 ml-2 text-center"
+                >需要我幫你再呈現更詳細的資料嗎，或許你想看：</span
+              >
             </div>
           </div>
         </div>
@@ -2032,10 +2043,10 @@ onUnmounted(() => {
         <!-- 功能選單區 -->
         <div
           id="advanced-functions"
-          class="sticky -top-6 z-40 bg-white/95 backdrop-blur-sm border-b border-slate-200/50 py-4 mb-6 shadow-sm"
+          class="sticky -top-6 z-40 bg-white/95 backdrop-blur-sm border-b p-1 rounded-xl border-slate-200/50 mb-6 shadow-sm"
         >
           <div
-            class="grid grid-cols-3 sm:grid-cols-5 gap-2 sm:gap-3 max-w-4xl mx-auto overflow-x-auto px-4"
+            class="grid grid-cols-3 sm:grid-cols-5 gap-2 sm:gap-3 max-w-4xl mx-auto"
           >
             <button
               @click="switchFunction('job-match')"
@@ -2472,6 +2483,73 @@ onUnmounted(() => {
 
             <!-- 職缺符合度分析區域 - 只在職缺符合度功能時顯示 -->
             <div v-show="activeFunction === 'job-match'" class="space-y-6 mt-8">
+              
+              <!-- AI 分析建議區域 - 置頂顯示 -->
+              <div
+                class="bg-gradient-to-r from-green-50 via-orange-50 to-green-50 border border-green-200 rounded-xl p-6 shadow-lg"
+              >
+                <h3
+                  class="text-xl font-bold text-slate-800 mb-6 flex items-center"
+                >
+                  <svg
+                    class="w-6 h-6 mr-3 text-green-600"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      stroke-width="2"
+                      d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"
+                    ></path>
+                  </svg>
+                  關於職務符合度的分析建議
+                </h3>
+                
+
+                <!-- 面試重點 -->
+                <div class="bg-orange-50 border border-orange-200 rounded-xl p-6">
+                  <h4 class="text-lg font-semibold text-orange-800 mb-4 flex items-center">
+                    <svg
+                      class="w-5 h-5 mr-2 text-orange-600"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                        stroke-width="2"
+                        d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                      ></path>
+                    </svg>
+                    面試聚焦
+                  </h4>
+                  <div class="space-y-3">
+                    <div class="flex items-start space-x-3">
+                      <div class="w-2 h-2 bg-orange-500 rounded-full mt-2 flex-shrink-0"></div>
+                      <p class="text-slate-700">
+                        請說明「巡迴專案 KPI、你負責的里程碑與成效證據」
+                      </p>
+                    </div>
+                    <div class="flex items-start space-x-3">
+                      <div class="w-2 h-2 bg-orange-500 rounded-full mt-2 flex-shrink-0"></div>
+                      <p class="text-slate-700">
+                        分享跨場地風險控管實例（如場地／車輛／人流協調）
+                      </p>
+                    </div>
+                    <div class="flex items-start space-x-3">
+                      <div class="w-2 h-2 bg-orange-500 rounded-full mt-2 flex-shrink-0"></div>
+                      <p class="text-slate-700">
+                        若職缺強調數位／會員經營，請評估以加分或補件後再評估處理
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- 職缺符合度概覽 -->
               <div
                 class="bg-gradient-to-r from-blue-50 to-cyan-50 border border-blue-200 p-6 rounded-xl shadow-sm"
               >
@@ -2491,24 +2569,24 @@ onUnmounted(() => {
                       d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"
                     ></path>
                   </svg>
-                  職缺符合度分析
+                  職缺符合度（活動行銷企劃／百貨・美妝）
                 </h3>
 
                 <!-- 符合度總覽 -->
-                <div class="mb-8">
+                <div class="mb-6">
                   <div
                     class="bg-white rounded-xl p-6 border border-green-200 shadow-sm max-w-md mx-auto"
                   >
                     <div class="flex items-center justify-between">
                       <div>
                         <h4 class="text-lg font-medium text-slate-600">
-                          符合項目
+                          總共符合
                         </h4>
                         <p class="text-3xl font-bold text-green-600 mt-2">
-                          8項
+                          必備 4/4（加分 2/3）
                         </p>
                         <p class="text-sm text-slate-500 mt-1">
-                          候選人符合職缺要求的技能項目
+                          完全符合職缺必備條件
                         </p>
                       </div>
                       <div
@@ -2534,7 +2612,8 @@ onUnmounted(() => {
 
                 <!-- 技能比對明細 -->
                 <div class="space-y-6">
-                  <!-- 符合技能 -->
+                  
+                  <!-- 符合職缺要求的技能 -->
                   <div
                     class="bg-white rounded-xl p-6 border border-slate-200 shadow-sm"
                   >
@@ -2542,89 +2621,45 @@ onUnmounted(() => {
                       class="text-lg font-semibold text-slate-800 mb-4 flex items-center"
                     >
                       <div class="w-4 h-4 bg-green-500 rounded-full mr-3"></div>
-                      符合職缺要求的技能 (共8項)
+                      符合職缺要求的技能（舉證）
                     </h4>
-                    <div class="grid grid-cols-2 md:grid-cols-4 gap-3">
-                      <div
-                        class="bg-green-50 border border-green-200 rounded-lg p-3 text-center"
-                      >
-                        <span class="text-green-800 font-medium"
-                          >JavaScript</span
-                        >
-                        <p class="text-xs text-green-600 mt-1">5年經驗</p>
+                    <div class="space-y-4">
+                      <div class="bg-green-50 border border-green-200 rounded-lg p-4">
+                        <h5 class="font-semibold text-green-800 mb-2">活動企劃與執行</h5>
+                        <p class="text-sm text-green-700">含現場統籌</p>
                       </div>
-                      <div
-                        class="bg-green-50 border border-green-200 rounded-lg p-3 text-center"
-                      >
-                        <span class="text-green-800 font-medium">React</span>
-                        <p class="text-xs text-green-600 mt-1">3年經驗</p>
+                      <div class="bg-green-50 border border-green-200 rounded-lg p-4">
+                        <h5 class="font-semibold text-green-800 mb-2">巡迴／跨場地協調</h5>
+                        <p class="text-sm text-green-700">北中南多據點，含場控與場佈撤場協作</p>
                       </div>
-                      <div
-                        class="bg-green-50 border border-green-200 rounded-lg p-3 text-center"
-                      >
-                        <span class="text-green-800 font-medium">Node.js</span>
-                        <p class="text-xs text-green-600 mt-1">4年經驗</p>
+                      <div class="bg-green-50 border border-green-200 rounded-lg p-4">
+                        <h5 class="font-semibold text-green-800 mb-2">結案與成效彙整</h5>
+                        <p class="text-sm text-green-700">KPI/成效追蹤、結案報告</p>
                       </div>
-                      <div
-                        class="bg-green-50 border border-green-200 rounded-lg p-3 text-center"
-                      >
-                        <span class="text-green-800 font-medium">Python</span>
-                        <p class="text-xs text-green-600 mt-1">2年經驗</p>
-                      </div>
-                      <div
-                        class="bg-green-50 border border-green-200 rounded-lg p-3 text-center"
-                      >
-                        <span class="text-green-800 font-medium">MySQL</span>
-                        <p class="text-xs text-green-600 mt-1">3年經驗</p>
-                      </div>
-                      <div
-                        class="bg-green-50 border border-green-200 rounded-lg p-3 text-center"
-                      >
-                        <span class="text-green-800 font-medium">Git</span>
-                        <p class="text-xs text-green-600 mt-1">5年經驗</p>
-                      </div>
-                      <div
-                        class="bg-green-50 border border-green-200 rounded-lg p-3 text-center"
-                      >
-                        <span class="text-green-800 font-medium">Docker</span>
-                        <p class="text-xs text-green-600 mt-1">2年經驗</p>
-                      </div>
-                      <div
-                        class="bg-green-50 border border-green-200 rounded-lg p-3 text-center"
-                      >
-                        <span class="text-green-800 font-medium">AWS</span>
-                        <p class="text-xs text-green-600 mt-1">1年經驗</p>
+                      <div class="bg-green-50 border border-green-200 rounded-lg p-4">
+                        <h5 class="font-semibold text-green-800 mb-2">異業合作溝通</h5>
+                        <p class="text-sm text-green-700">易遊網、甲上娛樂等</p>
                       </div>
                     </div>
                   </div>
 
-                  <!-- 缺少技能 -->
+                  <!-- 職缺要求但候選人未具備的技能 -->
                   <div
                     class="bg-white rounded-xl p-6 border border-slate-200 shadow-sm"
                   >
                     <h4
                       class="text-lg font-semibold text-slate-800 mb-4 flex items-center"
                     >
-                      <div class="w-4 h-4 bg-red-500 rounded-full mr-3"></div>
-                      職缺要求但候選人未具備的技能 (共2項)
+                      <div class="w-4 h-4 bg-yellow-500 rounded-full mr-3"></div>
+                      職缺要求但候選人未具備的技能
                     </h4>
-                    <div class="grid grid-cols-2 md:grid-cols-4 gap-3">
-                      <div
-                        class="bg-red-50 border border-red-200 rounded-lg p-3 text-center"
-                      >
-                        <span class="text-red-800 font-medium">Kubernetes</span>
-                        <p class="text-xs text-red-600 mt-1">職缺要求</p>
-                      </div>
-                      <div
-                        class="bg-red-50 border border-red-200 rounded-lg p-3 text-center"
-                      >
-                        <span class="text-red-800 font-medium">GraphQL</span>
-                        <p class="text-xs text-red-600 mt-1">職缺要求</p>
-                      </div>
+                    <div class="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
+                      <h5 class="font-semibold text-yellow-800 mb-2">數位投放／CRM</h5>
+                      <p class="text-sm text-yellow-700">履歷未見明確佐證；若此為必備，建議面談釐清</p>
                     </div>
                   </div>
 
-                  <!-- 加分技能 -->
+                  <!-- 候選人額外具備的技能 -->
                   <div
                     class="bg-white rounded-xl p-6 border border-slate-200 shadow-sm"
                   >
@@ -2632,78 +2667,25 @@ onUnmounted(() => {
                       class="text-lg font-semibold text-slate-800 mb-4 flex items-center"
                     >
                       <div class="w-4 h-4 bg-blue-500 rounded-full mr-3"></div>
-                      候選人額外具備的技能 (共3項)
+                      候選人額外具備的技能（加分）
                     </h4>
-                    <div class="grid grid-cols-2 md:grid-cols-4 gap-3">
-                      <div
-                        class="bg-blue-50 border border-blue-200 rounded-lg p-3 text-center"
-                      >
-                        <span class="text-blue-800 font-medium">Django</span>
-                        <p class="text-xs text-blue-600 mt-1">額外技能</p>
+                    <div class="space-y-3">
+                      <div class="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                        <h5 class="font-semibold text-blue-800 mb-2">主持與對外互動</h5>
+                        <p class="text-sm text-blue-700">直播主持／現場主持</p>
                       </div>
-                      <div
-                        class="bg-blue-50 border border-blue-200 rounded-lg p-3 text-center"
-                      >
-                        <span class="text-blue-800 font-medium">MongoDB</span>
-                        <p class="text-xs text-blue-600 mt-1">額外技能</p>
+                      <div class="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                        <h5 class="font-semibold text-blue-800 mb-2">多媒體／設計工具</h5>
+                        <p class="text-sm text-blue-700">Premiere、Photoshop、Illustrator</p>
                       </div>
-                      <div
-                        class="bg-blue-50 border border-blue-200 rounded-lg p-3 text-center"
-                      >
-                        <span class="text-blue-800 font-medium">Redis</span>
-                        <p class="text-xs text-blue-600 mt-1">額外技能</p>
+                      <div class="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                        <h5 class="font-semibold text-blue-800 mb-2">英文 TOEIC 840</h5>
+                        <p class="text-sm text-blue-700">具備英文工作基礎</p>
                       </div>
-                    </div>
-                  </div>
-                </div>
-
-                <!-- 推薦建議 -->
-                <div
-                  class="bg-gradient-to-r from-slate-50 to-slate-100 border border-slate-200 rounded-xl p-6 mt-8"
-                >
-                  <h4
-                    class="text-lg font-semibold text-slate-800 mb-3 flex items-center"
-                  >
-                    <svg
-                      class="w-5 h-5 mr-2 text-slate-600"
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
-                    >
-                      <path
-                        stroke-linecap="round"
-                        stroke-linejoin="round"
-                        stroke-width="2"
-                        d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"
-                      ></path>
-                    </svg>
-                    AI 分析建議
-                  </h4>
-                  <div class="space-y-3">
-                    <div class="flex items-start space-x-3">
-                      <div
-                        class="w-2 h-2 bg-green-500 rounded-full mt-2 flex-shrink-0"
-                      ></div>
-                      <p class="text-slate-700 leading-relaxed">
-                        候選人符合8項職缺要求，具備核心技能且經驗年限超過最低要求，表現優秀。
-                      </p>
-                    </div>
-                    <div class="flex items-start space-x-3">
-                      <div
-                        class="w-2 h-2 bg-yellow-500 rounded-full mt-2 flex-shrink-0"
-                      ></div>
-                      <p class="text-slate-700 leading-relaxed">
-                        僅有2項技能需要補強
-                        (Kubernetes、GraphQL)，建議面試時了解學習意願。
-                      </p>
-                    </div>
-                    <div class="flex items-start space-x-3">
-                      <div
-                        class="w-2 h-2 bg-blue-500 rounded-full mt-2 flex-shrink-0"
-                      ></div>
-                      <p class="text-slate-700 leading-relaxed">
-                        候選人額外具備3項加分技能，在後端技術方面有優勢，適合全端開發職務。
-                      </p>
+                      <div class="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                        <h5 class="font-semibold text-blue-800 mb-2">中英打字速度佳</h5>
+                        <p class="text-sm text-blue-700">內外溝通效率</p>
+                      </div>
                     </div>
                   </div>
                 </div>
