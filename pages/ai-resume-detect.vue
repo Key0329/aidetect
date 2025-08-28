@@ -1041,7 +1041,7 @@ onUnmounted(() => {
                     <p class="m-0 leading-28px font-700 text-start mb-2">
                       Tools / Development
                     </p>
-                    <p class="m-0 leading-28px text-start">
+                    <p id="keyword-stuffing" class="m-0 leading-28px text-start">
                       GraphQL 實作 API 串接、Docker 容器化部署、AWS Lambda 無伺服器功能、CI/CD 持續整合/交付流程
                     </p>
                   </div>
@@ -1281,6 +1281,7 @@ onUnmounted(() => {
                       <div class="flex justify-between gap-6 w-full">
                         <div>
                           <p
+                            id="experience-inconsistency"
                             class="text-start m-0 text-18px leading-24px font-700"
                           >
                             櫃檯主管 / 工務主任
@@ -1423,7 +1424,7 @@ onUnmounted(() => {
                    前端工程師！
                  </div>
                     【團隊合作與整合溝通：櫃台主管／工務主任】<br><br>
-                    <div class="ms-5 mb-5">
+                    <div id="abstract-description" class="ms-5 mb-5">
                       我的溝通風格是先綜觀全局，逐步分析找出問題核心後便可高效率解決雙邊或多邊溝通的痛點。<br>
                       透過全方位的策略規劃，我致力於促進跨部門的協同合作，並主動發掘潛在的成長契機，以達到全面性的卓越。<br>
                       在青旅工作期間，退房後到入住前是最忙碌的時段，各部門都想盡快完成自己的工作，在沒有管理的情況下容易發
@@ -2589,44 +2590,7 @@ onUnmounted(() => {
                 </div>
               </div>
 
-              <!-- 面試聚焦建議區域 -->
-              <div
-                class="mt-8 p-6 bg-gradient-to-r from-blue-50 to-cyan-50 rounded-xl border border-blue-100 shadow-sm"
-              >
-                <div class="flex items-center mb-3">
-                  <div
-                    class="w-10 h-10 bg-gradient-to-r from-blue-500 to-cyan-500 rounded-lg flex items-center justify-center mr-3"
-                  >
-                    <svg
-                      class="w-6 h-6 text-white"
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
-                    >
-                      <path
-                        stroke-linecap="round"
-                        stroke-linejoin="round"
-                        stroke-width="2"
-                        d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-                      ></path>
-                    </svg>
-                  </div>
-                  <h3 class="text-2xl font-bold text-gray-800 mb-0">
-                    面試聚焦建議
-                  </h3>
-                </div>
-                <div class="space-y-2">
-                  <p class="text-gray-700">
-                    • 請說明「巡迴專案 KPI、你負責的里程碑與成效證據」
-                  </p>
-                  <p class="text-gray-700">
-                    • 分享跨場地風險控管實例（如場地／車輛／人流協調）
-                  </p>
-                  <p class="text-gray-700">
-                    • 若職缺強調數位／會員經營，請評估以加分或補件後再評估處理
-                  </p>
-                </div>
-              </div>
+   
             </div>
           </div>
 
@@ -2691,20 +2655,9 @@ onUnmounted(() => {
                         </svg>
                       </div>
                     </div>
-                    <div>
-                      <h3 class="text-2xl font-bold text-slate-900 mb-1">
+                      <h3 class="text-2xl font-bold text-slate-900 my-0">
                         經歷跳躍或邏輯不通
                       </h3>
-                      <div class="flex items-center space-x-2">
-                        <span
-                          class="inline-flex items-center px-2 py-1 rounded-md text-sm font-medium bg-orange-100 text-orange-800"
-                          >高風險</span
-                        >
-                        <span class="text-base text-slate-500"
-                          >邏輯一致性分析</span
-                        >
-                      </div>
-                    </div>
                   </div>
                   <div class="flex items-center space-x-2">
                     <button
@@ -2760,7 +2713,7 @@ onUnmounted(() => {
                 <!-- 分析描述 -->
                 <div class="mb-6">
                   <p class="text-slate-700 leading-relaxed mb-4">
-                    使用過於精確的數字（30%、40%、90%）但缺乏計算方法說明，顯示AI傾向於產生整齊的百分比數據。時間線存在重疊矛盾，工作經驗總和與學歷期間不符，無法自圓其說，這是AI合成履歷常見的邏輯問題。
+                    旅行者之家的櫃檯主管經歷時間異常，須釐清「旅行者之家」與其他工作經歷的先後順序及職責內容，確保時間軸合理且不衝突
                   </p>
                 </div>
 
@@ -2791,8 +2744,8 @@ onUnmounted(() => {
                       class="flex items-start justify-between"
                       @click="
                         scrollToSection(
-                          'experience-section',
-                          '【數位轉型平台】成效'
+                          'experience-inconsistency',
+                          '櫃檯主管 / 工務主任'
                         )
                       "
                     >
@@ -2800,8 +2753,7 @@ onUnmounted(() => {
                         <p
                           class="text-slate-800 font-medium leading-relaxed group-hover/content:text-slate-900"
                         >
-                          【數位轉型平台】成效：成功將傳統系統遷移至雲端，降低
-                          40% 運營成本，業績增長 15%。
+                          櫃檯主管 / 工務主任 - 信星旅館股份有限公司（旅遊服務業 30~100人）
                         </p>
                       </div>
                       <div class="ml-4 flex-shrink-0">
@@ -2858,18 +2810,10 @@ onUnmounted(() => {
                         </svg>
                       </div>
                     </div>
-                    <div>
-                      <h3 class="text-2xl font-bold text-slate-900 mb-1">
+                      <h3 class="text-2xl font-bold text-slate-900 my-0">
                         堆砌熱門關鍵字但缺乏上下文
                       </h3>
-                      <div class="flex items-center space-x-2">
-                        <span
-                          class="inline-flex items-center px-2 py-1 rounded-md text-sm font-medium bg-yellow-100 text-yellow-800"
-                          >中風險</span
-                        >
-                        <span class="text-base text-slate-500">技術深度分析</span>
-                      </div>
-                    </div>
+       
                   </div>
                   <div class="flex items-center space-x-2">
                     <button
@@ -2957,101 +2901,14 @@ onUnmounted(() => {
                       <div
                         class="flex items-start justify-between"
                         @click="
-                          scrollToSection('skills-section', '高級程式設計')
+                          scrollToSection('keyword-stuffing', 'GraphQL 實作 API 串接')
                         "
                       >
                         <div class="flex-1">
                           <p
                             class="text-slate-800 font-medium leading-relaxed group-hover/content:text-slate-900"
                           >
-                            高級程式設計：精通
-                            Python、JavaScript、Java，具備跨平台全端開發能力，驅動高效能系統建構。
-                          </p>
-                        </div>
-                        <div class="ml-4 flex-shrink-0">
-                          <div
-                            class="w-8 h-8 bg-cyan-100 rounded-lg flex items-center justify-center group-hover/content:bg-cyan-200 transition-colors"
-                          >
-                            <svg
-                              class="w-4 h-4 text-cyan-600"
-                              fill="none"
-                              stroke="currentColor"
-                              viewBox="0 0 24 24"
-                            >
-                              <path
-                                stroke-linecap="round"
-                                stroke-linejoin="round"
-                                stroke-width="2"
-                                d="M9 5l7 7-7 7"
-                              ></path>
-                            </svg>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-
-                    <!-- 項目2 -->
-                    <div
-                      class="bg-gradient-to-r from-slate-50 to-slate-100 border border-slate-200 rounded-xl p-4 hover:border-cyan-300 hover:shadow-md transition-all duration-200 cursor-pointer group/content"
-                    >
-                      <div
-                        class="flex items-start justify-between"
-                        @click="
-                          scrollToSection(
-                            'experience-section',
-                            '系統架構設計：主導企業級應用程式架構'
-                          )
-                        "
-                      >
-                        <div class="flex-1">
-                          <p
-                            class="text-slate-800 font-medium leading-relaxed group-hover/content:text-slate-900"
-                          >
-                            系統架構設計：主導企業級應用程式架構，運用微服務與
-                            AWS 雲端技術，提升系統可擴展性 30%。
-                          </p>
-                        </div>
-                        <div class="ml-4 flex-shrink-0">
-                          <div
-                            class="w-8 h-8 bg-cyan-100 rounded-lg flex items-center justify-center group-hover/content:bg-cyan-200 transition-colors"
-                          >
-                            <svg
-                              class="w-4 h-4 text-cyan-600"
-                              fill="none"
-                              stroke="currentColor"
-                              viewBox="0 0 24 24"
-                            >
-                              <path
-                                stroke-linecap="round"
-                                stroke-linejoin="round"
-                                stroke-width="2"
-                                d="M9 5l7 7-7 7"
-                              ></path>
-                            </svg>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-
-                    <!-- 項目3 -->
-                    <div
-                      class="bg-gradient-to-r from-slate-50 to-slate-100 border border-slate-200 rounded-xl p-4 hover:border-cyan-300 hover:shadow-md transition-all duration-200 cursor-pointer group/content"
-                    >
-                      <div
-                        class="flex items-start justify-between"
-                        @click="
-                          scrollToSection(
-                            'experience-section',
-                            '專案領導：帶領 10'
-                          )
-                        "
-                      >
-                        <div class="flex-1">
-                          <p
-                            class="text-slate-800 font-medium leading-relaxed group-hover/content:text-slate-900"
-                          >
-                            專案領導：帶領 10
-                            人開發團隊，負責需求分析、功能規劃與敏捷開發，確保專案如期交付。
+                            GraphQL 實作 API 串接、Docker 容器化部署、AWS Lambda 無伺服器功能、CI/CD 持續整合/交付流程
                           </p>
                         </div>
                         <div class="ml-4 flex-shrink-0">
@@ -3109,18 +2966,9 @@ onUnmounted(() => {
                         </svg>
                       </div>
                     </div>
-                    <div>
-                      <h3 class="text-2xl font-bold text-slate-900 mb-1">
+                      <h3 class="text-2xl font-bold text-slate-900 my-0">
                         敘述抽象、缺乏細節
                       </h3>
-                      <div class="flex items-center space-x-2">
-                        <span
-                          class="inline-flex items-center px-2 py-1 rounded-md text-sm font-medium bg-blue-100 text-blue-800"
-                          >中風險</span
-                        >
-                        <span class="text-base text-slate-500">內容品質分析</span>
-                      </div>
-                    </div>
                   </div>
                   <div class="flex items-center space-x-2">
                     <button
@@ -3208,58 +3056,14 @@ onUnmounted(() => {
                       <div
                         class="flex items-start justify-between"
                         @click="
-                          scrollToSection('skills-section', '雲端與 DevOps')
+                          scrollToSection('abstract-description', '透過全方位的策略規劃')
                         "
                       >
                         <div class="flex-1">
                           <p
                             class="text-slate-800 font-medium leading-relaxed group-hover/content:text-slate-900"
                           >
-                            雲端與 DevOps：掌握
-                            AWS、Docker、Kubernetes，實現自動化部署與雲端優化。
-                          </p>
-                        </div>
-                        <div class="ml-4 flex-shrink-0">
-                          <div
-                            class="w-8 h-8 bg-cyan-100 rounded-lg flex items-center justify-center group-hover/content:bg-cyan-200 transition-colors"
-                          >
-                            <svg
-                              class="w-4 h-4 text-cyan-600"
-                              fill="none"
-                              stroke="currentColor"
-                              viewBox="0 0 24 24"
-                            >
-                              <path
-                                stroke-linecap="round"
-                                stroke-linejoin="round"
-                                stroke-width="2"
-                                d="M9 5l7 7-7 7"
-                              ></path>
-                            </svg>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-
-                    <!-- 項目2 -->
-                    <div
-                      class="bg-gradient-to-r from-slate-50 to-slate-100 border border-slate-200 rounded-xl p-4 hover:border-cyan-300 hover:shadow-md transition-all duration-200 cursor-pointer group/content"
-                    >
-                      <div
-                        class="flex items-start justify-between"
-                        @click="
-                          scrollToSection(
-                            'experience-section',
-                            '效能優化：重構後端程式碼'
-                          )
-                        "
-                      >
-                        <div class="flex-1">
-                          <p
-                            class="text-slate-800 font-medium leading-relaxed group-hover/content:text-slate-900"
-                          >
-                            效能優化：重構後端程式碼，縮短 API 響應時間
-                            25%，顯著提升用戶滿意度。
+                            「透過全方位的策略規劃，我致力於促進跨部門的協同合作，並主動發掘潛在的成長契機，以達到全面性的卓越」這類詞語流於空泛的敘述卻無實際案例或說明
                           </p>
                         </div>
                         <div class="ml-4 flex-shrink-0">
