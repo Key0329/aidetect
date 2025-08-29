@@ -130,13 +130,6 @@ const publicCandidateGroups = ref([
         title: "國立臺北大學休閒運動管理學系 - 鄭翔駿",
         reason: "學術機構｜休閒運動管理學系｜學歷相符",
         url: "https://lsm.ntpu.edu.tw/uploads/file/f1_msbpntqbgc.pdf#page=22"
-      },
-      {
-        favicon: "https://www.cake.me/favicon.ico",
-        domain: "cake.me",
-        title: "鄭翔駿 - CakeResume 履歷",
-        reason: "履歷平台｜個人檔案｜職涯展示",
-        url: "https://www.cake.me/me/springfield0329?locale=fr"
       }
     ],
     disambiguationNotes: null,
@@ -285,7 +278,7 @@ const generateAnalysisText = () => {
 特別是您在找尋的「網站開發經驗」，這位求職者具備【使用 Vue 3 製作 SPA 單頁式網站、整合 Vue Router 與 Pinia 狀態管理、並使用 Vite 進行環境建置與部署】的技術能力。`;
 
   if (concerns.areas.length > 0) {
-    text += `\n\n但同時我們也發現翔駿在「旅行者之家」的經歷時間線有些重疊，履歷中有些敘述抽象、缺乏細節的部分，建議在面試時可以多加了解其過往是否有實際參與專案的經驗與角色定位。`;
+    text += `\n\n但同時我們也發現翔駿在畢業後有四年的空窗期，履歷中有些敘述抽象、缺乏細節的部分，建議在面試前可以先向翔駿做初步的提問，需要我們幫你產生建議問題嗎？`;
   }
 
   return text;
@@ -311,15 +304,15 @@ const copyQuestion = async (questionText, questionIndex) => {
 
 // 取得問題範本內容
 const getQuestionTemplate = () => {
-  return `鄭先生您好，感謝您應徵我們的職位！
+  return `鄭先生您好，感謝您應徵我們的前端工程師職位！
 
-我們對您的履歷很有興趣，希望您能先協助回覆以下幾個問題，幫助我們更了解您的專業背景：
+我們對您的履歷與作品集很有興趣，希望您能先協助回覆以下幾個問題，幫助我們更了解您的背景與職涯規劃：
 
-1. 您在PRO360平台上擁有3年教學經驗並服務過70位以上客戶，能否分享一個您印象最深刻的學員案例，以及您是如何協助他們達成目標的？
+我們注意到您在過去有約三年的空窗期，想請問這段期間您在時間規劃上主要有什麼安排？是否有全職或持續進行前端學習與專案實作？
 
-2. 您擁有NSCA-CPT認證並專精於增肌減脂、體態雕塑等領域，對於沒有運動基礎的初學者，您通常會如何設計訓練計畫並確保訓練的安全性？
+您在履歷中提到具備「全方位的策略規劃」以及「致力於促進跨部門的協同合作」的經驗，方便請您進一步說明這段經歷的實際內容嗎？
 
-感謝您的配合！您的回覆將幫助我們更好地準備面試內容。期待您的回音，也期待不久後與您見面交流。`;
+感謝您的協助！這些資訊將幫助我們更全面地了解您的職涯規劃與求職狀況，期待收到您的回覆，再進一步安排後續面試。`;
 };
 
 const copyAllQuestions = async () => {
